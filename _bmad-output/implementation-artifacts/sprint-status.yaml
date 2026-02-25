@@ -1,0 +1,96 @@
+# Sprint Status - hyzer-app
+# Auto-generated for story-init sync
+
+stories:
+  "1.1":
+    title: "App Shell, Design System & Display Name Onboarding"
+    status: not-started
+    epic: 1
+  "1.2":
+    title: "iCloud Identity Association"
+    status: not-started
+    epic: 1
+  "1.3":
+    title: "Pre-Seeded Courses & Home Screen"
+    status: not-started
+    epic: 1
+  "2.1":
+    title: "Create a New Course"
+    status: not-started
+    epic: 2
+  "2.2":
+    title: "Edit and Delete Courses"
+    status: not-started
+    epic: 2
+  "3.1":
+    title: "Round Creation & Player Setup"
+    status: not-started
+    epic: 3
+  "3.2":
+    title: "Hole Card Tap Scoring & ScoreEvent Creation"
+    status: not-started
+    epic: 3
+  "3.3":
+    title: "Score Corrections & Hole Navigation"
+    status: not-started
+    epic: 3
+  "3.4":
+    title: "Live Leaderboard -- Floating Pill & Expanded View"
+    status: not-started
+    epic: 3
+  "3.5":
+    title: "Round Lifecycle & Player Immutability"
+    status: not-started
+    epic: 3
+  "3.6":
+    title: "Round Completion & Summary"
+    status: not-started
+    epic: 3
+  "4.1":
+    title: "CloudKit Sync Engine & Architectural Spike"
+    status: not-started
+    epic: 4
+  "4.2":
+    title: "Offline Queue & Sync Recovery"
+    status: not-started
+    epic: 4
+  "4.3":
+    title: "Silent Merge & Discrepancy Detection"
+    status: not-started
+    epic: 4
+  "5.1":
+    title: "Voice Recognition & Parser Pipeline"
+    status: not-started
+    epic: 5
+  "5.2":
+    title: "Voice Confirmation Overlay & Auto-Commit"
+    status: not-started
+    epic: 5
+  "5.3":
+    title: "Partial & Failed Recognition Handling"
+    status: not-started
+    epic: 5
+  "6.1":
+    title: "Discrepancy Alert & Resolution Flow"
+    status: not-started
+    epic: 6
+  "7.1":
+    title: "Watch App Shell & Leaderboard Display"
+    status: not-started
+    epic: 7
+  "7.2":
+    title: "Crown Score Entry"
+    status: not-started
+    epic: 7
+  "7.3":
+    title: "Watch Voice Scoring & Bidirectional Communication"
+    status: not-started
+    epic: 7
+  "8.1":
+    title: "History List & Round Detail"
+    status: not-started
+    epic: 8
+  "8.2":
+    title: "Player Hole-by-Hole Breakdown"
+    status: not-started
+    epic: 8
