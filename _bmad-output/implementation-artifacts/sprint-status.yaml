@@ -4,7 +4,7 @@
 stories:
   "1.1":
     title: "App Shell, Design System & Display Name Onboarding"
-    status: ready-for-dev
+    status: in-progress
     epic: 1
   "1.2":
     title: "iCloud Identity Association"
