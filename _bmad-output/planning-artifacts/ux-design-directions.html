@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hyzer-app Design Directions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Rounded', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0A0A0C 0%, #1a1a1c 100%);
+            color: #F5F5F7;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #30D5C8 0%, #5DE4D9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #8E8E93;
+            font-weight: 500;
+        }
+
+        nav {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+            padding: 20px;
+            background: #1C1C1E;
+            border-radius: 16px;
+            border: 1px solid #2C2C2E;
+        }
+
+        nav a {
+            padding: 12px 24px;
+            background: #2C2C2E;
+            color: #F5F5F7;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        nav a:hover {
+            background: #30D5C8;
+            color: #0A0A0C;
+            border-color: #30D5C8;
+        }
+
+        .direction-section {
+            margin-bottom: 100px;
+            scroll-margin-top: 40px;
+        }
+
+        .direction-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .direction-header h2 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            color: #30D5C8;
+        }
+
+        .direction-header .philosophy {
+            font-size: 18px;
+            color: #8E8E93;
+            font-style: italic;
+        }
+
+        .devices-container {
+            display: flex;
+            gap: 60px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        /* iPhone Frame */
+        .iphone-frame {
+            width: 385px;
+            height: 830px;
+            background: #1C1C1E;
+            border-radius: 48px;
+            padding: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.1),
+                        inset 0 0 0 2px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .iphone-frame::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 30px;
+            background: #0A0A0C;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        .iphone-screen {
+            width: 100%;
+            height: 100%;
+            background: #0A0A0C;
+            border-radius: 38px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Apple Watch Frame */
+        .watch-frame {
+            width: 200px;
+            height: 244px;
+            background: #1C1C1E;
+            border-radius: 44px;
+            padding: 8px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .watch-screen {
+            width: 100%;
+            height: 100%;
+            background: #0A0A0C;
+            border-radius: 38px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Common UI Elements */
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #F5F5F7;
+        }
+
+        .mic-button {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #30D5C8 0%, #28c4b8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(48, 213, 200, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(48, 213, 200, 0.5);
+        }
+
+        .mic-icon {
+            width: 24px;
+            height: 24px;
+            background: #0A0A0C;
+            border-radius: 50% 50% 0 0;
+            position: relative;
+        }
+
+        .mic-icon::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 8px;
+            border: 2px solid #0A0A0C;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+        }
+
+        /* Direction 1: Leaderboard First */
+        #direction1 .leaderboard-full {
+            padding: 64px 20px 90px;
+        }
+
+        .player-row {
+            background: #1C1C1E;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .player-row:hover {
+            border-color: #30D5C8;
+            background: #2C2C2E;
+        }
+
+        .position {
+            font-size: 24px;
+            font-weight: 700;
+            color: #30D5C8;
+            width: 40px;
+            text-align: center;
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .holes-info {
+            font-size: 13px;
+            color: #8E8E93;
+        }
+
+        .score {
+            font-family: ui-monospace, 'SF Mono', 'Menlo', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        .score.under { color: #34C759; }
+        .score.even { color: #F5F5F7; }
+        .score.over { color: #FF9F0A; }
+        .score.way-over { color: #FF453A; }
+
+        .fab-button {
+            position: absolute;
+            bottom: 32px;
+            right: 24px;
+        }
+
+        /* Direction 2: Split Stage */
+        #direction2 .split-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .compact-leaderboard {
+            background: #1C1C1E;
+            padding: 64px 16px 20px;
+            border-bottom: 1px solid #2C2C2E;
+        }
+
+        .compact-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #2C2C2E;
+            border-radius: 10px;
+        }
+
+        .compact-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .compact-position {
+            font-size: 14px;
+            font-weight: 700;
+            color: #30D5C8;
+            width: 24px;
+        }
+
+        .compact-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .compact-score {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        .scoring-area {
+            flex: 1;
+            padding: 24px 20px;
+            overflow-y: auto;
+        }
+
+        .scoring-card {
+            background: #1C1C1E;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #2C2C2E;
+        }
+
+        .hole-header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #2C2C2E;
+        }
+
+        .hole-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #30D5C8;
+            margin-bottom: 4px;
+        }
+
+        .hole-par {
+            font-size: 16px;
+            color: #8E8E93;
+            font-weight: 600;
+        }
+
+        .score-entry {
+            margin-bottom: 16px;
+        }
+
+        .score-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .score-entry-name {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .score-picker {
+            display: flex;
+            gap: 8px;
+        }
+
+        .score-button {
+            width: 44px;
+            height: 44px;
+            background: #2C2C2E;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: #F5F5F7;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .score-button:hover {
+            border-color: #30D5C8;
+            background: #30D5C8;
+            color: #0A0A0C;
+        }
+
+        .mic-button-center {
+            margin: 24px auto 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Direction 3: Card Stack */
+        #direction3 .card-stack {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mini-leaderboard-bar {
+            background: #1C1C1E;
+            padding: 60px 16px 12px;
+            border-bottom: 1px solid #2C2C2E;
+            text-align: center;
+            font-size: 13px;
+            color: #8E8E93;
+            font-weight: 600;
+        }
+
+        .mini-leaderboard-bar .positions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .position-item {
+            display: flex;
+            gap: 4px;
+        }
+
+        .pos-num {
+            color: #30D5C8;
+        }
+
+        .hole-card {
+            flex: 1;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hole-card-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .hole-card-title {
+            font-size: 40px;
+            font-weight: 700;
+            color: #30D5C8;
+            margin-bottom: 8px;
+        }
+
+        .hole-card-par {
+            font-size: 18px;
+            color: #8E8E93;
+            font-weight: 600;
+        }
+
+        .swipe-indicator {
+            text-align: center;
+            font-size: 12px;
+            color: #8E8E93;
+            margin-top: 20px;
+        }
+
+        /* Direction 4: Dashboard */
+        #direction4 .dashboard {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            grid-template-rows: auto 1fr auto;
+            height: 100%;
+            padding: 60px 16px 16px;
+            gap: 16px;
+        }
+
+        .mini-vertical-leaderboard {
+            grid-row: 1 / 3;
+            background: #1C1C1E;
+            border-radius: 16px;
+            padding: 16px 12px;
+            border: 1px solid #2C2C2E;
+        }
+
+        .vertical-player {
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .vertical-position {
+            font-size: 16px;
+            font-weight: 700;
+            color: #30D5C8;
+            margin-bottom: 4px;
+        }
+
+        .vertical-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .vertical-score {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        .current-hole-display {
+            background: #1C1C1E;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #2C2C2E;
+            text-align: center;
+        }
+
+        .score-grid {
+            background: #1C1C1E;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #2C2C2E;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .score-grid-item {
+            background: #2C2C2E;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .score-grid-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .score-grid-input {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .score-grid-button {
+            width: 36px;
+            height: 36px;
+            background: #1C1C1E;
+            border: 1px solid #30D5C8;
+            border-radius: 8px;
+            color: #F5F5F7;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .activity-feed {
+            grid-column: 2 / 3;
+            background: #1C1C1E;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #2C2C2E;
+        }
+
+        .activity-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8E8E93;
+            margin-bottom: 12px;
+        }
+
+        .activity-item {
+            font-size: 13px;
+            color: #F5F5F7;
+            padding: 8px;
+            background: #2C2C2E;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+
+        /* Direction 5: Focus Mode */
+        #direction5 .focus-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .focus-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 40px 100px;
+        }
+
+        .focus-player {
+            text-align: center;
+            width: 100%;
+        }
+
+        .focus-name {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .focus-standing {
+            font-size: 16px;
+            color: #8E8E93;
+            margin-bottom: 40px;
+        }
+
+        .focus-score-display {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 96px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            font-feature-settings: 'tnum';
+        }
+
+        .focus-controls {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .focus-button {
+            width: 64px;
+            height: 64px;
+            background: #2C2C2E;
+            border: 2px solid #30D5C8;
+            border-radius: 16px;
+            color: #30D5C8;
+            font-size: 32px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .focus-button:hover {
+            background: #30D5C8;
+            color: #0A0A0C;
+        }
+
+        .focus-swipe-hint {
+            font-size: 14px;
+            color: #8E8E93;
+            text-align: center;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: #1C1C1E;
+            border-top: 1px solid #2C2C2E;
+            padding: 8px 20px 24px;
+        }
+
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 11px;
+            color: #8E8E93;
+            font-weight: 600;
+        }
+
+        .tab-item.active {
+            color: #30D5C8;
+        }
+
+        /* Direction 6: Live Feed */
+        #direction6 .live-feed-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 0 0;
+        }
+
+        .floating-leaderboard-pill {
+            background: #1C1C1E;
+            margin: 16px 20px;
+            padding: 12px 16px;
+            border-radius: 24px;
+            border: 1px solid #2C2C2E;
+            display: flex;
+            justify-content: space-around;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .floating-leaderboard-pill:hover {
+            background: #2C2C2E;
+            border-color: #30D5C8;
+        }
+
+        .pill-player {
+            display: flex;
+            gap: 4px;
+        }
+
+        .pill-pos {
+            color: #30D5C8;
+        }
+
+        .pill-score {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-feature-settings: 'tnum';
+        }
+
+        .feed-stream {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 100px;
+        }
+
+        .feed-item {
+            background: #1C1C1E;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid #30D5C8;
+        }
+
+        .feed-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .feed-player-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .feed-score {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        .feed-item-details {
+            font-size: 14px;
+            color: #8E8E93;
+        }
+
+        .feed-time {
+            font-size: 12px;
+            color: #8E8E93;
+            margin-top: 4px;
+        }
+
+        /* Watch Specific Styles */
+        .watch-content {
+            padding: 16px 12px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .watch-player-row {
+            background: #1C1C1E;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .watch-position {
+            font-size: 18px;
+            font-weight: 700;
+            color: #30D5C8;
+            width: 28px;
+            text-align: center;
+        }
+
+        .watch-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .watch-score {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        /* Comparison Section */
+        .comparison-section {
+            background: #1C1C1E;
+            border-radius: 24px;
+            padding: 40px;
+            margin-top: 80px;
+            border: 1px solid #2C2C2E;
+        }
+
+        .comparison-section h2 {
+            font-size: 32px;
+            margin-bottom: 32px;
+            text-align: center;
+            color: #30D5C8;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .comparison-card {
+            background: #2C2C2E;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .comparison-card:hover {
+            border-color: #30D5C8;
+            transform: translateY(-2px);
+        }
+
+        .comparison-card h3 {
+            font-size: 20px;
+            margin-bottom: 16px;
+            color: #30D5C8;
+        }
+
+        .pros-cons {
+            display: grid;
+            gap: 16px;
+        }
+
+        .pros, .cons {
+            background: #1C1C1E;
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .pros h4 {
+            color: #34C759;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .cons h4 {
+            color: #FF453A;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .pros ul, .cons ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .pros li, .cons li {
+            font-size: 13px;
+            color: #F5F5F7;
+            margin-bottom: 6px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .pros li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #34C759;
+            font-weight: 700;
+        }
+
+        .cons li::before {
+            content: '✗';
+            position: absolute;
+            left: 0;
+            color: #FF453A;
+            font-weight: 700;
+        }
+
+        /* Direction 7: Card Stack + Floating Pill (SELECTED) */
+        .selected-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #30D5C8 0%, #28c4b8 100%);
+            color: #0A0A0C;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .selected-direction {
+            border: 3px solid #30D5C8;
+            box-shadow: 0 0 0 1px #30D5C8, 0 0 40px rgba(48, 213, 200, 0.3);
+        }
+
+        .iphone-frame-double {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .mockup-label {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #8E8E93;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #direction7 .floating-pill-overlay {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        #direction7 .floating-pill {
+            background: rgba(28, 28, 30, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px 16px;
+            border-radius: 24px;
+            border: 1px solid rgba(48, 213, 200, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #direction7 .floating-pill:hover {
+            background: rgba(28, 28, 30, 0.95);
+            border-color: #30D5C8;
+        }
+
+        #direction7 .pill-standings {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            overflow-x: auto;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        #direction7 .pill-player-item {
+            display: flex;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        #direction7 .expand-icon {
+            width: 20px;
+            height: 20px;
+            background: #30D5C8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0A0A0C;
+            font-size: 10px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        #direction7 .hole-card-full {
+            padding: 110px 20px 90px;
+        }
+
+        #direction7 .player-score-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            background: #1C1C1E;
+            border-radius: 16px;
+            border: 1px solid #2C2C2E;
+        }
+
+        #direction7 .player-score-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        #direction7 .player-score-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        #direction7 .player-score-total {
+            font-size: 13px;
+            color: #8E8E93;
+            font-family: ui-monospace, 'SF Mono', monospace;
+        }
+
+        #direction7 .player-score-hole {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 28px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        #direction7 .hole-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 24px;
+        }
+
+        #direction7 .page-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2C2C2E;
+            transition: all 0.2s ease;
+        }
+
+        #direction7 .page-dot.active {
+            background: #30D5C8;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        #direction7 .expanded-leaderboard-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1C1C1E;
+            border-radius: 24px 24px 0 0;
+            padding: 20px;
+            max-height: 70%;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 200;
+        }
+
+        #direction7 .sheet-handle {
+            width: 36px;
+            height: 5px;
+            background: #3A3A3C;
+            border-radius: 3px;
+            margin: 0 auto 24px;
+        }
+
+        #direction7 .expanded-player-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: #2C2C2E;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+
+        #direction7 .expanded-position {
+            font-size: 28px;
+            font-weight: 700;
+            color: #30D5C8;
+            width: 48px;
+            text-align: center;
+        }
+
+        #direction7 .expanded-position.first {
+            background: linear-gradient(135deg, #30D5C8 0%, #5DE4D9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #direction7 .expanded-info {
+            flex: 1;
+        }
+
+        #direction7 .expanded-name {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        #direction7 .expanded-change {
+            font-size: 12px;
+            color: #8E8E93;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #direction7 .expanded-score {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            font-feature-settings: 'tnum';
+        }
+
+        #direction7 .sheet-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 12, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 150;
+        }
+
+        @media (max-width: 768px) {
+            .devices-container {
+                gap: 40px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .direction-header h2 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>hyzer-app Design Directions</h1>
+            <p class="subtitle">7 distinct UX approaches for native iOS + Apple Watch disc golf scoring</p>
+        </header>
+
+        <nav>
+            <a href="#direction7">✓ SELECTED: Card Stack + Floating Pill</a>
+            <a href="#direction1">1. Leaderboard First</a>
+            <a href="#direction2">2. Split Stage</a>
+            <a href="#direction3">3. Card Stack</a>
+            <a href="#direction4">4. Dashboard</a>
+            <a href="#direction5">5. Focus Mode</a>
+            <a href="#direction6">6. Live Feed</a>
+            <a href="#comparison">Comparison</a>
+        </nav>
+
+        <!-- Direction 7: Card Stack + Floating Pill (SELECTED DIRECTION) -->
+        <section id="direction7" class="direction-section">
+            <div class="direction-header">
+                <div class="selected-badge">⭐ SELECTED DIRECTION</div>
+                <h2>Direction 7: Card Stack + Floating Pill (Combined)</h2>
+                <p class="philosophy">Each hole is a moment. Swipe through the round. The floating pill keeps the competitive pulse alive without leaving the scoring context.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone Mockups Container -->
+                <div class="iphone-frame-double">
+                    <!-- iPhone Mockup 1: Hole Card with Floating Pill -->
+                    <div>
+                        <div class="mockup-label">Main Scoring View</div>
+                        <div class="iphone-frame selected-direction">
+                            <div class="iphone-screen">
+                                <div class="status-bar">
+                                    <span>9:41</span>
+                                    <span>●●●●</span>
+                                </div>
+
+                                <!-- Floating Leaderboard Pill -->
+                                <div class="floating-pill-overlay">
+                                    <div class="floating-pill">
+                                        <div class="pill-standings">
+                                            <div class="pill-player-item">
+                                                <span class="pill-pos">1.</span>
+                                                <span>Jake</span>
+                                                <span class="pill-score under">-2</span>
+                                            </div>
+                                            <div class="pill-player-item">
+                                                <span class="pill-pos">2.</span>
+                                                <span>Mike</span>
+                                                <span class="pill-score under">-1</span>
+                                            </div>
+                                            <div class="pill-player-item">
+                                                <span class="pill-pos">3.</span>
+                                                <span>Sarah</span>
+                                                <span class="pill-score even">E</span>
+                                            </div>
+                                            <div class="pill-player-item">
+                                                <span class="pill-pos">4.</span>
+                                                <span>Nate</span>
+                                                <span class="pill-score over">+1</span>
+                                            </div>
+                                        </div>
+                                        <div class="expand-icon">↓</div>
+                                    </div>
+                                </div>
+
+                                <!-- Hole Card Content -->
+                                <div class="hole-card-full">
+                                    <div class="hole-card-header">
+                                        <div class="hole-card-title">Hole 7 • Par 3</div>
+                                        <div class="hole-card-par">Cedar Creek</div>
+                                    </div>
+
+                                    <!-- Player Score Rows -->
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Jake</div>
+                                            <div class="player-score-total under">-2 total</div>
+                                        </div>
+                                        <div class="player-score-hole under">3</div>
+                                    </div>
+
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Mike</div>
+                                            <div class="player-score-total under">-1 total</div>
+                                        </div>
+                                        <div class="player-score-hole over">4</div>
+                                    </div>
+
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Sarah</div>
+                                            <div class="player-score-total even">E total</div>
+                                        </div>
+                                        <div class="player-score-hole" style="color: #3A3A3C;">—</div>
+                                    </div>
+
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Nate</div>
+                                            <div class="player-score-total over">+1 total</div>
+                                        </div>
+                                        <div class="player-score-hole" style="color: #3A3A3C;">—</div>
+                                    </div>
+
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Dave</div>
+                                            <div class="player-score-total way-over">+3 total</div>
+                                        </div>
+                                        <div class="player-score-hole" style="color: #3A3A3C;">—</div>
+                                    </div>
+
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Chris</div>
+                                            <div class="player-score-total way-over">+4 total</div>
+                                        </div>
+                                        <div class="player-score-hole" style="color: #3A3A3C;">—</div>
+                                    </div>
+
+                                    <!-- Hole Pagination Dots -->
+                                    <div class="hole-pagination">
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot active"></div>
+                                        <div class="page-dot"></div>
+                                        <div class="page-dot"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Mic Button -->
+                                <div class="fab-button">
+                                    <div class="mic-button">
+                                        <div class="mic-icon"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- iPhone Mockup 2: Expanded Leaderboard Sheet -->
+                    <div>
+                        <div class="mockup-label">Expanded Leaderboard View</div>
+                        <div class="iphone-frame selected-direction">
+                            <div class="iphone-screen">
+                                <div class="status-bar">
+                                    <span>9:41</span>
+                                    <span>●●●●</span>
+                                </div>
+
+                                <!-- Dimmed Background Content -->
+                                <div class="hole-card-full" style="filter: blur(4px); opacity: 0.4;">
+                                    <div class="hole-card-header">
+                                        <div class="hole-card-title">Hole 7 • Par 3</div>
+                                    </div>
+                                    <div class="player-score-row">
+                                        <div class="player-score-left">
+                                            <div class="player-score-name">Jake</div>
+                                        </div>
+                                        <div class="player-score-hole under">3</div>
+                                    </div>
+                                </div>
+
+                                <!-- Sheet Overlay -->
+                                <div class="sheet-overlay"></div>
+
+                                <!-- Expanded Leaderboard Sheet -->
+                                <div class="expanded-leaderboard-sheet">
+                                    <div class="sheet-handle"></div>
+
+                                    <div class="expanded-player-row">
+                                        <div class="expanded-position first">1</div>
+                                        <div class="expanded-info">
+                                            <div class="expanded-name">Jake</div>
+                                            <div class="expanded-change">▲ +1 position</div>
+                                        </div>
+                                        <div class="expanded-score under">-2</div>
+                                    </div>
+
+                                    <div class="expanded-player-row">
+                                        <div class="expanded-position">2</div>
+                                        <div class="expanded-info">
+                                            <div class="expanded-name">Mike</div>
+                                            <div class="expanded-change">— No change</div>
+                                        </div>
+                                        <div class="expanded-score under">-1</div>
+                                    </div>
+
+                                    <div class="expanded-player-row">
+                                        <div class="expanded-position">3</div>
+                                        <div class="expanded-info">
+                                            <div class="expanded-name">Sarah</div>
+                                            <div class="expanded-change">▼ -1 position</div>
+                                        </div>
+                                        <div class="expanded-score even">E</div>
+                                    </div>
+
+                                    <div class="expanded-player-row">
+                                        <div class="expanded-position">4</div>
+                                        <div class="expanded-info">
+                                            <div class="expanded-name">Nate</div>
+                                            <div class="expanded-change">— No change</div>
+                                        </div>
+                                        <div class="expanded-score over">+1</div>
+                                    </div>
+
+                                    <div class="expanded-player-row">
+                                        <div class="expanded-position">5</div>
+                                        <div class="expanded-info">
+                                            <div class="expanded-name">Dave</div>
+                                            <div class="expanded-change">▼ -1 position</div>
+                                        </div>
+                                        <div class="expanded-score way-over">+3</div>
+                                    </div>
+
+                                    <div class="expanded-player-row">
+                                        <div class="expanded-position">6</div>
+                                        <div class="expanded-info">
+                                            <div class="expanded-name">Chris</div>
+                                            <div class="expanded-change">— No change</div>
+                                        </div>
+                                        <div class="expanded-score way-over">+4</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content">
+                            <div class="watch-player-row">
+                                <div class="watch-position">1</div>
+                                <div class="watch-name">Jake</div>
+                                <div class="watch-score under">-2</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">2</div>
+                                <div class="watch-name">Mike</div>
+                                <div class="watch-score under">-1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">3</div>
+                                <div class="watch-name">Sarah</div>
+                                <div class="watch-score even">E</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">4</div>
+                                <div class="watch-name">Nate</div>
+                                <div class="watch-score over">+1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">5</div>
+                                <div class="watch-name">Dave</div>
+                                <div class="watch-score way-over">+3</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">6</div>
+                                <div class="watch-name">Chris</div>
+                                <div class="watch-score way-over">+4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction 1: Leaderboard First -->
+        <section id="direction1" class="direction-section">
+            <div class="direction-header">
+                <h2>Direction 1: Leaderboard First</h2>
+                <p class="philosophy">The standings ARE the app. Scoring is a quick inline action.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone -->
+                <div class="iphone-frame">
+                    <div class="iphone-screen">
+                        <div class="status-bar">
+                            <span>9:41</span>
+                            <span>●●●●</span>
+                        </div>
+                        <div class="leaderboard-full">
+                            <div class="player-row">
+                                <div class="position">1</div>
+                                <div class="player-info">
+                                    <div class="player-name">Jake</div>
+                                    <div class="holes-info">7 of 18 holes</div>
+                                </div>
+                                <div class="score under">-2</div>
+                            </div>
+                            <div class="player-row">
+                                <div class="position">2</div>
+                                <div class="player-info">
+                                    <div class="player-name">Mike</div>
+                                    <div class="holes-info">7 of 18 holes</div>
+                                </div>
+                                <div class="score under">-1</div>
+                            </div>
+                            <div class="player-row">
+                                <div class="position">3</div>
+                                <div class="player-info">
+                                    <div class="player-name">Sarah</div>
+                                    <div class="holes-info">7 of 18 holes</div>
+                                </div>
+                                <div class="score even">E</div>
+                            </div>
+                            <div class="player-row">
+                                <div class="position">4</div>
+                                <div class="player-info">
+                                    <div class="player-name">Nate</div>
+                                    <div class="holes-info">7 of 18 holes</div>
+                                </div>
+                                <div class="score over">+1</div>
+                            </div>
+                            <div class="player-row">
+                                <div class="position">5</div>
+                                <div class="player-info">
+                                    <div class="player-name">Dave</div>
+                                    <div class="holes-info">7 of 18 holes</div>
+                                </div>
+                                <div class="score way-over">+3</div>
+                            </div>
+                            <div class="player-row">
+                                <div class="position">6</div>
+                                <div class="player-info">
+                                    <div class="player-name">Chris</div>
+                                    <div class="holes-info">7 of 18 holes</div>
+                                </div>
+                                <div class="score way-over">+4</div>
+                            </div>
+                        </div>
+                        <div class="fab-button">
+                            <div class="mic-button">
+                                <div class="mic-icon"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content">
+                            <div class="watch-player-row">
+                                <div class="watch-position">1</div>
+                                <div class="watch-name">Jake</div>
+                                <div class="watch-score under">-2</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">2</div>
+                                <div class="watch-name">Mike</div>
+                                <div class="watch-score under">-1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">3</div>
+                                <div class="watch-name">Sarah</div>
+                                <div class="watch-score even">E</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">4</div>
+                                <div class="watch-name">Nate</div>
+                                <div class="watch-score over">+1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">5</div>
+                                <div class="watch-name">Dave</div>
+                                <div class="watch-score way-over">+3</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">6</div>
+                                <div class="watch-name">Chris</div>
+                                <div class="watch-score way-over">+4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction 2: Split Stage -->
+        <section id="direction2" class="direction-section">
+            <div class="direction-header">
+                <h2>Direction 2: Split Stage</h2>
+                <p class="philosophy">Apple Weather-inspired. Always see standings AND current scoring simultaneously.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone -->
+                <div class="iphone-frame">
+                    <div class="iphone-screen">
+                        <div class="split-container">
+                            <div class="compact-leaderboard">
+                                <div class="compact-row">
+                                    <div class="compact-player">
+                                        <div class="compact-position">1</div>
+                                        <div class="compact-name">Jake</div>
+                                    </div>
+                                    <div class="compact-score under">-2</div>
+                                </div>
+                                <div class="compact-row">
+                                    <div class="compact-player">
+                                        <div class="compact-position">2</div>
+                                        <div class="compact-name">Mike</div>
+                                    </div>
+                                    <div class="compact-score under">-1</div>
+                                </div>
+                                <div class="compact-row">
+                                    <div class="compact-player">
+                                        <div class="compact-position">3</div>
+                                        <div class="compact-name">Sarah</div>
+                                    </div>
+                                    <div class="compact-score even">E</div>
+                                </div>
+                                <div class="compact-row">
+                                    <div class="compact-player">
+                                        <div class="compact-position">4</div>
+                                        <div class="compact-name">Nate</div>
+                                    </div>
+                                    <div class="compact-score over">+1</div>
+                                </div>
+                                <div class="compact-row">
+                                    <div class="compact-player">
+                                        <div class="compact-position">5</div>
+                                        <div class="compact-name">Dave</div>
+                                    </div>
+                                    <div class="compact-score way-over">+3</div>
+                                </div>
+                                <div class="compact-row">
+                                    <div class="compact-player">
+                                        <div class="compact-position">6</div>
+                                        <div class="compact-name">Chris</div>
+                                    </div>
+                                    <div class="compact-score way-over">+4</div>
+                                </div>
+                            </div>
+                            <div class="scoring-area">
+                                <div class="scoring-card">
+                                    <div class="hole-header">
+                                        <div class="hole-number">Hole 7</div>
+                                        <div class="hole-par">Par 3</div>
+                                    </div>
+                                    <div class="score-entry">
+                                        <div class="score-entry-header">
+                                            <span class="score-entry-name">Jake</span>
+                                        </div>
+                                        <div class="score-picker">
+                                            <button class="score-button">1</button>
+                                            <button class="score-button">2</button>
+                                            <button class="score-button">3</button>
+                                            <button class="score-button">4</button>
+                                            <button class="score-button">5</button>
+                                        </div>
+                                    </div>
+                                    <div class="score-entry">
+                                        <div class="score-entry-header">
+                                            <span class="score-entry-name">Mike</span>
+                                        </div>
+                                        <div class="score-picker">
+                                            <button class="score-button">1</button>
+                                            <button class="score-button">2</button>
+                                            <button class="score-button">3</button>
+                                            <button class="score-button">4</button>
+                                            <button class="score-button">5</button>
+                                        </div>
+                                    </div>
+                                    <div class="score-entry">
+                                        <div class="score-entry-header">
+                                            <span class="score-entry-name">Sarah</span>
+                                        </div>
+                                        <div class="score-picker">
+                                            <button class="score-button">1</button>
+                                            <button class="score-button">2</button>
+                                            <button class="score-button">3</button>
+                                            <button class="score-button">4</button>
+                                            <button class="score-button">5</button>
+                                        </div>
+                                    </div>
+                                    <div class="mic-button-center">
+                                        <div class="mic-button">
+                                            <div class="mic-icon"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content">
+                            <div class="watch-player-row">
+                                <div class="watch-position">1</div>
+                                <div class="watch-name">Jake</div>
+                                <div class="watch-score under">-2</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">2</div>
+                                <div class="watch-name">Mike</div>
+                                <div class="watch-score under">-1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">3</div>
+                                <div class="watch-name">Sarah</div>
+                                <div class="watch-score even">E</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">4</div>
+                                <div class="watch-name">Nate</div>
+                                <div class="watch-score over">+1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">5</div>
+                                <div class="watch-name">Dave</div>
+                                <div class="watch-score way-over">+3</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">6</div>
+                                <div class="watch-name">Chris</div>
+                                <div class="watch-score way-over">+4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction 3: Card Stack -->
+        <section id="direction3" class="direction-section">
+            <div class="direction-header">
+                <h2>Direction 3: Card Stack</h2>
+                <p class="philosophy">Each hole is a moment. Swipe through the round like swiping through a story.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone -->
+                <div class="iphone-frame">
+                    <div class="iphone-screen">
+                        <div class="card-stack">
+                            <div class="mini-leaderboard-bar">
+                                <div class="positions">
+                                    <div class="position-item">
+                                        <span class="pos-num">1.</span>
+                                        <span>Jake</span>
+                                    </div>
+                                    <div class="position-item">
+                                        <span class="pos-num">2.</span>
+                                        <span>Mike</span>
+                                    </div>
+                                    <div class="position-item">
+                                        <span class="pos-num">3.</span>
+                                        <span>Sarah</span>
+                                    </div>
+                                    <div class="position-item">
+                                        <span class="pos-num">4.</span>
+                                        <span>Nate</span>
+                                    </div>
+                                    <div class="position-item">
+                                        <span class="pos-num">5.</span>
+                                        <span>Dave</span>
+                                    </div>
+                                    <div class="position-item">
+                                        <span class="pos-num">6.</span>
+                                        <span>Chris</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hole-card">
+                                <div class="hole-card-header">
+                                    <div class="hole-card-title">Hole 7</div>
+                                    <div class="hole-card-par">Par 3 • Cedar Creek</div>
+                                </div>
+                                <div class="score-entry">
+                                    <div class="score-entry-header">
+                                        <span class="score-entry-name">Jake</span>
+                                    </div>
+                                    <div class="score-picker">
+                                        <button class="score-button">1</button>
+                                        <button class="score-button">2</button>
+                                        <button class="score-button">3</button>
+                                        <button class="score-button">4</button>
+                                        <button class="score-button">5</button>
+                                        <button class="score-button">6</button>
+                                    </div>
+                                </div>
+                                <div class="score-entry">
+                                    <div class="score-entry-header">
+                                        <span class="score-entry-name">Mike</span>
+                                    </div>
+                                    <div class="score-picker">
+                                        <button class="score-button">1</button>
+                                        <button class="score-button">2</button>
+                                        <button class="score-button">3</button>
+                                        <button class="score-button">4</button>
+                                        <button class="score-button">5</button>
+                                        <button class="score-button">6</button>
+                                    </div>
+                                </div>
+                                <div class="score-entry">
+                                    <div class="score-entry-header">
+                                        <span class="score-entry-name">Sarah</span>
+                                    </div>
+                                    <div class="score-picker">
+                                        <button class="score-button">1</button>
+                                        <button class="score-button">2</button>
+                                        <button class="score-button">3</button>
+                                        <button class="score-button">4</button>
+                                        <button class="score-button">5</button>
+                                        <button class="score-button">6</button>
+                                    </div>
+                                </div>
+                                <div class="mic-button-center">
+                                    <div class="mic-button">
+                                        <div class="mic-icon"></div>
+                                    </div>
+                                </div>
+                                <div class="swipe-indicator">← Swipe for Hole 6 or 8 →</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content">
+                            <div class="watch-player-row">
+                                <div class="watch-position">1</div>
+                                <div class="watch-name">Jake</div>
+                                <div class="watch-score under">-2</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">2</div>
+                                <div class="watch-name">Mike</div>
+                                <div class="watch-score under">-1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">3</div>
+                                <div class="watch-name">Sarah</div>
+                                <div class="watch-score even">E</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">4</div>
+                                <div class="watch-name">Nate</div>
+                                <div class="watch-score over">+1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">5</div>
+                                <div class="watch-name">Dave</div>
+                                <div class="watch-score way-over">+3</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">6</div>
+                                <div class="watch-name">Chris</div>
+                                <div class="watch-score way-over">+4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction 4: Dashboard -->
+        <section id="direction4" class="direction-section">
+            <div class="direction-header">
+                <h2>Direction 4: Dashboard</h2>
+                <p class="philosophy">Maximum information density. Power-user view where everything is one glance away.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone -->
+                <div class="iphone-frame">
+                    <div class="iphone-screen">
+                        <div class="status-bar">
+                            <span>9:41</span>
+                            <span>●●●●</span>
+                        </div>
+                        <div class="dashboard">
+                            <div class="mini-vertical-leaderboard">
+                                <div class="vertical-player">
+                                    <div class="vertical-position">1</div>
+                                    <div class="vertical-name">Jake</div>
+                                    <div class="vertical-score under">-2</div>
+                                </div>
+                                <div class="vertical-player">
+                                    <div class="vertical-position">2</div>
+                                    <div class="vertical-name">Mike</div>
+                                    <div class="vertical-score under">-1</div>
+                                </div>
+                                <div class="vertical-player">
+                                    <div class="vertical-position">3</div>
+                                    <div class="vertical-name">Sarah</div>
+                                    <div class="vertical-score even">E</div>
+                                </div>
+                                <div class="vertical-player">
+                                    <div class="vertical-position">4</div>
+                                    <div class="vertical-name">Nate</div>
+                                    <div class="vertical-score over">+1</div>
+                                </div>
+                                <div class="vertical-player">
+                                    <div class="vertical-position">5</div>
+                                    <div class="vertical-name">Dave</div>
+                                    <div class="vertical-score way-over">+3</div>
+                                </div>
+                                <div class="vertical-player">
+                                    <div class="vertical-position">6</div>
+                                    <div class="vertical-name">Chris</div>
+                                    <div class="vertical-score way-over">+4</div>
+                                </div>
+                            </div>
+                            <div class="current-hole-display">
+                                <div class="hole-number">Hole 7</div>
+                                <div class="hole-par">Par 3</div>
+                            </div>
+                            <div class="score-grid">
+                                <div class="score-grid-item">
+                                    <div class="score-grid-name">Jake</div>
+                                    <div class="score-grid-input">
+                                        <button class="score-grid-button">2</button>
+                                        <button class="score-grid-button">3</button>
+                                        <button class="score-grid-button">4</button>
+                                    </div>
+                                </div>
+                                <div class="score-grid-item">
+                                    <div class="score-grid-name">Mike</div>
+                                    <div class="score-grid-input">
+                                        <button class="score-grid-button">2</button>
+                                        <button class="score-grid-button">3</button>
+                                        <button class="score-grid-button">4</button>
+                                    </div>
+                                </div>
+                                <div class="score-grid-item">
+                                    <div class="score-grid-name">Sarah</div>
+                                    <div class="score-grid-input">
+                                        <button class="score-grid-button">2</button>
+                                        <button class="score-grid-button">3</button>
+                                        <button class="score-grid-button">4</button>
+                                    </div>
+                                </div>
+                                <div class="score-grid-item">
+                                    <div class="score-grid-name">Nate</div>
+                                    <div class="score-grid-input">
+                                        <button class="score-grid-button">2</button>
+                                        <button class="score-grid-button">3</button>
+                                        <button class="score-grid-button">4</button>
+                                    </div>
+                                </div>
+                                <div class="score-grid-item">
+                                    <div class="score-grid-name">Dave</div>
+                                    <div class="score-grid-input">
+                                        <button class="score-grid-button">2</button>
+                                        <button class="score-grid-button">3</button>
+                                        <button class="score-grid-button">4</button>
+                                    </div>
+                                </div>
+                                <div class="score-grid-item">
+                                    <div class="score-grid-name">Chris</div>
+                                    <div class="score-grid-input">
+                                        <button class="score-grid-button">2</button>
+                                        <button class="score-grid-button">3</button>
+                                        <button class="score-grid-button">4</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="activity-feed">
+                                <div class="activity-title">Recent</div>
+                                <div class="activity-item">Jake scored 3 on Hole 6</div>
+                                <div class="activity-item">Mike scored 2 on Hole 6</div>
+                                <div class="activity-item">Sarah scored 4 on Hole 6</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content">
+                            <div class="watch-player-row">
+                                <div class="watch-position">1</div>
+                                <div class="watch-name">Jake</div>
+                                <div class="watch-score under">-2</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">2</div>
+                                <div class="watch-name">Mike</div>
+                                <div class="watch-score under">-1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">3</div>
+                                <div class="watch-name">Sarah</div>
+                                <div class="watch-score even">E</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">4</div>
+                                <div class="watch-name">Nate</div>
+                                <div class="watch-score over">+1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">5</div>
+                                <div class="watch-name">Dave</div>
+                                <div class="watch-score way-over">+3</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">6</div>
+                                <div class="watch-name">Chris</div>
+                                <div class="watch-score way-over">+4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction 5: Focus Mode -->
+        <section id="direction5" class="direction-section">
+            <div class="direction-header">
+                <h2>Direction 5: Focus Mode</h2>
+                <p class="philosophy">Reduce cognitive load to zero. One player, one score, one action at a time.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone -->
+                <div class="iphone-frame">
+                    <div class="iphone-screen">
+                        <div class="focus-container">
+                            <div class="status-bar">
+                                <span>9:41</span>
+                                <span>●●●●</span>
+                            </div>
+                            <div class="focus-main">
+                                <div class="focus-player">
+                                    <div class="focus-name">Jake</div>
+                                    <div class="focus-standing">1st • -2 overall</div>
+                                    <div class="focus-score-display under">3</div>
+                                    <div class="focus-controls">
+                                        <button class="focus-button">−</button>
+                                        <button class="focus-button">+</button>
+                                    </div>
+                                    <div class="mic-button-center">
+                                        <div class="mic-button">
+                                            <div class="mic-icon"></div>
+                                        </div>
+                                    </div>
+                                    <div class="focus-swipe-hint">↑ Swipe to next player ↓</div>
+                                </div>
+                            </div>
+                            <div class="tab-bar">
+                                <div class="tab-item active">Scoring</div>
+                                <div class="tab-item">Leaderboard</div>
+                                <div class="tab-item">History</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center;">
+                            <div style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Jake</div>
+                            <div style="font-size: 12px; color: #8E8E93; margin-bottom: 20px;">1st place</div>
+                            <div style="font-family: ui-monospace, 'SF Mono', monospace; font-size: 64px; font-weight: 700; color: #34C759;">3</div>
+                            <div style="font-size: 11px; color: #8E8E93; margin-top: 12px;">Crown to scroll</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Direction 6: Live Feed -->
+        <section id="direction6" class="direction-section">
+            <div class="direction-header">
+                <h2>Direction 6: Live Feed</h2>
+                <p class="philosophy">Scoring is social. The feed shows the group's activity in real time.</p>
+            </div>
+            <div class="devices-container">
+                <!-- iPhone -->
+                <div class="iphone-frame">
+                    <div class="iphone-screen">
+                        <div class="live-feed-container">
+                            <div class="status-bar">
+                                <span>9:41</span>
+                                <span>●●●●</span>
+                            </div>
+                            <div class="floating-leaderboard-pill">
+                                <div class="pill-player">
+                                    <span class="pill-pos">1.</span>
+                                    <span>Jake</span>
+                                    <span class="pill-score under">-2</span>
+                                </div>
+                                <div class="pill-player">
+                                    <span class="pill-pos">2.</span>
+                                    <span>Mike</span>
+                                    <span class="pill-score under">-1</span>
+                                </div>
+                                <div class="pill-player">
+                                    <span class="pill-pos">3.</span>
+                                    <span>Sarah</span>
+                                    <span class="pill-score even">E</span>
+                                </div>
+                            </div>
+                            <div class="feed-stream">
+                                <div class="feed-item">
+                                    <div class="feed-item-header">
+                                        <span class="feed-player-name">Sarah</span>
+                                        <span class="feed-score even">3</span>
+                                    </div>
+                                    <div class="feed-item-details">Hole 7 • Par 3 • scored by Mike</div>
+                                    <div class="feed-time">Just now</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-item-header">
+                                        <span class="feed-player-name">Mike</span>
+                                        <span class="feed-score under">2</span>
+                                    </div>
+                                    <div class="feed-item-details">Hole 7 • Par 3 • scored by Sarah</div>
+                                    <div class="feed-time">1 min ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-item-header">
+                                        <span class="feed-player-name">Jake</span>
+                                        <span class="feed-score under">2</span>
+                                    </div>
+                                    <div class="feed-item-details">Hole 7 • Par 3 • scored by Jake</div>
+                                    <div class="feed-time">2 min ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-item-header">
+                                        <span class="feed-player-name">Chris</span>
+                                        <span class="feed-score way-over">5</span>
+                                    </div>
+                                    <div class="feed-item-details">Hole 6 • Par 3 • scored by Dave</div>
+                                    <div class="feed-time">5 min ago</div>
+                                </div>
+                                <div class="feed-item">
+                                    <div class="feed-item-header">
+                                        <span class="feed-player-name">Dave</span>
+                                        <span class="feed-score way-over">4</span>
+                                    </div>
+                                    <div class="feed-item-details">Hole 6 • Par 3 • scored by Chris</div>
+                                    <div class="feed-time">5 min ago</div>
+                                </div>
+                            </div>
+                            <div class="fab-button">
+                                <div class="mic-button">
+                                    <div class="mic-icon"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="watch-frame">
+                    <div class="watch-screen">
+                        <div class="watch-content">
+                            <div class="watch-player-row">
+                                <div class="watch-position">1</div>
+                                <div class="watch-name">Jake</div>
+                                <div class="watch-score under">-2</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">2</div>
+                                <div class="watch-name">Mike</div>
+                                <div class="watch-score under">-1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">3</div>
+                                <div class="watch-name">Sarah</div>
+                                <div class="watch-score even">E</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">4</div>
+                                <div class="watch-name">Nate</div>
+                                <div class="watch-score over">+1</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">5</div>
+                                <div class="watch-name">Dave</div>
+                                <div class="watch-score way-over">+3</div>
+                            </div>
+                            <div class="watch-player-row">
+                                <div class="watch-position">6</div>
+                                <div class="watch-name">Chris</div>
+                                <div class="watch-score way-over">+4</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section id="comparison" class="comparison-section">
+            <h2>Design Direction Comparison</h2>
+            <div class="comparison-grid">
+                <div class="comparison-card selected-direction">
+                    <div class="selected-badge">⭐ SELECTED</div>
+                    <h3>7. Card Stack + Floating Pill</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Best of both worlds: focused scoring + standings awareness</li>
+                                <li>Floating pill is non-intrusive yet always accessible</li>
+                                <li>Hole-by-hole navigation keeps mental model clear</li>
+                                <li>Expandable sheet provides full leaderboard detail on demand</li>
+                                <li>Position changes add competitive context</li>
+                                <li>Swipe navigation feels natural and fluid</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Slightly more complex than single-view approaches</li>
+                                <li>Pill may feel redundant to some users</li>
+                                <li>Requires implementation of overlay/sheet patterns</li>
+                                <li>More UI states to design and test</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="comparison-card">
+                    <h3>1. Leaderboard First</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Competition visibility is paramount</li>
+                                <li>Simple mental model: one screen</li>
+                                <li>Inline expansion minimizes navigation</li>
+                                <li>Quick glance shows everyone's status</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Scoring feels secondary to standings</li>
+                                <li>Expansion pattern might feel cluttered</li>
+                                <li>No hole context visible at a glance</li>
+                                <li>Requires tap to enter scores</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-card">
+                    <h3>2. Split Stage</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Zero context switching required</li>
+                                <li>Always aware of standings + current hole</li>
+                                <li>Compact leaderboard feels efficient</li>
+                                <li>Scoring area gets dedicated space</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Leaderboard is visually compressed</li>
+                                <li>May feel cramped on smaller screens</li>
+                                <li>Less dramatic/focused than alternatives</li>
+                                <li>Fixed split may not suit all preferences</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-card">
+                    <h3>3. Card Stack</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Each hole feels like a distinct moment</li>
+                                <li>Swipe navigation is intuitive/familiar</li>
+                                <li>Mini bar keeps standings accessible</li>
+                                <li>Easy to review previous/next holes</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Horizontal swiping adds friction</li>
+                                <li>Mini bar is very compressed</li>
+                                <li>Pull-down overlay adds complexity</li>
+                                <li>Navigation requires explicit action</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-card">
+                    <h3>4. Dashboard</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Maximum information density</li>
+                                <li>Everything visible at once</li>
+                                <li>Activity feed adds social context</li>
+                                <li>Appeals to power users</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Can feel overwhelming/cluttered</li>
+                                <li>Smaller touch targets in grid</li>
+                                <li>Not ideal for casual/beginner users</li>
+                                <li>Reduced visual hierarchy</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-card">
+                    <h3>5. Focus Mode</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Absolute minimal cognitive load</li>
+                                <li>Perfect for beginners/casual play</li>
+                                <li>Large, easy-to-hit controls</li>
+                                <li>Clear single-task focus</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Slower for entering multiple scores</li>
+                                <li>Requires cycling through players</li>
+                                <li>No competitive context while scoring</li>
+                                <li>May feel too simplified for experienced users</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="comparison-card">
+                    <h3>6. Live Feed</h3>
+                    <div class="pros-cons">
+                        <div class="pros">
+                            <h4>PROS</h4>
+                            <ul>
+                                <li>Emphasizes group/social dynamics</li>
+                                <li>Natural for distributed scoring</li>
+                                <li>Activity history is transparent</li>
+                                <li>Floating pill is non-intrusive</li>
+                            </ul>
+                        </div>
+                        <div class="cons">
+                            <h4>CONS</h4>
+                            <ul>
+                                <li>Feed can feel noisy/overwhelming</li>
+                                <li>Less clear "where to enter score"</li>
+                                <li>Pill doesn't show full standings</li>
+                                <li>Novelty factor may wear off</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
