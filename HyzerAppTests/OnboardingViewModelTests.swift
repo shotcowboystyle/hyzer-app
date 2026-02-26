@@ -1,6 +1,7 @@
 import Testing
 import SwiftData
 @testable import HyzerKit
+@testable import HyzerApp
 
 /// Tests for OnboardingViewModel (10.2: onboarding flow creates Player record).
 ///
