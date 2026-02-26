@@ -1,0 +1,92 @@
+name: HyzerApp
+
+options:
+  bundleIdPrefix: com.shotcowboystyle
+  createIntermediateGroups: true
+  groupSortPosition: top
+  deploymentTarget:
+    iOS: "18.0"
+    watchOS: "11.0"
+
+packages:
+  HyzerKit:
+    path: HyzerKit
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_TESTABILITY: YES
+  configs:
+    Debug:
+      GCC_PREPROCESSOR_DEFINITIONS:
+        - "DEBUG=1"
+        - "$(inherited)"
+    Release:
+      VALIDATE_PRODUCT: YES
+
+targets:
+  HyzerApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - HyzerApp
+    dependencies:
+      - package: HyzerKit
+        product: HyzerKit
+      - target: HyzerWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp
+        CODE_SIGN_ENTITLEMENTS: HyzerApp/App/HyzerApp.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1,2"
+    preBuildScripts:
+      - script: |
+          if which swiftlint > /dev/null; then
+            swiftlint
+          fi
+        name: SwiftLint
+        showEnvVars: false
+
+  HyzerWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "11.0"
+    sources:
+      - HyzerWatch
+    dependencies:
+      - package: HyzerKit
+        product: HyzerKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp.watchkitapp
+        CODE_SIGN_ENTITLEMENTS: HyzerWatch/App/HyzerWatch.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_WKWatchKitApp: YES
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: "1.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        WK_COMPANION_APP_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/Frameworks @executable_path/../../Frameworks"
+
+  HyzerAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - HyzerAppTests
+    dependencies:
+      - target: HyzerApp
+      - package: HyzerKit
+        product: HyzerKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp.tests
+        GENERATE_INFOPLIST_FILE: YES

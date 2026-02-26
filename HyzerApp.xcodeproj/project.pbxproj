@@ -1,0 +1,725 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		43AA274D5D9454EBF1D658F2 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */; };
+		5827D9E4DC7FC42B10CF812A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */; };
+		602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6AEC89D27BF2CC224C8D55BB /* HyzerKit */; };
+		70D0955366D0881623788723 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65E7DE08C3408533CBAE374 /* WatchRootView.swift */; };
+		824CB3E7C4FE4793E135E5B0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800D115E8B8669538227512F /* ContentView.swift */; };
+		8C3A37E858EC8BF31CCE054B /* HyzerWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED517066535936D3C664FF33 /* HyzerWatchApp.swift */; };
+		93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBF7E3B49360BEFE78202833 /* HyzerKit */; };
+		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975F8EB2A2D2513F584FD186 /* OnboardingView.swift */; };
+		A96BC87130D06BB117DA9903 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */; };
+		AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */; };
+		BED316BD11BE024B8F9B7B12 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4814FA35A94A0628886B8CF5 /* Assets.xcassets */; };
+		D2EF055D37B19C14B5DEF295 /* HyzerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */; };
+		E0B971BA203161D80992CAB3 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = BAC383C18DE2169D84F62B75 /* HyzerKit */; };
+		E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		82F819555AE4D5EA40088ED0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 657812DB09CD5C9EB0CBC179 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A67AFF364CE9767F277A798B;
+			remoteInfo = HyzerWatch;
+		};
+		C63B00B52A74D0AD198A3C04 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 657812DB09CD5C9EB0CBC179 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E8413A3E7DC7ED336AB58FB1;
+			remoteInfo = HyzerApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3F833405D7E65D94AB9E0401 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		07943A8909080D9EEB547B64 /* HyzerKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = HyzerKit; path = HyzerKit; sourceTree = SOURCE_ROOT; };
+		1AFA4C5EA37270895D500678 /* HyzerWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HyzerWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1C7BA35CCB400F30E2359CFE /* HyzerAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HyzerAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerApp.swift; sourceTree = "<group>"; };
+		39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		4814FA35A94A0628886B8CF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		800D115E8B8669538227512F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		975F8EB2A2D2513F584FD186 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
+		A0348F5FC211306493C34EDC /* HyzerApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HyzerApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2DE096DC71267D6C2C700CD /* HyzerApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HyzerApp.entitlements; sourceTree = "<group>"; };
+		CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
+		ED517066535936D3C664FF33 /* HyzerWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerWatchApp.swift; sourceTree = "<group>"; };
+		EE744D39F8F9982D7C7986DD /* HyzerWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HyzerWatch.entitlements; sourceTree = "<group>"; };
+		F65E7DE08C3408533CBAE374 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		479F635B1ECE2BF3B6A1F778 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E0B971BA203161D80992CAB3 /* HyzerKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BE8EDA7E7A85DB6D20088E38 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DA74B9F9C5E0F0F9C55CCFF9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2EA27EE230CA76ADDCD6A13A /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		3F9EE8EAEFE2495CF3D31074 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4058938EE2AEF93A9B8E92C9 /* Onboarding */,
+				800D115E8B8669538227512F /* ContentView.swift */,
+				CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		4058938EE2AEF93A9B8E92C9 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				975F8EB2A2D2513F584FD186 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		6485E2724D24255F29C6ED15 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F65E7DE08C3408533CBAE374 /* WatchRootView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		8F4C479F6E70B8F442F6A454 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				07943A8909080D9EEB547B64 /* HyzerKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		8FEB21AC3B5648E636889527 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				EE744D39F8F9982D7C7986DD /* HyzerWatch.entitlements */,
+				ED517066535936D3C664FF33 /* HyzerWatchApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A6513A9E2C4A140FCD7073D2 /* HyzerAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */,
+			);
+			path = HyzerAppTests;
+			sourceTree = "<group>";
+		};
+		AC5AC0A99416970B55C0E550 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */,
+				C2DE096DC71267D6C2C700CD /* HyzerApp.entitlements */,
+				2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B2CA1494C59E8F50DCB1F856 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				4814FA35A94A0628886B8CF5 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BA962ACD280C2DF7A1184366 /* HyzerApp */ = {
+			isa = PBXGroup;
+			children = (
+				AC5AC0A99416970B55C0E550 /* App */,
+				E537675A7E8B329D16767E55 /* Resources */,
+				2EA27EE230CA76ADDCD6A13A /* ViewModels */,
+				3F9EE8EAEFE2495CF3D31074 /* Views */,
+			);
+			path = HyzerApp;
+			sourceTree = "<group>";
+		};
+		C04F9DE336288B8AE02E8295 /* HyzerWatch */ = {
+			isa = PBXGroup;
+			children = (
+				8FEB21AC3B5648E636889527 /* App */,
+				B2CA1494C59E8F50DCB1F856 /* Resources */,
+				6485E2724D24255F29C6ED15 /* Views */,
+			);
+			path = HyzerWatch;
+			sourceTree = "<group>";
+		};
+		C431EC029275A66FFCED7A9A = {
+			isa = PBXGroup;
+			children = (
+				BA962ACD280C2DF7A1184366 /* HyzerApp */,
+				A6513A9E2C4A140FCD7073D2 /* HyzerAppTests */,
+				C04F9DE336288B8AE02E8295 /* HyzerWatch */,
+				8F4C479F6E70B8F442F6A454 /* Packages */,
+				EEE56E501DA65667981A9D89 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E537675A7E8B329D16767E55 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		EEE56E501DA65667981A9D89 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A0348F5FC211306493C34EDC /* HyzerApp.app */,
+				1C7BA35CCB400F30E2359CFE /* HyzerAppTests.xctest */,
+				1AFA4C5EA37270895D500678 /* HyzerWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		296984D3E617E4E2782F619D /* HyzerAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1899DF5653244A3759627B45 /* Build configuration list for PBXNativeTarget "HyzerAppTests" */;
+			buildPhases = (
+				383C7831837D4DE5627DF1C2 /* Sources */,
+				DA74B9F9C5E0F0F9C55CCFF9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A8729983A693D02DF68779B4 /* PBXTargetDependency */,
+			);
+			name = HyzerAppTests;
+			packageProductDependencies = (
+				FBF7E3B49360BEFE78202833 /* HyzerKit */,
+			);
+			productName = HyzerAppTests;
+			productReference = 1C7BA35CCB400F30E2359CFE /* HyzerAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		A67AFF364CE9767F277A798B /* HyzerWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9B375164C83A3C80AD983B5E /* Build configuration list for PBXNativeTarget "HyzerWatch" */;
+			buildPhases = (
+				E335B6D3E743C5A0533DC391 /* Sources */,
+				E6FE4BA6B2FFEAF341A878CB /* Resources */,
+				BE8EDA7E7A85DB6D20088E38 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HyzerWatch;
+			packageProductDependencies = (
+				6AEC89D27BF2CC224C8D55BB /* HyzerKit */,
+			);
+			productName = HyzerWatch;
+			productReference = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E8413A3E7DC7ED336AB58FB1 /* HyzerApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 063D1E68FD935BBF042CB3AB /* Build configuration list for PBXNativeTarget "HyzerApp" */;
+			buildPhases = (
+				16020A595ADF2F9CCCD0663C /* SwiftLint */,
+				94DABEC6A227F16C27A42045 /* Sources */,
+				B0B70AD576A9F10E00126197 /* Resources */,
+				479F635B1ECE2BF3B6A1F778 /* Frameworks */,
+				3F833405D7E65D94AB9E0401 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				95C7E0303FB76D67CBB1B791 /* PBXTargetDependency */,
+			);
+			name = HyzerApp;
+			packageProductDependencies = (
+				BAC383C18DE2169D84F62B75 /* HyzerKit */,
+			);
+			productName = HyzerApp;
+			productReference = A0348F5FC211306493C34EDC /* HyzerApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		657812DB09CD5C9EB0CBC179 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+			};
+			buildConfigurationList = 7695FBD39CF0233934147071 /* Build configuration list for PBXProject "HyzerApp" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = C431EC029275A66FFCED7A9A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6D6E64350F09E1FC3F6A5091 /* XCLocalSwiftPackageReference "HyzerKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E8413A3E7DC7ED336AB58FB1 /* HyzerApp */,
+				296984D3E617E4E2782F619D /* HyzerAppTests */,
+				A67AFF364CE9767F277A798B /* HyzerWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B0B70AD576A9F10E00126197 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5827D9E4DC7FC42B10CF812A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E6FE4BA6B2FFEAF341A878CB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BED316BD11BE024B8F9B7B12 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		16020A595ADF2F9CCCD0663C /* SwiftLint */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = SwiftLint;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint > /dev/null; then\n  swiftlint\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		383C7831837D4DE5627DF1C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A96BC87130D06BB117DA9903 /* OnboardingViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		94DABEC6A227F16C27A42045 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43AA274D5D9454EBF1D658F2 /* AppServices.swift in Sources */,
+				824CB3E7C4FE4793E135E5B0 /* ContentView.swift in Sources */,
+				E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */,
+				D2EF055D37B19C14B5DEF295 /* HyzerApp.swift in Sources */,
+				A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */,
+				AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E335B6D3E743C5A0533DC391 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8C3A37E858EC8BF31CCE054B /* HyzerWatchApp.swift in Sources */,
+				70D0955366D0881623788723 /* WatchRootView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		95C7E0303FB76D67CBB1B791 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A67AFF364CE9767F277A798B /* HyzerWatch */;
+			targetProxy = 82F819555AE4D5EA40088ED0 /* PBXContainerItemProxy */;
+		};
+		A8729983A693D02DF68779B4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E8413A3E7DC7ED336AB58FB1 /* HyzerApp */;
+			targetProxy = C63B00B52A74D0AD198A3C04 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0B771D5A876D6A319640E4F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = HyzerApp/App/HyzerApp.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		24EC46CDB12638E516D6F904 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HyzerApp.app/HyzerApp";
+			};
+			name = Release;
+		};
+		32C7E50D665B943C24C30B67 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_WKWatchKitApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+				WK_COMPANION_APP_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp;
+			};
+			name = Debug;
+		};
+		6B035714A2D397555BC4E568 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HyzerApp.app/HyzerApp";
+			};
+			name = Debug;
+		};
+		7BA6B1247C2B6FC607CE5CDB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		C6683A42EBAAFDB6C3FEEB29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_WKWatchKitApp = YES;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+				WK_COMPANION_APP_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp;
+			};
+			name = Release;
+		};
+		C9F6B65200F97B960263FCBE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = HyzerApp/App/HyzerApp.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E334912A3B84ACB4B96BCEE1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		063D1E68FD935BBF042CB3AB /* Build configuration list for PBXNativeTarget "HyzerApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C9F6B65200F97B960263FCBE /* Debug */,
+				0B771D5A876D6A319640E4F3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1899DF5653244A3759627B45 /* Build configuration list for PBXNativeTarget "HyzerAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B035714A2D397555BC4E568 /* Debug */,
+				24EC46CDB12638E516D6F904 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7695FBD39CF0233934147071 /* Build configuration list for PBXProject "HyzerApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7BA6B1247C2B6FC607CE5CDB /* Debug */,
+				E334912A3B84ACB4B96BCEE1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9B375164C83A3C80AD983B5E /* Build configuration list for PBXNativeTarget "HyzerWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				32C7E50D665B943C24C30B67 /* Debug */,
+				C6683A42EBAAFDB6C3FEEB29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6D6E64350F09E1FC3F6A5091 /* XCLocalSwiftPackageReference "HyzerKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = HyzerKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6AEC89D27BF2CC224C8D55BB /* HyzerKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HyzerKit;
+		};
+		BAC383C18DE2169D84F62B75 /* HyzerKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HyzerKit;
+		};
+		FBF7E3B49360BEFE78202833 /* HyzerKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HyzerKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 657812DB09CD5C9EB0CBC179 /* Project object */;
+}
