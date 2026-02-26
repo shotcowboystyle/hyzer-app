@@ -1,6 +1,6 @@
 # Story 1.1: App Shell, Design System & Display Name Onboarding
 
-Status: review
+Status: done
 
 ## Story
 
