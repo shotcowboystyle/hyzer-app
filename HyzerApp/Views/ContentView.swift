@@ -6,7 +6,7 @@ import HyzerKit
 /// - No Player → `OnboardingView`
 /// - Player exists → `HomeView`
 struct ContentView: View {
-    @Query private var players: [Player]
+    @Query(sort: \Player.createdAt) private var players: [Player]
 
     var body: some View {
         if let player = players.first {

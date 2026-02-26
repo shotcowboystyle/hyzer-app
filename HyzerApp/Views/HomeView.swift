@@ -11,7 +11,7 @@ struct HomeView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: SpacingTokens.lg) {
-                Text("Hey, \(player.displayName)!")
+                Text("Hey, \(player.displayName.isEmpty ? "Player" : player.displayName)!")
                     .font(TypographyTokens.h1)
                     .foregroundStyle(Color.textPrimary)
 

@@ -27,7 +27,7 @@ struct OnboardingView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, SpacingTokens.lg)
 
-                TextField("", text: $viewModel.displayName)
+                TextField("Your name", text: $viewModel.displayName)
                     .font(TypographyTokens.h2)
                     .foregroundStyle(Color.textPrimary)
                     .tint(Color.accentPrimary)
@@ -46,12 +46,18 @@ struct OnboardingView: View {
                     }
                     .accessibilityLabel("Display name. Enter the name your friends will see.")
 
+                if viewModel.isOverMaxLength {
+                    Text("\(OnboardingViewModel.maxDisplayNameLength) character limit")
+                        .font(TypographyTokens.caption)
+                        .foregroundStyle(Color.destructive)
+                }
+
                 Button(action: saveAndContinue) {
                     Text("Continue")
                         .font(TypographyTokens.h3)
                         .foregroundStyle(Color.backgroundPrimary)
                         .frame(maxWidth: .infinity)
-                        .frame(height: SpacingTokens.minimumTouchTarget + SpacingTokens.sm)
+                        .frame(minHeight: SpacingTokens.minimumTouchTarget)
                         .background(
                             viewModel.canContinue ? Color.accentPrimary : Color.textSecondary
                         )
@@ -66,6 +72,14 @@ struct OnboardingView: View {
         }
         .onAppear {
             isTextFieldFocused = true
+        }
+        .alert("Unable to Save", isPresented: .init(
+            get: { viewModel.saveError != nil },
+            set: { if !$0 { viewModel.saveError = nil } }
+        )) {
+            Button("Try Again") { saveAndContinue() }
+        } message: {
+            Text("Your profile couldn't be saved. Please try again.")
         }
     }
 

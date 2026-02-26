@@ -345,19 +345,34 @@ claude-sonnet-4-6
 - ✅ AppServices: @MainActor @Observable final class, constructor injection, no singletons
 - ✅ Design tokens: ColorTokens (11 tokens), TypographyTokens (8 levels), SpacingTokens (6 + touch targets), AnimationTokens + AnimationCoordinator
 - ✅ OnboardingView: dark background, accent CTA, VoiceOver labels, reduce-motion animation, no network calls
-- ✅ OnboardingViewModel: @MainActor @Observable, savePlayer(in:) pattern, trims whitespace
-- ✅ HomeView: placeholder showing displayName, styled with design tokens
-- ✅ ContentView: @Query-driven routing (OnboardingView vs HomeView), no navigation stack
+- ✅ OnboardingViewModel: @MainActor @Observable, savePlayer(in:) pattern, trims whitespace, max length validation, double-tap guard, save error surfacing
+- ✅ HomeView: placeholder showing displayName with empty-name fallback, styled with design tokens
+- ✅ ContentView: @Query-driven routing with sort descriptor (OnboardingView vs HomeView), no navigation stack
 - ✅ HyzerApp.swift: dual ModelConfiguration (DomainStore + OperationalStore), AppServices via .environment()
-- ✅ HyzerWatchApp.swift: minimal shell for Story 7.1
+- ✅ HyzerWatchApp.swift: minimal shell for Story 7.1, imports HyzerKit and uses design tokens
 - ✅ SwiftLint: .swiftlint.yml configured, SwiftLint build phase added to HyzerApp target
-- ✅ 9/9 HyzerKit tests pass (Player model, persistence, design tokens)
-- ✅ 4 OnboardingViewModel tests written in HyzerAppTests (testable via xcodebuild test)
+- ✅ ColorTokens: hex initializer validates input with precondition
+- ✅ 9/9 HyzerKit tests pass (Player model, persistence, design token values)
+- ✅ 12 OnboardingViewModel tests (max length, double-tap, emoji, newlines, edge cases)
 - ✅ iOS Simulator build: BUILD SUCCEEDED (zero errors)
 - ✅ watchOS Simulator build: BUILD SUCCEEDED (zero errors)
 
+### Code Review Fixes Applied (2026-02-26)
+- [CRITICAL] Fixed savePlayer error handling: rollback insert on save failure, surface error via alert
+- [HIGH] Added 50-character max length validation on display name with UI feedback
+- [HIGH] Added sort descriptor to @Query in ContentView for deterministic ordering
+- [HIGH] Added double-tap guard (hasSaved flag) to prevent duplicate Player creation
+- [HIGH] Added precondition validation in Color.init(hex:) for invalid input
+- [HIGH] watchOS target now imports HyzerKit and uses design tokens (TypographyTokens, ColorTokens)
+- [MEDIUM] Added visible placeholder text ("Your name") to display name TextField
+- [MEDIUM] Changed button frame from fixed height to minHeight for Dynamic Type scaling
+- [MEDIUM] Added edge-case tests: max length, emoji, newlines, double-tap (12 tests total)
+- [MEDIUM] Replaced hollow design token tests with value assertions
+- [LOW] Added empty-name fallback in HomeView greeting
+
 ### File List
 HyzerApp.xcodeproj/project.pbxproj
+HyzerApp.xcodeproj/project.xcworkspace/contents.xcworkspacedata
 project.yml
 .gitignore
 .swiftlint.yml

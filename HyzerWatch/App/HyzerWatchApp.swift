@@ -1,4 +1,5 @@
 import SwiftUI
+import HyzerKit
 
 @main
 struct HyzerWatchApp: App {

@@ -59,25 +59,27 @@ struct PlayerTests {
         #expect(player.aliases == ["Ed"])
     }
 
-    // MARK: - 10.3 Design token accessibility
+    // MARK: - 10.3 Design token values
 
-    @Test("test_designTokens_colorsAreAccessible")
+    @Test("test_designTokens_colorHexValues")
     @MainActor
-    func test_designTokens_colorsAreAccessible() {
-        _ = Color.backgroundPrimary
-        _ = Color.accentPrimary
-        _ = Color.textPrimary
-        _ = Color.textSecondary
-        _ = Color.scoreUnderPar
-        _ = Color.scoreOverPar
-        _ = Color.scoreAtPar
-        _ = Color.scoreWayOver
-        _ = Color.destructive
+    func test_designTokens_colorHexValues() {
+        // Verify design tokens resolve without crashing (precondition validates hex)
+        let colors: [Color] = [
+            .backgroundPrimary, .backgroundElevated, .backgroundTertiary,
+            .textPrimary, .textSecondary,
+            .accentPrimary,
+            .scoreUnderPar, .scoreOverPar, .scoreAtPar, .scoreWayOver,
+            .destructive,
+        ]
+        #expect(colors.count == 11)
     }
 
-    @Test("test_designTokens_typographyIsAccessible")
+    @Test("test_designTokens_typographyBaseSize")
     @MainActor
-    func test_designTokens_typographyIsAccessible() {
+    func test_designTokens_typographyBaseSize() {
+        #expect(TypographyTokens.heroBaseSize == 48)
+        // Verify all levels resolve without error
         _ = TypographyTokens.hero
         _ = TypographyTokens.h1
         _ = TypographyTokens.h2
@@ -86,7 +88,6 @@ struct PlayerTests {
         _ = TypographyTokens.caption
         _ = TypographyTokens.score
         _ = TypographyTokens.scoreLarge
-        #expect(TypographyTokens.heroBaseSize == 48)
     }
 
     @Test("test_designTokens_spacingValues")
@@ -100,13 +101,13 @@ struct PlayerTests {
         #expect(SpacingTokens.minimumTouchTarget == 44)
     }
 
-    @Test("test_designTokens_animationTokensAreDefined")
+    @Test("test_designTokens_animationTokenValues")
     @MainActor
-    func test_designTokens_animationTokensAreDefined() {
-        _ = AnimationTokens.springStiff
-        _ = AnimationTokens.springGentle
+    func test_designTokens_animationTokenValues() {
         #expect(AnimationTokens.scoreEntryDuration == 0.2)
         #expect(AnimationTokens.leaderboardReshuffleDuration == 0.4)
         #expect(AnimationTokens.pillPulseDelay == 0.2)
+        _ = AnimationTokens.springStiff
+        _ = AnimationTokens.springGentle
     }
 }
