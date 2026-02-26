@@ -17,31 +17,78 @@ command = tool_input.get("command", "")
 if tool_name != "Bash" or "git push" not in command:
     sys.exit(0)
 
-# Get current branch
-try:
-    current_branch = subprocess.check_output(
-        ["git", "branch", "--show-current"],
-        stderr=subprocess.DEVNULL,
-        text=True
-    ).strip()
-except:
-    current_branch = ""
-
-# Check if pushing to main or develop
+PROTECTED = {"main", "develop"}
 push_cmd = command
 is_force_push = "--force" in push_cmd or "-f" in push_cmd
 
-# Check if command or current branch targets protected branches
-targets_protected = (
-    "origin main" in push_cmd or
-    "origin develop" in push_cmd or
-    current_branch in ["main", "develop"]
-)
+# ------------------------------------------------------------------
+# Determine the push destination branch.
+#
+# Strategy: parse the explicit branch from the push command first.
+# Falling back to `git branch --show-current` is unreliable in git
+# worktrees because the hook always runs in $CLAUDE_PROJECT_DIR (the
+# main repo), which may be on a different branch than the worktree.
+# ------------------------------------------------------------------
 
-# Block direct push to main/develop (unless force push which is already dangerous)
-if targets_protected and not is_force_push:
-    if current_branch in ["main", "develop"] or "origin main" in push_cmd or "origin develop" in push_cmd:
-        reason = f"""❌ Direct push to main/develop is not allowed!
+def extract_explicit_branch(cmd: str) -> str | None:
+    """Return the explicit destination branch from a git push command, or None."""
+    tokens = cmd.split()
+    # Strip git push flags and find positional args after "push"
+    try:
+        push_idx = next(i for i, t in enumerate(tokens) if t == "push")
+    except StopIteration:
+        return None
+
+    positional = []
+    skip_next = False
+    for token in tokens[push_idx + 1:]:
+        if skip_next:
+            skip_next = False
+            continue
+        # Flags that consume a following value
+        if token in ("-u", "--set-upstream", "--receive-pack", "--repo"):
+            skip_next = True
+            continue
+        if token.startswith("-"):
+            continue
+        positional.append(token)
+
+    # positional[0] = remote, positional[1] = refspec (branch or src:dst)
+    if len(positional) >= 2:
+        refspec = positional[1]
+        # Handle src:dst — we care about the destination (rhs)
+        dst = refspec.split(":")[-1] if ":" in refspec else refspec
+        # Strip refs/heads/ prefix if present
+        return dst.removeprefix("refs/heads/")
+
+    return None
+
+
+explicit_branch = extract_explicit_branch(push_cmd)
+
+# Explicit push to a protected branch is always blocked.
+if explicit_branch in PROTECTED or "origin main" in push_cmd or "origin develop" in push_cmd:
+    is_pushing_to_protected = True
+elif explicit_branch is not None:
+    # Explicit non-protected branch — allow regardless of what the main
+    # repo's HEAD says (handles git worktrees on story/feature branches).
+    is_pushing_to_protected = False
+else:
+    # No explicit branch: will push to the tracking branch.
+    # Fall back to reading the current branch from the repo.
+    try:
+        current_branch = subprocess.check_output(
+            ["git", "branch", "--show-current"],
+            stderr=subprocess.DEVNULL,
+            text=True
+        ).strip()
+    except Exception:
+        current_branch = ""
+    is_pushing_to_protected = current_branch in PROTECTED
+
+if is_pushing_to_protected and not is_force_push:
+    target = explicit_branch or "main/develop"
+    reason = f"""❌ Direct push to main/develop is not allowed!
 
 Protected branches:
   - main (production)
@@ -49,7 +96,7 @@ Protected branches:
 
 Git Flow workflow:
   1. Create a feature branch:
-     /feature <name>
+     git checkout -b feature/<name>
 
   2. Make your changes and commit
 
@@ -68,19 +115,19 @@ For releases:
 For hotfixes:
   /hotfix <name> → PR → /finish
 
-Current branch: {current_branch}
+Target: {target}
 
 💡 Use feature/release/hotfix branches instead of pushing directly to main/develop."""
 
-        output = {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "deny",
-                "permissionDecisionReason": reason
-            }
+    output = {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": reason
         }
-        print(json.dumps(output))
-        sys.exit(0)
+    }
+    print(json.dumps(output))
+    sys.exit(0)
 
 # Allow the command
 sys.exit(0)
