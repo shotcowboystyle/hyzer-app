@@ -1,0 +1,49 @@
+# HyzerApp SwiftLint configuration
+
+included:
+  - HyzerApp
+  - HyzerWatch
+  - HyzerKit/Sources
+
+excluded:
+  - .build
+  - DerivedData
+  - HyzerKit/Tests
+
+opt_in_rules:
+  - force_unwrapping
+  - unused_import
+  - identifier_name
+  - type_name
+  - empty_count
+  - trailing_newline
+
+rules:
+  force_cast:
+    severity: warning
+  force_try:
+    severity: warning
+  force_unwrapping:
+    severity: warning
+  unused_import:
+    severity: warning
+  identifier_name:
+    min_length: 2
+    max_length: 60
+    excluded:
+      - id
+      - db
+  type_name:
+    min_length: 3
+    max_length: 60
+  line_length:
+    warning: 120
+    error: 160
+    ignores_comments: true
+    ignores_urls: true
+  function_body_length:
+    warning: 50
+    error: 100
+  file_length:
+    warning: 400
+    error: 600
