@@ -5,12 +5,10 @@ import SwiftData
 ///
 /// Courses are loaded from `SeededCourses.json` in the HyzerKit bundle — no network required.
 /// The seeder is idempotent: it is a no-op if seeded courses already exist.
+@MainActor
 public enum CourseSeeder {
 
     /// Seeds courses from the bundle JSON if no seeded courses exist yet.
-    ///
-    /// Must be called from the main actor because `ModelContext` is main-actor-isolated.
-    @MainActor
     public static func seedIfNeeded(in context: ModelContext) throws {
         let descriptor = FetchDescriptor<Course>(
             predicate: #Predicate { $0.isSeeded == true }

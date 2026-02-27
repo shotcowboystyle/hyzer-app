@@ -20,20 +20,32 @@ struct CourseDetailView: View {
     }
 
     var body: some View {
-        List(holes) { hole in
-            HStack {
-                Text("Hole \(hole.number)")
-                    .font(TypographyTokens.body)
-                    .foregroundStyle(Color.textPrimary)
-                Spacer()
-                Text("Par \(hole.par)")
-                    .font(TypographyTokens.caption)
-                    .foregroundStyle(Color.textSecondary)
+        Group {
+            if holes.isEmpty {
+                VStack {
+                    Text("No holes found for this course.")
+                        .font(TypographyTokens.body)
+                        .foregroundStyle(Color.textSecondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.backgroundPrimary)
+            } else {
+                List(holes) { hole in
+                    HStack {
+                        Text("Hole \(hole.number)")
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(Color.textPrimary)
+                        Spacer()
+                        Text("Par \(hole.par)")
+                            .font(TypographyTokens.caption)
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                    .listRowBackground(Color.backgroundElevated)
+                }
+                .scrollContentBackground(.hidden)
+                .background(Color.backgroundPrimary)
             }
-            .listRowBackground(Color.backgroundElevated)
         }
-        .scrollContentBackground(.hidden)
-        .background(Color.backgroundPrimary)
         .navigationTitle(course.name)
         .navigationBarTitleDisplayMode(.large)
     }
