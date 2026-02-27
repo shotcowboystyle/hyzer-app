@@ -20,16 +20,17 @@ struct HyzerApp: App {
                 .environment(appServices)
                 .modelContainer(appServices.modelContainer)
                 .task { await appServices.resolveICloudIdentity() }
+                .task { await appServices.seedCoursesIfNeeded() }
         }
     }
 
     // MARK: - Private
 
     private static func makeModelContainer() -> ModelContainer {
-        // Domain store: Player (and future: Round, Course, Hole, ScoreEvent) — synced via manual CloudKit
+        // Domain store: Player, Course, Hole (and future: Round, ScoreEvent) — synced via manual CloudKit
         let domainConfig = ModelConfiguration(
             "DomainStore",
-            schema: Schema([Player.self])
+            schema: Schema([Player.self, Course.self, Hole.self])
         )
         // Operational store: future SyncMetadata — local only, never syncs
         let operationalConfig = ModelConfiguration(
@@ -39,7 +40,7 @@ struct HyzerApp: App {
         )
         do {
             return try ModelContainer(
-                for: Player.self,
+                for: Player.self, Course.self, Hole.self,
                 configurations: domainConfig, operationalConfig
             )
         } catch {
