@@ -16,7 +16,7 @@ stories:
     epic: 1
   "2.1":
     title: "Create a New Course"
-    status: ready-for-dev
+    status: in-progress
     epic: 2
   "2.2":
     title: "Edit and Delete Courses"
