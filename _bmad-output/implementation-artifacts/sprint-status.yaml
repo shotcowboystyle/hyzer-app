@@ -8,7 +8,7 @@ stories:
     epic: 1
   "1.2":
     title: "iCloud Identity Association"
-    status: review
+    status: done
     epic: 1
   "1.3":
     title: "Pre-Seeded Courses & Home Screen"

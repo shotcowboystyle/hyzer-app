@@ -1,6 +1,6 @@
 # Story 1.2: iCloud Identity Association
 
-Status: review
+Status: done
 
 ## Story
 
