@@ -20,7 +20,7 @@ stories:
     epic: 2
   "2.2":
     title: "Edit and Delete Courses"
-    status: ready-for-dev
+    status: in-progress
     epic: 2
   "3.1":
     title: "Round Creation & Player Setup"
