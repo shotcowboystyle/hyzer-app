@@ -1,6 +1,6 @@
 # Story 2.2: Edit and Delete Courses
 
-Status: review
+Status: done
 
 ## Story
 
