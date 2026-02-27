@@ -54,6 +54,7 @@ targets:
           fi
         name: SwiftLint
         showEnvVars: false
+        basedOnDependencyAnalysis: false
 
   HyzerWatch:
     type: application

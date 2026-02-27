@@ -2,11 +2,6 @@
   "images": [
     {
       "idiom": "watch",
-      "scale": "2x",
-      "size": "44x44"
-    },
-    {
-      "idiom": "watch",
       "role": "appLauncher",
       "scale": "2x",
       "size": "44x44",
