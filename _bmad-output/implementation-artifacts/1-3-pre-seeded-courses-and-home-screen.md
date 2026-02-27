@@ -1,6 +1,6 @@
 # Story 1.3: Pre-Seeded Courses & Home Screen
 
-Status: review
+Status: done
 
 ## Story
 
