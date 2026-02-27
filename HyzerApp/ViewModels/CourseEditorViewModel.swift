@@ -90,9 +90,14 @@ final class CourseEditorViewModel {
 
     /// Deletes a `Course` and all associated `Hole` records from SwiftData.
     ///
-    /// Holes must be passed in explicitly because there is no `@Relationship` cascade
-    /// (flat `courseID` foreign key per Amendment A8).
-    func deleteCourse(_ course: Course, holes: [Hole], in context: ModelContext) throws {
+    /// Fetches holes internally (matching `saveCourse` pattern) because there is
+    /// no `@Relationship` cascade (flat `courseID` foreign key per Amendment A8).
+    static func deleteCourse(_ course: Course, in context: ModelContext) throws {
+        let courseID = course.id
+        let descriptor = FetchDescriptor<Hole>(
+            predicate: #Predicate { $0.courseID == courseID }
+        )
+        let holes = try context.fetch(descriptor)
         for hole in holes {
             context.delete(hole)
         }

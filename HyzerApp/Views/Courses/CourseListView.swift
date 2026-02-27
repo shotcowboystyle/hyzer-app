@@ -92,12 +92,7 @@ struct CourseListView: View {
 
     private func performDelete(_ course: Course) {
         do {
-            let courseID = course.id
-            let descriptor = FetchDescriptor<Hole>(
-                predicate: #Predicate { $0.courseID == courseID }
-            )
-            let holes = try modelContext.fetch(descriptor)
-            try CourseEditorViewModel().deleteCourse(course, holes: holes, in: modelContext)
+            try CourseEditorViewModel.deleteCourse(course, in: modelContext)
         } catch {
             deleteError = error
             isShowingDeleteError = true

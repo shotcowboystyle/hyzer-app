@@ -333,16 +333,12 @@ struct CourseEditorViewModelTests {
 
         let course = Course(name: "To Delete", holeCount: 9, isSeeded: false)
         context.insert(course)
-        var holes: [Hole] = []
         for i in 1...9 {
-            let hole = Hole(courseID: course.id, number: i, par: 3)
-            context.insert(hole)
-            holes.append(hole)
+            context.insert(Hole(courseID: course.id, number: i, par: 3))
         }
         try context.save()
 
-        let vm = CourseEditorViewModel()
-        try vm.deleteCourse(course, holes: holes, in: context)
+        try CourseEditorViewModel.deleteCourse(course, in: context)
 
         let remainingCourses = try context.fetch(FetchDescriptor<Course>())
         let remainingHoles = try context.fetch(FetchDescriptor<Hole>())
@@ -361,11 +357,8 @@ struct CourseEditorViewModelTests {
         context.insert(courseA)
         context.insert(courseB)
 
-        var holesA: [Hole] = []
         for i in 1...9 {
-            let hole = Hole(courseID: courseA.id, number: i, par: 3)
-            context.insert(hole)
-            holesA.append(hole)
+            context.insert(Hole(courseID: courseA.id, number: i, par: 3))
         }
         let courseBID = courseB.id
         for i in 1...9 {
@@ -373,8 +366,7 @@ struct CourseEditorViewModelTests {
         }
         try context.save()
 
-        let vm = CourseEditorViewModel()
-        try vm.deleteCourse(courseA, holes: holesA, in: context)
+        try CourseEditorViewModel.deleteCourse(courseA, in: context)
 
         let remainingCourses = try context.fetch(FetchDescriptor<Course>())
         #expect(remainingCourses.count == 1)
@@ -383,5 +375,36 @@ struct CourseEditorViewModelTests {
         let remainingHoles = try context.fetch(FetchDescriptor<Hole>())
         #expect(remainingHoles.count == 9)
         #expect(remainingHoles.allSatisfy { $0.courseID == courseBID })
+    }
+
+    // MARK: - Seeded course editing
+
+    @Test("saveCourse in edit mode on seeded course preserves isSeeded flag")
+    func test_saveCourse_editMode_seededCourse_preservesIsSeeded() throws {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
+        let context = ModelContext(container)
+
+        let course = Course(name: "Seeded Course", holeCount: 9, isSeeded: true)
+        context.insert(course)
+        for i in 1...9 {
+            context.insert(Hole(courseID: course.id, number: i, par: 3))
+        }
+        try context.save()
+
+        let courseID = course.id
+        let fetchedHoles = try context.fetch(FetchDescriptor<Hole>(
+            predicate: #Predicate { $0.courseID == courseID },
+            sortBy: [SortDescriptor(\Hole.number)]
+        ))
+
+        let vm = CourseEditorViewModel(course: course, holes: fetchedHoles)
+        vm.courseName = "Renamed Seeded"
+        try vm.saveCourse(in: context)
+
+        let courses = try context.fetch(FetchDescriptor<Course>())
+        #expect(courses.count == 1)
+        #expect(courses[0].name == "Renamed Seeded")
+        #expect(courses[0].isSeeded)
     }
 }

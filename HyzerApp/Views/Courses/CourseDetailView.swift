@@ -56,6 +56,7 @@ struct CourseDetailView: View {
                 } label: {
                     Image(systemName: "pencil")
                 }
+                .accessibilityLabel("Edit Course")
                 .tint(Color.accentPrimary)
             }
         }

@@ -51,8 +51,8 @@ So that I can keep my course list accurate and up to date.
   - [x] 1.5 Hole reconciliation on edit: delete holes beyond new `holeCount`, update par values on existing holes, insert new holes if `holeCount` increased
 
 - [x] Task 2: Add `deleteCourse(_:in:)` to `CourseEditorViewModel` (AC: 4)
-  - [x] 2.1 Method signature: `func deleteCourse(_ course: Course, holes: [Hole], in context: ModelContext) throws`
-  - [x] 2.2 Delete all `Hole` records for the course first, then delete the `Course`
+  - [x] 2.1 Method signature: `static func deleteCourse(_ course: Course, in context: ModelContext) throws` (fetches holes internally)
+  - [x] 2.2 Fetch all `Hole` records for the course, delete them, then delete the `Course`
   - [x] 2.3 Call `try context.save()`
 
 - [x] Task 3: Update `CourseEditorView` for edit mode (AC: 1, 2, 3)
@@ -330,7 +330,7 @@ claude-sonnet-4-6
 - `CourseEditorView` now accepts optional `course` and `holes` params via struct `init`; `@State` initialized conditionally; nav title is dynamic
 - `CourseDetailView` adds Edit toolbar button (pencil) + sheet presenting `CourseEditorView` in edit mode
 - `CourseListView` adds swipe-to-delete with `.swipeActions(edge:.trailing, allowsFullSwipe:false)`, `.confirmationDialog` with `presenting:` pattern, error alert on delete failure
-- 22 total tests in `CourseEditorViewModelTests` (14 original + 8 new edit/delete tests); SwiftLint clean
+- 21 total tests in `CourseEditorViewModelTests` (11 original + 10 new edit/delete/seeded tests); SwiftLint clean
 
 ### File List
 
