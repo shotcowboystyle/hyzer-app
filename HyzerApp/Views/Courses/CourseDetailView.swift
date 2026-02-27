@@ -4,11 +4,12 @@ import HyzerKit
 
 /// Read-only view showing a course's holes and pars.
 ///
-/// Editing is deferred to Epic 2.
+/// An Edit toolbar button opens `CourseEditorView` in edit mode as a sheet.
 struct CourseDetailView: View {
     let course: Course
 
     @Query private var holes: [Hole]
+    @State private var isShowingEditor = false
 
     init(course: Course) {
         self.course = course
@@ -48,5 +49,19 @@ struct CourseDetailView: View {
         }
         .navigationTitle(course.name)
         .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    isShowingEditor = true
+                } label: {
+                    Image(systemName: "pencil")
+                }
+                .accessibilityLabel("Edit Course")
+                .tint(Color.accentPrimary)
+            }
+        }
+        .sheet(isPresented: $isShowingEditor) {
+            CourseEditorView(course: course, holes: holes)
+        }
     }
 }

@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import HyzerKit
 
-/// Course creation form presented as a sheet.
+/// Course creation and editing form presented as a sheet.
 ///
 /// Uses `CourseEditorViewModel` for validation, par management, and saving.
 /// `ModelContext` is retrieved from the environment and passed to the VM at save time.
@@ -10,9 +10,17 @@ struct CourseEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    @State private var viewModel = CourseEditorViewModel()
+    @State private var viewModel: CourseEditorViewModel
     @State private var isShowingError = false
     @State private var saveError: Error?
+
+    init(course: Course? = nil, holes: [Hole] = []) {
+        if let course = course {
+            _viewModel = State(initialValue: CourseEditorViewModel(course: course, holes: holes))
+        } else {
+            _viewModel = State(initialValue: CourseEditorViewModel())
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -53,7 +61,7 @@ struct CourseEditorView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color.backgroundPrimary)
-            .navigationTitle("New Course")
+            .navigationTitle(viewModel.isEditing ? "Edit Course" : "New Course")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
