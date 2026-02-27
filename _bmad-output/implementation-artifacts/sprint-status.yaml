@@ -12,7 +12,7 @@ stories:
     epic: 1
   "1.3":
     title: "Pre-Seeded Courses & Home Screen"
-    status: not-started
+    status: ready-for-dev
     epic: 1
   "2.1":
     title: "Create a New Course"
