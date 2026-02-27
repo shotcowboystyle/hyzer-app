@@ -24,7 +24,7 @@ stories:
     epic: 2
   "3.1":
     title: "Round Creation & Player Setup"
-    status: in-progress
+    status: review
     epic: 3
   "3.2":
     title: "Hole Card Tap Scoring & ScoreEvent Creation"
