@@ -1,6 +1,6 @@
 # Story 2.1: Create a New Course
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -47,39 +47,39 @@ So that I can set up courses I play at that aren't pre-seeded.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `CourseEditorViewModel` (AC: 2, 3, 4, 5)
-  - [ ] 1.1 Create `HyzerApp/ViewModels/CourseEditorViewModel.swift` -- `@MainActor @Observable final class`
-  - [ ] 1.2 Properties: `courseName: String`, `holeCount: Int` (default 18), `holePars: [Int]` (array of par values, one per hole, all default 3)
-  - [ ] 1.3 Computed: `canSave: Bool` (name is non-empty after trimming)
-  - [ ] 1.4 Method: `setHoleCount(_ count: Int)` -- rebuilds `holePars` array (preserves existing values up to min of old/new count, fills new holes with par 3)
-  - [ ] 1.5 Method: `saveCourse(in context: ModelContext)` -- creates `Course` + `Hole` records, saves context
+- [x] Task 1: Create `CourseEditorViewModel` (AC: 2, 3, 4, 5)
+  - [x] 1.1 Create `HyzerApp/ViewModels/CourseEditorViewModel.swift` -- `@MainActor @Observable final class`
+  - [x] 1.2 Properties: `courseName: String`, `holeCount: Int` (default 18), `holePars: [Int]` (array of par values, one per hole, all default 3)
+  - [x] 1.3 Computed: `canSave: Bool` (name is non-empty after trimming)
+  - [x] 1.4 Method: `setHoleCount(_ count: Int)` -- rebuilds `holePars` array (preserves existing values up to min of old/new count, fills new holes with par 3)
+  - [x] 1.5 Method: `saveCourse(in context: ModelContext)` -- creates `Course` + `Hole` records, saves context
 
-- [ ] Task 2: Create `CourseEditorView` (AC: 1, 2, 3, 5)
-  - [ ] 2.1 Create `HyzerApp/Views/Courses/CourseEditorView.swift` -- presented as `.sheet`
-  - [ ] 2.2 Course name `TextField` with design tokens
-  - [ ] 2.3 Hole count segmented `Picker` (9 / 18)
-  - [ ] 2.4 Scrollable hole list with per-hole par `Picker` (range 2-6) or `Stepper`
-  - [ ] 2.5 Save button disabled when `!canSave`
-  - [ ] 2.6 Cancel button to dismiss without saving
-  - [ ] 2.7 Navigation bar: "Cancel" (leading), "New Course" title (center), "Save" (trailing)
+- [x] Task 2: Create `CourseEditorView` (AC: 1, 2, 3, 5)
+  - [x] 2.1 Create `HyzerApp/Views/Courses/CourseEditorView.swift` -- presented as `.sheet`
+  - [x] 2.2 Course name `TextField` with design tokens
+  - [x] 2.3 Hole count segmented `Picker` (9 / 18)
+  - [x] 2.4 Scrollable hole list with per-hole par `Picker` (range 2-6) or `Stepper`
+  - [x] 2.5 Save button disabled when `!canSave`
+  - [x] 2.6 Cancel button to dismiss without saving
+  - [x] 2.7 Navigation bar: "Cancel" (leading), "New Course" title (center), "Save" (trailing)
 
-- [ ] Task 3: Wire CourseEditorView into CourseListView (AC: 1)
-  - [ ] 3.1 Add `@State private var isShowingEditor = false` to `CourseListView`
-  - [ ] 3.2 Add `.toolbar { Button(action: { isShowingEditor = true }) { Image(systemName: "plus") } }` to course list
-  - [ ] 3.3 Wire existing "Add Course" empty state button to set `isShowingEditor = true`
-  - [ ] 3.4 Add `.sheet(isPresented: $isShowingEditor) { CourseEditorView() }` to the view
+- [x] Task 3: Wire CourseEditorView into CourseListView (AC: 1)
+  - [x] 3.1 Add `@State private var isShowingEditor = false` to `CourseListView`
+  - [x] 3.2 Add `.toolbar { Button(action: { isShowingEditor = true }) { Image(systemName: "plus") } }` to course list
+  - [x] 3.3 Wire existing "Add Course" empty state button to set `isShowingEditor = true`
+  - [x] 3.4 Add `.sheet(isPresented: $isShowingEditor) { CourseEditorView() }` to the view
 
-- [ ] Task 4: Write tests (AC: 2, 3, 4, 5)
-  - [ ] 4.1 Create `HyzerAppTests/CourseEditorViewModelTests.swift`
-  - [ ] 4.2 Test: `canSave` is false when name is empty
-  - [ ] 4.3 Test: `canSave` is false when name is whitespace-only
-  - [ ] 4.4 Test: `canSave` is true when name has content
-  - [ ] 4.5 Test: `setHoleCount(9)` produces 9 par values all defaulting to 3
-  - [ ] 4.6 Test: `setHoleCount` preserves existing par values when shrinking from 18 to 9
-  - [ ] 4.7 Test: `setHoleCount` fills new holes with par 3 when expanding from 9 to 18
-  - [ ] 4.8 Test: `saveCourse` creates one Course with `isSeeded = false` and correct hole count
-  - [ ] 4.9 Test: `saveCourse` creates Hole records with correct `courseID`, `number`, and `par` values
-  - [ ] 4.10 Verify existing tests still pass (17 HyzerKit + 12 HyzerApp = 29 total pre-existing)
+- [x] Task 4: Write tests (AC: 2, 3, 4, 5)
+  - [x] 4.1 Create `HyzerAppTests/CourseEditorViewModelTests.swift`
+  - [x] 4.2 Test: `canSave` is false when name is empty
+  - [x] 4.3 Test: `canSave` is false when name is whitespace-only
+  - [x] 4.4 Test: `canSave` is true when name has content
+  - [x] 4.5 Test: `setHoleCount(9)` produces 9 par values all defaulting to 3
+  - [x] 4.6 Test: `setHoleCount` preserves existing par values when shrinking from 18 to 9
+  - [x] 4.7 Test: `setHoleCount` fills new holes with par 3 when expanding from 9 to 18
+  - [x] 4.8 Test: `saveCourse` creates one Course with `isSeeded = false` and correct hole count
+  - [x] 4.9 Test: `saveCourse` creates Hole records with correct `courseID`, `number`, and `par` values
+  - [x] 4.10 Verify existing tests still pass (17 HyzerKit pass; HyzerApp tests require iOS simulator, pre-existing simulator crash on this machine unrelated to Story 2.1)
 
 ## Dev Notes
 
@@ -338,8 +338,28 @@ Key learnings from the most recent story in the codebase:
 
 ### Agent Model Used
 
+claude-sonnet-4-6
+
 ### Debug Log References
+
+- Build succeeded with `xcodebuild build -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'generic/platform=iOS Simulator'`
+- 17/17 HyzerKit tests pass via `swift test --package-path HyzerKit`
+- SwiftLint passes with zero errors or warnings on new files
+- HyzerApp test runner crashes on this machine with a pre-existing simulator issue (OperationalStore fatal error on main branch too — not caused by Story 2.1)
 
 ### Completion Notes List
 
+- Created `CourseEditorViewModel` following the `OnboardingViewModel` pattern: `@MainActor @Observable final class`, `ModelContext` passed at call time not via constructor
+- `setHoleCount` preserves existing par values up to the old count, fills new slots with par 3
+- `saveCourse` creates `Course` (isSeeded: false) + one `Hole` per par entry using flat `courseID` foreign key per Amendment A8
+- Created `CourseEditorView` as a `NavigationStack`-wrapped `Form` sheet with segmented Picker (9/18), per-hole par Picker (2–6), Cancel/Save toolbar items
+- Used custom `Binding<Int>` for hole count to route changes through `setHoleCount` so `holePars` array stays in sync
+- Wired `CourseEditorView` into `CourseListView`: `@State isShowingEditor`, toolbar "+" button, empty-state "Add Course" button, `.sheet` modifier
+- 10 tests written covering all canSave, setHoleCount, and saveCourse scenarios
+
 ### File List
+
+- `HyzerApp/ViewModels/CourseEditorViewModel.swift` (new)
+- `HyzerApp/Views/Courses/CourseEditorView.swift` (new)
+- `HyzerApp/Views/Courses/CourseListView.swift` (modified)
+- `HyzerAppTests/CourseEditorViewModelTests.swift` (new)
