@@ -7,6 +7,7 @@ import HyzerKit
 /// Uses `@Query` for reactive SwiftData updates — no ViewModel needed (Story 1.3 dev notes).
 struct CourseListView: View {
     @Query(sort: \Course.name) private var courses: [Course]
+    @State private var isShowingEditor = false
 
     var body: some View {
         Group {
@@ -18,6 +19,18 @@ struct CourseListView: View {
         }
         .navigationTitle("Courses")
         .background(Color.backgroundPrimary)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    isShowingEditor = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $isShowingEditor) {
+            CourseEditorView()
+        }
     }
 
     // MARK: - Private
@@ -40,7 +53,7 @@ struct CourseListView: View {
                 .foregroundStyle(Color.textSecondary)
                 .multilineTextAlignment(.center)
             Button("Add Course") {
-                // Placeholder — Epic 2
+                isShowingEditor = true
             }
             .font(TypographyTokens.body)
             .foregroundStyle(Color.accentPrimary)
