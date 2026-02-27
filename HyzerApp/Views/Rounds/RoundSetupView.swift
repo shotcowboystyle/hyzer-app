@@ -82,6 +82,8 @@ struct RoundSetupView: View {
                     .onTapGesture {
                         viewModel.selectedCourse = course
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("Select \(course.name), \(course.holeCount) holes")
                     .listRowBackground(Color.backgroundElevated)
                 }
             }
@@ -122,6 +124,8 @@ struct RoundSetupView: View {
                         viewModel.addPlayer(player)
                     }
                 }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(isAdded ? "Remove \(player.displayName) from round" : "Add \(player.displayName) to round")
                 .listRowBackground(Color.backgroundElevated)
             }
         } header: {

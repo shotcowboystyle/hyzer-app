@@ -42,6 +42,7 @@ final class RoundSetupViewModel {
         let trimmed = guestNameInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let name = String(trimmed.prefix(50))
+        guard !guestNames.contains(name) else { return }
         guestNames.append(name)
         guestNameInput = ""
     }

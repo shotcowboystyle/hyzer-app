@@ -11,6 +11,13 @@ import SwiftData
 /// Player list immutability (FR13): After `start()` is called the round is active.
 /// There are no public mutating methods for `playerIDs` or `guestNames` — these are set
 /// at init time and frozen when `start()` transitions status to "active".
+///
+/// **Known limitation:** `playerIDs` and `guestNames` are `public var` because SwiftData's
+/// `@Model` macro requires full read/write access for persistence and fetch operations.
+/// `private(set)` is incompatible with `@Model` property synthesis. Type-level enforcement
+/// of post-start immutability is deferred to Story 3.5 (`RoundLifecycleManager`).
+/// Until then, immutability is enforced by convention: only `RoundSetupViewModel` modifies
+/// these properties, and only during the "setup" phase before `start()` is called.
 @Model
 public final class Round {
     public var id: UUID = UUID()

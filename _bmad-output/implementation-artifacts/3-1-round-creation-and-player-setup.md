@@ -380,8 +380,24 @@ claude-sonnet-4-6
 - Created `RoundSetupView` using Form + `.searchable` for player search (client-side filter for ≤6 users). Course selection via tap, guest management with Add/Delete, summary section, error alert pattern matching `CourseEditorView`.
 - Updated `HomeView` Scoring tab: `@Query` detects active rounds, shows `RoundSetupView` sheet when none active, `ActiveRoundView` placeholder when one exists (Story 3.2 replaces).
 - `Round+Fixture.swift` matches the `Course+Fixture.swift` / `Player+Fixture.swift` pattern.
-- `RoundModelTests` (7 tests) and `RoundSetupViewModelTests` (12 tests) written using Swift Testing macros.
-- HyzerKit total: 24 tests pass (`swift test --package-path HyzerKit`). Build: `xcodebuild build-for-testing` succeeds.
+- `RoundModelTests` (7 tests) and `RoundSetupViewModelTests` (14 tests) written using Swift Testing macros.
+- HyzerKit total: 24 tests pass (`swift test --package-path HyzerKit`). Build: `xcodebuild build` succeeds.
+
+### Code Review (AI) — 2026-02-27
+
+**Reviewer:** claude-opus-4-6 (adversarial review)
+
+**Findings (4 MEDIUM, 3 LOW) — all resolved:**
+
+| ID | Severity | Finding | Resolution |
+|----|----------|---------|------------|
+| M1 | MEDIUM | `ForEach(guestNames, id: \.self)` — duplicate guest names cause SwiftUI identity conflicts | Added duplicate name guard in `addGuest()` |
+| M2 | MEDIUM | `ActiveRoundView` shows player count, not player names (AC 5 gap) | Added `@Query` for Players in `ScoringTabView`, resolve IDs to names |
+| M3 | MEDIUM | No accessibility annotations on interactive elements in new views | Added `.accessibilityLabel` and `.accessibilityAddTraits(.isButton)` to course/player rows |
+| M4 | MEDIUM | `playerIDs`/`guestNames` are `public var` — AC 6 type-level enforcement unmet | Documented as SwiftData platform limitation; deferred to Story 3.5 `RoundLifecycleManager` |
+| L1 | LOW | Test name `triggersPreconditionFailure` is misleading (test doesn't crash) | Renamed to `documentsInvariant` with clarified comments |
+| L2 | LOW | No test coverage for `removeGuest(at:)` | Added `test_removeGuest_removesAtIndex` |
+| L3 | LOW | Duplicate guest names within a round compound M1 | Resolved by M1 fix (duplicate guard) |
 
 ### File List
 

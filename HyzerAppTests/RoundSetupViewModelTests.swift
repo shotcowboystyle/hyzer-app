@@ -134,6 +134,29 @@ struct RoundSetupViewModelTests {
         #expect(vm.guestNameInput.isEmpty)
     }
 
+    // MARK: - removeGuest
+
+    @Test("removeGuest removes guest at specified index")
+    func test_removeGuest_removesAtIndex() {
+        let vm = RoundSetupViewModel()
+        vm.guestNames = ["Alice", "Bob", "Charlie"]
+
+        vm.removeGuest(at: IndexSet(integer: 1))
+
+        #expect(vm.guestNames == ["Alice", "Charlie"])
+    }
+
+    @Test("addGuest rejects duplicate guest name")
+    func test_addGuest_rejectsDuplicateName() {
+        let vm = RoundSetupViewModel()
+        vm.guestNameInput = "Alice"
+        vm.addGuest()
+        vm.guestNameInput = "Alice"
+        vm.addGuest()
+
+        #expect(vm.guestNames.count == 1)
+    }
+
     // MARK: - startRound
 
     @Test("startRound creates Round with correct courseID and organizerID")

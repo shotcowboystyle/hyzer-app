@@ -55,19 +55,18 @@ struct RoundModelTests {
 
     // MARK: - 7.4: start() on already-active round triggers precondition failure
 
-    @Test("start() on active round triggers precondition failure")
-    func test_start_onActiveRound_triggersPreconditionFailure() {
+    @Test("start() on active round documents invariant — precondition prevents double-start")
+    func test_start_onActiveRound_documentsInvariant() {
         let round = Round.fixture()
         round.start()
         #expect(round.isActive)
 
-        // Verify that calling start() again would fail the precondition.
-        // We test this by confirming the precondition message matches the known failure path.
-        // Direct precondition testing is via expectCrash — we verify the state guards instead.
-        // The precondition "status == setup" is enforced and testable via status inspection.
+        // After start(), the round is active and calling start() again would trigger
+        // `precondition(status == "setup")` — a fatal error in debug builds.
+        // Swift Testing cannot catch precondition failures (they terminate the process),
+        // so we verify the guard condition instead: status is no longer "setup".
         #expect(round.status == "active")
-        // Note: Calling round.start() again would crash in debug builds.
-        // This test documents the expected invariant state.
+        #expect(!round.isSetup)
     }
 
     // MARK: - 7.5: Round persists and fetches correctly in SwiftData (in-memory)
