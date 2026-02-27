@@ -32,6 +32,13 @@ struct CourseEditorViewModelTests {
         #expect(vm.canSave)
     }
 
+    @Test("canSave is true when name has leading/trailing whitespace around content")
+    func test_canSave_nameWithPaddedWhitespace_isTrue() {
+        let vm = CourseEditorViewModel()
+        vm.courseName = "  Maple Hill  "
+        #expect(vm.canSave)
+    }
+
     // MARK: - setHoleCount
 
     @Test("setHoleCount(9) produces 9 par values all defaulting to 3")
@@ -70,6 +77,22 @@ struct CourseEditorViewModelTests {
         }
     }
 
+    @Test("setHoleCount ignores invalid values like 0")
+    func test_setHoleCount_invalidValue_noChange() {
+        let vm = CourseEditorViewModel()
+        vm.setHoleCount(0)
+        #expect(vm.holeCount == 18)
+        #expect(vm.holePars.count == 18)
+    }
+
+    @Test("setHoleCount ignores values outside 9/18")
+    func test_setHoleCount_arbitraryValue_noChange() {
+        let vm = CourseEditorViewModel()
+        vm.setHoleCount(12)
+        #expect(vm.holeCount == 18)
+        #expect(vm.holePars.count == 18)
+    }
+
     // MARK: - saveCourse
 
     @Test("saveCourse creates one Course with isSeeded false and correct hole count")
@@ -81,7 +104,7 @@ struct CourseEditorViewModelTests {
         let vm = CourseEditorViewModel()
         vm.courseName = "Maple Hill"
         vm.setHoleCount(18)
-        vm.saveCourse(in: context)
+        try vm.saveCourse(in: context)
 
         let courses = try context.fetch(FetchDescriptor<Course>())
         #expect(courses.count == 1)
@@ -101,7 +124,7 @@ struct CourseEditorViewModelTests {
         vm.setHoleCount(9)
         vm.holePars[0] = 4
         vm.holePars[4] = 5
-        vm.saveCourse(in: context)
+        try vm.saveCourse(in: context)
 
         let courses = try context.fetch(FetchDescriptor<Course>())
         #expect(courses.count == 1)

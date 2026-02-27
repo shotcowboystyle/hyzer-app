@@ -11,6 +11,8 @@ struct CourseEditorView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var viewModel = CourseEditorViewModel()
+    @State private var isShowingError = false
+    @State private var saveError: Error?
 
     var body: some View {
         NavigationStack {
@@ -18,6 +20,11 @@ struct CourseEditorView: View {
                 Section("Course Info") {
                     TextField("Course Name", text: $viewModel.courseName)
                         .font(TypographyTokens.body)
+                        .onChange(of: viewModel.courseName) { _, newValue in
+                            if newValue.count > 100 {
+                                viewModel.courseName = String(newValue.prefix(100))
+                            }
+                        }
                     Picker("Holes", selection: holeCountBinding) {
                         Text("9").tag(9)
                         Text("18").tag(18)
@@ -59,6 +66,11 @@ struct CourseEditorView: View {
                         .foregroundStyle(viewModel.canSave ? Color.accentPrimary : Color.textSecondary)
                 }
             }
+            .alert("Unable to Save", isPresented: $isShowingError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(saveError?.localizedDescription ?? "An unknown error occurred.")
+            }
         }
     }
 
@@ -72,7 +84,12 @@ struct CourseEditorView: View {
     }
 
     private func save() {
-        viewModel.saveCourse(in: modelContext)
-        dismiss()
+        do {
+            try viewModel.saveCourse(in: modelContext)
+            dismiss()
+        } catch {
+            saveError = error
+            isShowingError = true
+        }
     }
 }

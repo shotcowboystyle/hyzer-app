@@ -25,6 +25,7 @@ struct CourseListView: View {
                     isShowingEditor = true
                 } label: {
                     Image(systemName: "plus")
+                        .foregroundStyle(Color.accentPrimary)
                 }
             }
         }

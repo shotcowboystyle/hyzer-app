@@ -357,6 +357,27 @@ claude-sonnet-4-6
 - Wired `CourseEditorView` into `CourseListView`: `@State isShowingEditor`, toolbar "+" button, empty-state "Add Course" button, `.sheet` modifier
 - 10 tests written covering all canSave, setHoleCount, and saveCourse scenarios
 
+### Senior Developer Review (AI)
+
+**Reviewed:** 2026-02-27 by claude-opus-4-6
+
+**Findings (9 total):** 2 HIGH, 4 MEDIUM, 3 LOW — all HIGH and MEDIUM issues fixed.
+
+**Fixes applied:**
+1. **[HIGH] `try? context.save()` → `try context.save()`** — was silently swallowing errors in violation of code-quality rules. `saveCourse` now `throws`, view handles errors with alert and only dismisses on success.
+2. **[HIGH] Added `precondition` guard** in `saveCourse` to reject empty names at the API boundary.
+3. **[MEDIUM] `setHoleCount` bounds validation** — now guards `count == 9 || count == 18`, ignoring invalid values.
+4. **[MEDIUM] `CourseEditorView.save()` error handling** — added `do/try/catch` with `.alert` on failure instead of unconditional dismiss.
+5. **[MEDIUM] Course name length limit** — added `.onChange` capping at 100 characters.
+6. **[MEDIUM] Added 4 new tests** — bounds validation for `setHoleCount` (0 and 12), padded whitespace `canSave`, and `try` propagation on `saveCourse`.
+7. **[LOW] Plus button tint** — applied `Color.accentPrimary` for design token consistency.
+
+**Remaining LOW issues (deferred):**
+- `ForEach(0..<viewModel.holeCount)` uses dynamic range — potential SwiftUI animation glitch (minor, only triggers on 9↔18 toggle)
+- Magic number `3` for default par repeated in 3 places — cosmetic
+
+**Test count:** 14 tests (was 10) + 17 HyzerKit = 31 total
+
 ### File List
 
 - `HyzerApp/ViewModels/CourseEditorViewModel.swift` (new)
