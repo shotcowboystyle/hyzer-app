@@ -1,6 +1,6 @@
 # Story 2.1: Create a New Course
 
-Status: review
+Status: done
 
 ## Story
 
