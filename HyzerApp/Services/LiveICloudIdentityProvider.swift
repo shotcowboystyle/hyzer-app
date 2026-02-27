@@ -5,7 +5,7 @@ import HyzerKit
 ///
 /// `CloudKit` is imported here (not in HyzerKit) so the protocol remains
 /// platform-agnostic. watchOS never uses this implementation.
-struct LiveICloudIdentityProvider: ICloudIdentityProvider {
+struct LiveICloudIdentityProvider: ICloudIdentityProvider, Sendable {
     func resolveIdentity() async throws -> ICloudIdentityResult {
         let status = try await CKContainer.default().accountStatus()
         switch status {

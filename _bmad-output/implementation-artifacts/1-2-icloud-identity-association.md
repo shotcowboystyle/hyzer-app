@@ -243,7 +243,7 @@ claude-sonnet-4-6
 - `HyzerApp/Services/LiveICloudIdentityProvider.swift` (new) — live CloudKit implementation wrapping callback API with `withCheckedThrowingContinuation`
 - `HyzerApp/App/AppServices.swift` (modified) — added `iCloudRecordName`, `iCloudIdentityProvider`, `resolveICloudIdentity()`
 - `HyzerApp/App/HyzerApp.swift` (modified) — passes `LiveICloudIdentityProvider()` to `AppServices`, adds `.task { await appServices.resolveICloudIdentity() }`
-- `HyzerKit/Tests/HyzerKitTests/Mocks/MockICloudIdentityProvider.swift` (new) — test mock
-- `HyzerAppTests/ICloudIdentityResolutionTests.swift` (new) — 4 unit tests
+- `HyzerAppTests/ICloudIdentityResolutionTests.swift` (new) — 4 unit tests with local private mock
 - `HyzerAppTests/OnboardingViewModelTests.swift` (modified) — added `@testable import HyzerApp` for explicit module resolution compatibility
-- `project.yml` (modified) — fixed `INFOPLIST_KEY_WKCompanionAppBundleIdentifier` for watch companion Info.plist generation
+- `project.yml` (modified) — fixed `INFOPLIST_KEY_WKCompanionAppBundleIdentifier` for watch companion Info.plist generation, added `basedOnDependencyAnalysis: false` for SwiftLint script phase
+- `HyzerWatch/Resources/Assets.xcassets/AppIcon.appiconset/Contents.json` (modified) — removed invalid 44x44 2x icon entry without role/subtype

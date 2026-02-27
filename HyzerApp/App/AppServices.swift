@@ -27,6 +27,8 @@ final class AppServices {
     /// Never throws — errors are logged and the app continues with local identity.
     /// Idempotent: skips resolution if Player already has an `iCloudRecordName`.
     func resolveICloudIdentity() async {
+        if iCloudRecordName != nil { return }
+
         do {
             let context = ModelContext(modelContainer)
             let players = try context.fetch(FetchDescriptor<Player>())
