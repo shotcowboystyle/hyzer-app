@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		43AA274D5D9454EBF1D658F2 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */; };
+		5105D60E9D7E55AB98453D0C /* CourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D567388ADB189B6F28DF15C2 /* CourseListView.swift */; };
 		5827D9E4DC7FC42B10CF812A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */; };
+		596A35E4701C525655211716 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */; };
 		602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6AEC89D27BF2CC224C8D55BB /* HyzerKit */; };
 		70D0955366D0881623788723 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65E7DE08C3408533CBAE374 /* WatchRootView.swift */; };
 		7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */; };
@@ -68,12 +70,14 @@
 		4814FA35A94A0628886B8CF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		800D115E8B8669538227512F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
 		975F8EB2A2D2513F584FD186 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 		A0348F5FC211306493C34EDC /* HyzerApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HyzerApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2DE096DC71267D6C2C700CD /* HyzerApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HyzerApp.entitlements; sourceTree = "<group>"; };
 		CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
+		D567388ADB189B6F28DF15C2 /* CourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListView.swift; sourceTree = "<group>"; };
 		ED517066535936D3C664FF33 /* HyzerWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerWatchApp.swift; sourceTree = "<group>"; };
 		EE744D39F8F9982D7C7986DD /* HyzerWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HyzerWatch.entitlements; sourceTree = "<group>"; };
 		F65E7DE08C3408533CBAE374 /* WatchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRootView.swift; sourceTree = "<group>"; };
@@ -118,6 +122,7 @@
 		3F9EE8EAEFE2495CF3D31074 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				9550B01599FC7C965A2ED49F /* Courses */,
 				4058938EE2AEF93A9B8E92C9 /* Onboarding */,
 				800D115E8B8669538227512F /* ContentView.swift */,
 				CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */,
@@ -156,6 +161,15 @@
 				ED517066535936D3C664FF33 /* HyzerWatchApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		9550B01599FC7C965A2ED49F /* Courses */ = {
+			isa = PBXGroup;
+			children = (
+				89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */,
+				D567388ADB189B6F28DF15C2 /* CourseListView.swift */,
+			);
+			path = Courses;
 			sourceTree = "<group>";
 		};
 		A6513A9E2C4A140FCD7073D2 /* HyzerAppTests */ = {
@@ -401,6 +415,8 @@
 			files = (
 				43AA274D5D9454EBF1D658F2 /* AppServices.swift in Sources */,
 				824CB3E7C4FE4793E135E5B0 /* ContentView.swift in Sources */,
+				596A35E4701C525655211716 /* CourseDetailView.swift in Sources */,
+				5105D60E9D7E55AB98453D0C /* CourseListView.swift in Sources */,
 				E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */,
 				D2EF055D37B19C14B5DEF295 /* HyzerApp.swift in Sources */,
 				A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */,

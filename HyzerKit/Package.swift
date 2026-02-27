@@ -15,6 +15,7 @@ let package = Package(
         .target(
             name: "HyzerKit",
             path: "Sources/HyzerKit",
+            resources: [.process("Resources")],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
