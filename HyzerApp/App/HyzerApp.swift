@@ -8,7 +8,10 @@ struct HyzerApp: App {
 
     init() {
         let container = Self.makeModelContainer()
-        appServices = AppServices(modelContainer: container)
+        appServices = AppServices(
+            modelContainer: container,
+            iCloudIdentityProvider: LiveICloudIdentityProvider()
+        )
     }
 
     var body: some Scene {
@@ -16,6 +19,7 @@ struct HyzerApp: App {
             ContentView()
                 .environment(appServices)
                 .modelContainer(appServices.modelContainer)
+                .task { await appServices.resolveICloudIdentity() }
         }
     }
 

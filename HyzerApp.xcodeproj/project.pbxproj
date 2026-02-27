@@ -11,10 +11,12 @@
 		5827D9E4DC7FC42B10CF812A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */; };
 		602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6AEC89D27BF2CC224C8D55BB /* HyzerKit */; };
 		70D0955366D0881623788723 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65E7DE08C3408533CBAE374 /* WatchRootView.swift */; };
+		7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */; };
 		824CB3E7C4FE4793E135E5B0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800D115E8B8669538227512F /* ContentView.swift */; };
 		8C3A37E858EC8BF31CCE054B /* HyzerWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED517066535936D3C664FF33 /* HyzerWatchApp.swift */; };
 		93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBF7E3B49360BEFE78202833 /* HyzerKit */; };
 		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */; };
 		A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975F8EB2A2D2513F584FD186 /* OnboardingView.swift */; };
 		A96BC87130D06BB117DA9903 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */; };
 		AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */; };
@@ -59,8 +61,10 @@
 		07943A8909080D9EEB547B64 /* HyzerKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = HyzerKit; path = HyzerKit; sourceTree = SOURCE_ROOT; };
 		1AFA4C5EA37270895D500678 /* HyzerWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HyzerWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C7BA35CCB400F30E2359CFE /* HyzerAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = HyzerAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudIdentityResolutionTests.swift; sourceTree = "<group>"; };
 		2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerApp.swift; sourceTree = "<group>"; };
 		39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveICloudIdentityProvider.swift; sourceTree = "<group>"; };
 		4814FA35A94A0628886B8CF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		800D115E8B8669538227512F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -157,6 +161,7 @@
 		A6513A9E2C4A140FCD7073D2 /* HyzerAppTests */ = {
 			isa = PBXGroup;
 			children = (
+				2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */,
 				9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */,
 			);
 			path = HyzerAppTests;
@@ -185,6 +190,7 @@
 			children = (
 				AC5AC0A99416970B55C0E550 /* App */,
 				E537675A7E8B329D16767E55 /* Resources */,
+				E0B19F0BA4504AD1BC89902F /* Services */,
 				2EA27EE230CA76ADDCD6A13A /* ViewModels */,
 				3F9EE8EAEFE2495CF3D31074 /* Views */,
 			);
@@ -210,6 +216,14 @@
 				8F4C479F6E70B8F442F6A454 /* Packages */,
 				EEE56E501DA65667981A9D89 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		E0B19F0BA4504AD1BC89902F /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		E537675A7E8B329D16767E55 /* Resources */ = {
@@ -351,6 +365,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		16020A595ADF2F9CCCD0663C /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -375,6 +390,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */,
 				A96BC87130D06BB117DA9903 /* OnboardingViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -387,6 +403,7 @@
 				824CB3E7C4FE4793E135E5B0 /* ContentView.swift in Sources */,
 				E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */,
 				D2EF055D37B19C14B5DEF295 /* HyzerApp.swift in Sources */,
+				A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */,
 				A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */,
 				AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */,
 			);
@@ -464,6 +481,7 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.shotcowboystyle.hyzerapp;
 				INFOPLIST_KEY_WKWatchKitApp = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 1.0;
@@ -472,7 +490,6 @@
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
 				WATCHOS_DEPLOYMENT_TARGET = 11.0;
-				WK_COMPANION_APP_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp;
 			};
 			name = Debug;
 		};
@@ -565,6 +582,7 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.shotcowboystyle.hyzerapp;
 				INFOPLIST_KEY_WKWatchKitApp = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 1.0;
@@ -573,7 +591,6 @@
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
 				WATCHOS_DEPLOYMENT_TARGET = 11.0;
-				WK_COMPANION_APP_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp;
 			};
 			name = Release;
 		};

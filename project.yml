@@ -54,6 +54,7 @@ targets:
           fi
         name: SwiftLint
         showEnvVars: false
+        basedOnDependencyAnalysis: false
 
   HyzerWatch:
     type: application
@@ -73,7 +74,7 @@ targets:
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        WK_COMPANION_APP_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.shotcowboystyle.hyzerapp
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/Frameworks @executable_path/../../Frameworks"
 
   HyzerAppTests:
