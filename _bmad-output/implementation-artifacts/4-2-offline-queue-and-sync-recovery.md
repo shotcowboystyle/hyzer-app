@@ -1,6 +1,6 @@
 # Story 4.2: Offline Queue & Sync Recovery
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -63,81 +63,81 @@ so that no scores are ever lost, even on courses with no signal.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `NetworkMonitor` protocol and implementations (AC: #2)
-  - [ ] 1.1 Define `NetworkMonitor` protocol in `HyzerKit/Sources/HyzerKit/Sync/NetworkMonitor.swift` with `var isConnected: Bool`, `var pathUpdates: AsyncStream<Bool>` — must be `Sendable`
-  - [ ] 1.2 Create `LiveNetworkMonitor` in `HyzerApp/Services/LiveNetworkMonitor.swift` wrapping `NWPathMonitor` — uses `AsyncStream` to publish connectivity changes
-  - [ ] 1.3 Create `MockNetworkMonitor` in `HyzerKit/Tests/HyzerKitTests/Mocks/MockNetworkMonitor.swift` with controllable `isConnected` and `AsyncStream<Bool>` via continuation
-  - [ ] 1.4 Write unit tests for `MockNetworkMonitor` stream behavior
+- [x] Task 1: Create `NetworkMonitor` protocol and implementations (AC: #2)
+  - [x] 1.1 Define `NetworkMonitor` protocol in `HyzerKit/Sources/HyzerKit/Sync/NetworkMonitor.swift` with `var isConnected: Bool`, `var pathUpdates: AsyncStream<Bool>` — must be `Sendable`
+  - [x] 1.2 Create `LiveNetworkMonitor` in `HyzerApp/Services/LiveNetworkMonitor.swift` wrapping `NWPathMonitor` — uses `AsyncStream` to publish connectivity changes
+  - [x] 1.3 Create `MockNetworkMonitor` in `HyzerKit/Tests/HyzerKitTests/Mocks/MockNetworkMonitor.swift` with controllable `isConnected` and `AsyncStream<Bool>` via continuation
+  - [x] 1.4 Write unit tests for `MockNetworkMonitor` stream behavior
 
-- [ ] Task 2: Extend `CloudKitClient` protocol for subscriptions (AC: #6)
-  - [ ] 2.1 Add `subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID` to `CloudKitClient` protocol
-  - [ ] 2.2 Add `deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws` to `CloudKitClient` protocol
-  - [ ] 2.3 Implement subscription methods in `LiveCloudKitClient` using `CKQuerySubscription` on public database (silent push, `shouldSendContentAvailable = true`)
-  - [ ] 2.4 Update `MockCloudKitClient` with `subscribedRecordTypes: [CKRecord.RecordType]` tracking and test helpers
-  - [ ] 2.5 Register for remote notifications in `HyzerApp.swift` (UIApplication delegate method or SwiftUI equivalent)
+- [x] Task 2: Extend `CloudKitClient` protocol for subscriptions (AC: #6)
+  - [x] 2.1 Add `subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID` to `CloudKitClient` protocol
+  - [x] 2.2 Add `deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws` to `CloudKitClient` protocol
+  - [x] 2.3 Implement subscription methods in `LiveCloudKitClient` using `CKQuerySubscription` on public database (silent push, `shouldSendContentAvailable = true`)
+  - [x] 2.4 Update `MockCloudKitClient` with `subscribedRecordTypes: [CKRecord.RecordType]` tracking and test helpers
+  - [x] 2.5 Register for remote notifications in `HyzerApp.swift` (UIApplication delegate method or SwiftUI equivalent)
 
-- [ ] Task 3: Create `SyncScheduler` coordinator (AC: #2, #3, #6)
-  - [ ] 3.1 Define `SyncScheduler` as an `actor` in `HyzerKit/Sources/HyzerKit/Sync/SyncScheduler.swift`
-  - [ ] 3.2 Dependencies: `SyncEngine`, `NetworkMonitor` — injected via constructor
-  - [ ] 3.3 Implement `startActiveRoundPolling()` — starts periodic timer (every 45s) calling `syncEngine.pushPending()` + `syncEngine.pullRecords()`. Timer uses `Task.sleep(for:)` in a loop, NOT `Timer` or `DispatchQueue`
-  - [ ] 3.4 Implement `stopActiveRoundPolling()` — cancels the polling task
-  - [ ] 3.5 Implement connectivity listener: observe `networkMonitor.pathUpdates`, on reconnection call `syncEngine.pushPending()` to flush pending/failed entries
-  - [ ] 3.6 Implement `handleRemoteNotification()` — called when a CKSubscription silent push arrives, triggers `syncEngine.pullRecords()`
-  - [ ] 3.7 Write tests for timer start/stop lifecycle, connectivity-triggered flush, and notification-triggered pull
+- [x] Task 3: Create `SyncScheduler` coordinator (AC: #2, #3, #6)
+  - [x] 3.1 Define `SyncScheduler` as an `actor` in `HyzerKit/Sources/HyzerKit/Sync/SyncScheduler.swift`
+  - [x] 3.2 Dependencies: `SyncEngine`, `NetworkMonitor` — injected via constructor
+  - [x] 3.3 Implement `startActiveRoundPolling()` — starts periodic timer (every 45s) calling `syncEngine.pushPending()` + `syncEngine.pullRecords()`. Timer uses `Task.sleep(for:)` in a loop, NOT `Timer` or `DispatchQueue`
+  - [x] 3.4 Implement `stopActiveRoundPolling()` — cancels the polling task
+  - [x] 3.5 Implement connectivity listener: observe `networkMonitor.pathUpdates`, on reconnection call `syncEngine.pushPending()` to flush pending/failed entries
+  - [x] 3.6 Implement `handleRemoteNotification()` — called when a CKSubscription silent push arrives, triggers `syncEngine.pullRecords()`
+  - [x] 3.7 Write tests for timer start/stop lifecycle, connectivity-triggered flush, and notification-triggered pull
 
-- [ ] Task 4: Update `SyncEngine` for retry and network awareness (AC: #2, #7)
-  - [ ] 4.1 Modify `pushPending()` to also pick up `.failed` entries (currently only `.pending` — verify this is already the case from 4.1, fix if not)
-  - [ ] 4.2 Add `retryFailed()` method: fetches all `.failed` SyncMetadata, resets to `.pending`, then calls `pushPending()` — triggered by `SyncScheduler` on connectivity restore
-  - [ ] 4.3 Verify deduplication in `pullRecords()` handles extended offline scenarios: many remote events, local events that already synced from other paths
-  - [ ] 4.4 Write tests for retry-after-failure scenarios and extended offline recovery (4-hour simulation)
+- [x] Task 4: Update `SyncEngine` for retry and network awareness (AC: #2, #7)
+  - [x] 4.1 Modify `pushPending()` to also pick up `.failed` entries (currently only `.pending` — verify this is already the case from 4.1, fix if not)
+  - [x] 4.2 Add `retryFailed()` method: fetches all `.failed` SyncMetadata, resets to `.pending`, then calls `pushPending()` — triggered by `SyncScheduler` on connectivity restore
+  - [x] 4.3 Verify deduplication in `pullRecords()` handles extended offline scenarios: many remote events, local events that already synced from other paths
+  - [x] 4.4 Write tests for retry-after-failure scenarios and extended offline recovery (4-hour simulation)
 
-- [ ] Task 5: Create observable `SyncState` bridge to UI (AC: #4)
-  - [ ] 5.1 Add `@Observable` `syncStatePublisher` property to `AppServices` that mirrors `SyncEngine.syncState` — updated via a `.task` that periodically reads or streams from the actor
-  - [ ] 5.2 Alternative approach: Add `syncStateStream: AsyncStream<SyncState>` to `SyncEngine` that emits on every state change, consumed by a `.task` in the root view that sets an `@Observable` property on `AppServices`
-  - [ ] 5.3 Ensure the bridge is `@MainActor`-safe — `SyncState` is read on main thread, written on SyncEngine's background actor
-  - [ ] 5.4 Write tests verifying state propagation from SyncEngine actor to the observable property
+- [x] Task 5: Create observable `SyncState` bridge to UI (AC: #4)
+  - [x] 5.1 Add `@Observable` `syncStatePublisher` property to `AppServices` that mirrors `SyncEngine.syncState` — updated via a `.task` that periodically reads or streams from the actor
+  - [x] 5.2 Alternative approach: Add `syncStateStream: AsyncStream<SyncState>` to `SyncEngine` that emits on every state change, consumed by a `.task` in the root view that sets an `@Observable` property on `AppServices`
+  - [x] 5.3 Ensure the bridge is `@MainActor`-safe — `SyncState` is read on main thread, written on SyncEngine's background actor
+  - [x] 5.4 Write tests verifying state propagation from SyncEngine actor to the observable property
 
-- [ ] Task 6: Build `SyncIndicatorView` (AC: #4)
-  - [ ] 6.1 Create `HyzerApp/Views/Components/SyncIndicatorView.swift` — reads `appServices.syncState` from environment
-  - [ ] 6.2 States: `.idle`/`.synced` → no indicator (silence = success). `.syncing` → subtle `ProgressView` in toolbar. `.offline` → `cloud.slash` SF Symbol in toolbar. `.error` → `exclamationmark.icloud` SF Symbol
-  - [ ] 6.3 Use `ColorTokens`, `TypographyTokens`, `SpacingTokens` for all styling — never hardcode values
-  - [ ] 6.4 Respect `AccessibilitySettings` — reduce-motion aware animations via `AnimationTokens`
-  - [ ] 6.5 Add VoiceOver labels: "Syncing scores", "Offline — scores saving locally", "Sync error"
-  - [ ] 6.6 Integrate into scoring view toolbar (and optionally home screen)
-  - [ ] 6.7 Write ViewModel tests (if separate VM) or snapshot-style tests for state rendering
+- [x] Task 6: Build `SyncIndicatorView` (AC: #4)
+  - [x] 6.1 Create `HyzerApp/Views/Components/SyncIndicatorView.swift` — reads `appServices.syncState` from environment
+  - [x] 6.2 States: `.idle`/`.synced` → no indicator (silence = success). `.syncing` → subtle `ProgressView` in toolbar. `.offline` → `cloud.slash` SF Symbol in toolbar. `.error` → `exclamationmark.icloud` SF Symbol
+  - [x] 6.3 Use `ColorTokens`, `TypographyTokens`, `SpacingTokens` for all styling — never hardcode values
+  - [x] 6.4 Respect `AccessibilitySettings` — reduce-motion aware animations via `AnimationTokens`
+  - [x] 6.5 Add VoiceOver labels: "Syncing scores", "Offline — scores saving locally", "Sync error"
+  - [x] 6.6 Integrate into scoring view toolbar (and optionally home screen)
+  - [x] 6.7 Write ViewModel tests (if separate VM) or snapshot-style tests for state rendering
 
-- [ ] Task 7: Implement CKSubscription lifecycle management (AC: #6)
-  - [ ] 7.1 Create subscription setup in `SyncScheduler.setupSubscriptions()` — subscribes to `ScoreEventRecord` type (and optionally `RoundRecord` for round discovery)
-  - [ ] 7.2 Use `CKQuerySubscription` with `NSPredicate(value: true)` for all records of the type (public DB doesn't support zone subscriptions)
-  - [ ] 7.3 Set `notificationInfo.shouldSendContentAvailable = true` for silent push
-  - [ ] 7.4 Handle `application(_:didReceiveRemoteNotification:)` → parse `CKNotification` → call `syncScheduler.handleRemoteNotification()`
-  - [ ] 7.5 Idempotent subscription creation: check for existing subscription before creating (avoid duplicates on each app launch)
-  - [ ] 7.6 Write tests with MockCloudKitClient verifying subscription creation and deduplication
+- [x] Task 7: Implement CKSubscription lifecycle management (AC: #6)
+  - [x] 7.1 Create subscription setup in `SyncScheduler.setupSubscriptions()` — subscribes to `ScoreEventRecord` type (and optionally `RoundRecord` for round discovery)
+  - [x] 7.2 Use `CKQuerySubscription` with `NSPredicate(value: true)` for all records of the type (public DB doesn't support zone subscriptions)
+  - [x] 7.3 Set `notificationInfo.shouldSendContentAvailable = true` for silent push
+  - [x] 7.4 Handle `application(_:didReceiveRemoteNotification:)` → parse `CKNotification` → call `syncScheduler.handleRemoteNotification()`
+  - [x] 7.5 Idempotent subscription creation: check for existing subscription before creating (avoid duplicates on each app launch)
+  - [x] 7.6 Write tests with MockCloudKitClient verifying subscription creation and deduplication
 
-- [ ] Task 8: Implement app-foreground round discovery (AC: #5)
-  - [ ] 8.1 In `HyzerApp.swift` or root view, observe `ScenePhase` changes
-  - [ ] 8.2 On `.active` (foreground): if no round is currently active locally, execute a CKQuery for `RoundRecord` where `playerIDs CONTAINS currentUserID AND status == "active"`
-  - [ ] 8.3 If matching rounds found, pull all ScoreEvents for those rounds
-  - [ ] 8.4 This covers missed CKSubscription silent pushes (iOS throttles them in Low Power Mode, background-killed app)
-  - [ ] 8.5 Guard: skip if last foreground discovery was < 30s ago (prevent rapid scene phase flapping)
-  - [ ] 8.6 Write tests for foreground discovery with mock CloudKit containing active rounds
+- [x] Task 8: Implement app-foreground round discovery (AC: #5)
+  - [x] 8.1 In `HyzerApp.swift` or root view, observe `ScenePhase` changes
+  - [x] 8.2 On `.active` (foreground): if no round is currently active locally, execute a CKQuery for `RoundRecord` where `playerIDs CONTAINS currentUserID AND status == "active"`
+  - [x] 8.3 If matching rounds found, pull all ScoreEvents for those rounds
+  - [x] 8.4 This covers missed CKSubscription silent pushes (iOS throttles them in Low Power Mode, background-killed app)
+  - [x] 8.5 Guard: skip if last foreground discovery was < 30s ago (prevent rapid scene phase flapping)
+  - [x] 8.6 Write tests for foreground discovery with mock CloudKit containing active rounds
 
-- [ ] Task 9: Wire into AppServices and app lifecycle (AC: #2, #3, #5, #6)
-  - [ ] 9.1 Add `NetworkMonitor` and `SyncScheduler` to `AppServices` — construction order: `ModelContainer` → `StandingsEngine` → `RoundLifecycleManager` → `CloudKitClient` → `NetworkMonitor` → `SyncEngine` → `SyncScheduler` → `ScoringService`
-  - [ ] 9.2 Add `.task` for `syncScheduler.start()` in `HyzerApp.swift` (calls `setupSubscriptions()` + starts connectivity listener)
-  - [ ] 9.3 Connect round lifecycle to timer: when `RoundLifecycleManager` starts a round → call `syncScheduler.startActiveRoundPolling()`. When round completes → call `syncScheduler.stopActiveRoundPolling()`
-  - [ ] 9.4 Add `syncState` observable property to `AppServices` with bridge task
-  - [ ] 9.5 Register for remote notifications and wire to `syncScheduler.handleRemoteNotification()`
-  - [ ] 9.6 Update `project.yml` for any new files if needed, run `xcodegen generate`
+- [x] Task 9: Wire into AppServices and app lifecycle (AC: #2, #3, #5, #6)
+  - [x] 9.1 Add `NetworkMonitor` and `SyncScheduler` to `AppServices` — construction order: `ModelContainer` → `StandingsEngine` → `RoundLifecycleManager` → `CloudKitClient` → `NetworkMonitor` → `SyncEngine` → `SyncScheduler` → `ScoringService`
+  - [x] 9.2 Add `.task` for `syncScheduler.start()` in `HyzerApp.swift` (calls `setupSubscriptions()` + starts connectivity listener)
+  - [x] 9.3 Connect round lifecycle to timer: when `RoundLifecycleManager` starts a round → call `syncScheduler.startActiveRoundPolling()`. When round completes → call `syncScheduler.stopActiveRoundPolling()`
+  - [x] 9.4 Add `syncState` observable property to `AppServices` with bridge task
+  - [x] 9.5 Register for remote notifications and wire to `syncScheduler.handleRemoteNotification()`
+  - [x] 9.6 Update `project.yml` for any new files if needed, run `xcodegen generate`
 
-- [ ] Task 10: Comprehensive test suite (AC: #1-7)
-  - [ ] 10.1 Offline → online recovery test: create ScoreEvents offline → simulate connectivity restore → verify all pushed to MockCloudKitClient
-  - [ ] 10.2 Extended offline test: simulate 4-hour offline period with many local events → restore → verify count and content match
-  - [ ] 10.3 Periodic timer test: verify timer fires and calls push/pull within expected interval
-  - [ ] 10.4 CKSubscription trigger test: simulate remote notification → verify pullRecords() called
-  - [ ] 10.5 Foreground discovery test: simulate app foreground with active remote rounds → verify CKQuery executed and events pulled
-  - [ ] 10.6 Deduplication under concurrent sync: events arrive via both timer pull and subscription pull → verify no duplicates in SwiftData
-  - [ ] 10.7 SyncState bridge test: verify state transitions propagate from SyncEngine actor to observable property on main thread
+- [x] Task 10: Comprehensive test suite (AC: #1-7)
+  - [x] 10.1 Offline → online recovery test: create ScoreEvents offline → simulate connectivity restore → verify all pushed to MockCloudKitClient
+  - [x] 10.2 Extended offline test: simulate 4-hour offline period with many local events → restore → verify count and content match
+  - [x] 10.3 Periodic timer test: verify timer fires and calls push/pull within expected interval
+  - [x] 10.4 CKSubscription trigger test: simulate remote notification → verify pullRecords() called
+  - [x] 10.5 Foreground discovery test: simulate app foreground with active remote rounds → verify CKQuery executed and events pulled
+  - [x] 10.6 Deduplication under concurrent sync: events arrive via both timer pull and subscription pull → verify no duplicates in SwiftData
+  - [x] 10.7 SyncState bridge test: verify state transitions propagate from SyncEngine actor to observable property on main thread
 
 ## Dev Notes
 
@@ -363,10 +363,46 @@ Silent push requires:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+None — all tasks completed without significant debugging. One test fix was needed: `test_syncStateStream_emitsOffline_onNetworkError` had a logic bug where `.syncing` triggered an early `break` in the state loop; fixed with explicit `switch` and actor-isolated `OfflineReceivedBox`.
+
 ### Completion Notes List
 
+- NetworkMonitor protocol + LiveNetworkMonitor (NWPathMonitor wrapper) + MockNetworkMonitor with AsyncStream — all following ICloudIdentityProvider split pattern
+- CloudKitClient protocol extended with subscribe/deleteSubscription/fetchAllSubscriptionIDs; LiveCloudKitClient and MockCloudKitClient updated accordingly
+- SyncScheduler actor: 45s polling timer (Task.sleep loop), connectivity listener (AsyncStream of Bool), remote notification handler, idempotent CKSubscription setup with UserDefaults persistence
+- SyncEngine extended: retryFailed() method, pushPending() now picks up both .pending AND .failed, syncStateStream AsyncStream<SyncState> bridged via makeStream() continuation
+- SyncState bridge: AppServices.syncState @Observable property bridged from SyncEngine.syncStateStream via startSync() async task
+- SyncIndicatorView: 4 states (idle/syncing/offline/error), SF Symbols, ColorTokens, AnimationTokens, VoiceOver labels, integrated into ScorecardContainerView toolbar
+- CKSubscription lifecycle: idempotent via UserDefaults-stored subscription IDs vs CloudKit-fetched IDs
+- Foreground discovery: ScenePhase observer in HyzerApp.swift, 30s throttle in SyncScheduler
+- AppDelegate added for remote notification registration and forwarding
+- project.yml: UIBackgroundModes: remote-notification added via info: section (removed GENERATE_INFOPLIST_FILE to use explicit plist)
+- ColorTokens: added `warning` color token (#FF9F0A) for SyncIndicatorView error state
+- 120 HyzerKit tests pass (49 new tests added). Build succeeded for iOS Simulator (iPhone 17 Pro)
+
 ### File List
+
+**New files:**
+- HyzerKit/Sources/HyzerKit/Sync/NetworkMonitor.swift
+- HyzerKit/Sources/HyzerKit/Sync/SyncScheduler.swift
+- HyzerApp/Services/LiveNetworkMonitor.swift
+- HyzerApp/Views/Components/SyncIndicatorView.swift
+- HyzerKit/Tests/HyzerKitTests/Mocks/MockNetworkMonitor.swift
+- HyzerKit/Tests/HyzerKitTests/NetworkMonitorTests.swift
+- HyzerKit/Tests/HyzerKitTests/SyncSchedulerTests.swift
+- HyzerKit/Tests/HyzerKitTests/SyncRecoveryTests.swift
+
+**Modified files:**
+- HyzerKit/Sources/HyzerKit/Sync/CloudKitClient.swift
+- HyzerKit/Sources/HyzerKit/Sync/SyncEngine.swift
+- HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift
+- HyzerApp/Services/LiveCloudKitClient.swift
+- HyzerApp/App/AppServices.swift
+- HyzerApp/App/HyzerApp.swift
+- HyzerApp/Views/Scoring/ScorecardContainerView.swift
+- HyzerKit/Tests/HyzerKitTests/Mocks/MockCloudKitClient.swift
+- project.yml
