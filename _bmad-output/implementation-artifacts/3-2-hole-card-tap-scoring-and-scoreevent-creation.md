@@ -1,6 +1,6 @@
 # Story 3.2: Hole Card Tap Scoring & ScoreEvent Creation
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -46,84 +46,84 @@ So that I can record scores quickly and accurately during a round.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `ScoreEvent` SwiftData model in HyzerKit (AC: 2, 6)
-  - [ ] 1.1 Create `HyzerKit/Sources/HyzerKit/Models/ScoreEvent.swift` with `@Model` class
-  - [ ] 1.2 Properties: `id`, `roundID`, `holeNumber`, `playerID` (String), `strokeCount`, `supersedesEventID` (UUID?), `reportedByPlayerID`, `deviceID` (String), `createdAt`
-  - [ ] 1.3 CloudKit constraints: all properties have defaults, no `@Attribute(.unique)`, no `@Relationship`
-  - [ ] 1.4 NO public update or delete API surface (type-level invariant for NFR19 append-only)
-  - [ ] 1.5 Init accepts `roundID`, `holeNumber`, `playerID`, `strokeCount`, `reportedByPlayerID`, `deviceID`
+- [x] Task 1: Create `ScoreEvent` SwiftData model in HyzerKit (AC: 2, 6)
+  - [x] 1.1 Create `HyzerKit/Sources/HyzerKit/Models/ScoreEvent.swift` with `@Model` class
+  - [x] 1.2 Properties: `id`, `roundID`, `holeNumber`, `playerID` (String), `strokeCount`, `supersedesEventID` (UUID?), `reportedByPlayerID`, `deviceID` (String), `createdAt`
+  - [x] 1.3 CloudKit constraints: all properties have defaults, no `@Attribute(.unique)`, no `@Relationship`
+  - [x] 1.4 NO public update or delete API surface (type-level invariant for NFR19 append-only)
+  - [x] 1.5 Init accepts `roundID`, `holeNumber`, `playerID`, `strokeCount`, `reportedByPlayerID`, `deviceID`
 
-- [ ] Task 2: Register `ScoreEvent` in ModelContainer (AC: 2)
-  - [ ] 2.1 Add `ScoreEvent.self` to `Schema` and `ModelContainer(for:)` in `HyzerApp.swift`
+- [x] Task 2: Register `ScoreEvent` in ModelContainer (AC: 2)
+  - [x] 2.1 Add `ScoreEvent.self` to `Schema` and `ModelContainer(for:)` in `HyzerApp.swift`
 
-- [ ] Task 3: Create `ScoringService` in HyzerKit (AC: 2)
-  - [ ] 3.1 Create `HyzerKit/Sources/HyzerKit/Domain/ScoringService.swift`
-  - [ ] 3.2 Constructor: `init(modelContext: ModelContext, deviceID: String)`
-  - [ ] 3.3 Method: `createScoreEvent(roundID:holeNumber:playerID:strokeCount:reportedByPlayerID:) throws -> ScoreEvent`
-  - [ ] 3.4 Creates ScoreEvent with `supersedesEventID: nil` (corrections are Story 3.3)
-  - [ ] 3.5 Inserts into modelContext and saves; throws on failure (never `try?`)
+- [x] Task 3: Create `ScoringService` in HyzerKit (AC: 2)
+  - [x] 3.1 Create `HyzerKit/Sources/HyzerKit/Domain/ScoringService.swift`
+  - [x] 3.2 Constructor: `init(modelContext: ModelContext, deviceID: String)`
+  - [x] 3.3 Method: `createScoreEvent(roundID:holeNumber:playerID:strokeCount:reportedByPlayerID:) throws -> ScoreEvent`
+  - [x] 3.4 Creates ScoreEvent with `supersedesEventID: nil` (corrections are Story 3.3)
+  - [x] 3.5 Inserts into modelContext and saves; throws on failure (never `try?`)
 
-- [ ] Task 4: Add `ScoringService` to `AppServices` (AC: 2)
-  - [ ] 4.1 Add `let scoringService: ScoringService` to `AppServices`
-  - [ ] 4.2 Construct with main ModelContext and device ID (`UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString`)
+- [x] Task 4: Add `ScoringService` to `AppServices` (AC: 2)
+  - [x] 4.1 Add `let scoringService: ScoringService` to `AppServices`
+  - [x] 4.2 Construct with main ModelContext and device ID (`UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString`)
 
-- [ ] Task 5: Create `ScorecardViewModel` (AC: 1, 2, 3, 6)
-  - [ ] 5.1 Create `HyzerApp/ViewModels/ScorecardViewModel.swift` -- `@MainActor @Observable`
-  - [ ] 5.2 Constructor: `init(scoringService: ScoringService, roundID: UUID, reportedByPlayerID: UUID)`
-  - [ ] 5.3 Method: `enterScore(playerID: String, holeNumber: Int, strokeCount: Int) throws`
-  - [ ] 5.4 Property: `saveError: Error?` for error alert binding
+- [x] Task 5: Create `ScorecardViewModel` (AC: 1, 2, 3, 6)
+  - [x] 5.1 Create `HyzerApp/ViewModels/ScorecardViewModel.swift` -- `@MainActor @Observable`
+  - [x] 5.2 Constructor: `init(scoringService: ScoringService, roundID: UUID, reportedByPlayerID: UUID)`
+  - [x] 5.3 Method: `enterScore(playerID: String, holeNumber: Int, strokeCount: Int) throws`
+  - [x] 5.4 Property: `saveError: Error?` for error alert binding
 
-- [ ] Task 6: Create `ScorecardContainerView` (AC: 4, 5)
-  - [ ] 6.1 Create `HyzerApp/Views/Scoring/ScorecardContainerView.swift`
-  - [ ] 6.2 Receives `Round` object; queries ScoreEvents, Holes, Players via `@Query`
-  - [ ] 6.3 `TabView(selection: $currentHole)` with `.tabViewStyle(.page)` for horizontal paging
-  - [ ] 6.4 One `HoleCardView` per hole (1...round.holeCount), each tagged by hole number
-  - [ ] 6.5 Client-side filter for scores/holes matching this round (small dataset, no dynamic predicate needed)
+- [x] Task 6: Create `ScorecardContainerView` (AC: 4, 5)
+  - [x] 6.1 Create `HyzerApp/Views/Scoring/ScorecardContainerView.swift`
+  - [x] 6.2 Receives `Round` object; queries ScoreEvents, Holes, Players via `@Query`
+  - [x] 6.3 `TabView(selection: $currentHole)` with `.tabViewStyle(.page)` for horizontal paging
+  - [x] 6.4 One `HoleCardView` per hole (1...round.holeCount), each tagged by hole number
+  - [x] 6.5 Client-side filter for scores/holes matching this round (small dataset, no dynamic predicate needed)
 
-- [ ] Task 7: Create `HoleCardView` (AC: 1, 3, 4, 6)
-  - [ ] 7.1 Create `HyzerApp/Views/Scoring/HoleCardView.swift`
-  - [ ] 7.2 Card header: hole number (H2), par value (caption), course name (caption, secondary)
-  - [ ] 7.3 Player rows: name, score (or dash if unscored), running +/- par not required yet (Story 3.4)
-  - [ ] 7.4 Both registered players and guest players appear as rows
-  - [ ] 7.5 Tapping an unscored row expands inline `ScoreInputView`
-  - [ ] 7.6 Scored rows display the stroke count with score-state color coding
-  - [ ] 7.7 Accessibility: card labeled "Hole [n], Par [n]"; rows labeled "[name], score [n] or no score"
+- [x] Task 7: Create `HoleCardView` (AC: 1, 3, 4, 6)
+  - [x] 7.1 Create `HyzerApp/Views/Scoring/HoleCardView.swift`
+  - [x] 7.2 Card header: hole number (H2), par value (caption), course name (caption, secondary)
+  - [x] 7.3 Player rows: name, score (or dash if unscored), running +/- par not required yet (Story 3.4)
+  - [x] 7.4 Both registered players and guest players appear as rows
+  - [x] 7.5 Tapping an unscored row expands inline `ScoreInputView`
+  - [x] 7.6 Scored rows display the stroke count with score-state color coding
+  - [x] 7.7 Accessibility: card labeled "Hole [n], Par [n]"; rows labeled "[name], score [n] or no score"
 
-- [ ] Task 8: Create `ScoreInputView` (AC: 1, 2)
-  - [ ] 8.1 Create `HyzerApp/Views/Scoring/ScoreInputView.swift`
-  - [ ] 8.2 Inline picker with values 1-10, defaulting to par for the current hole (FR18)
-  - [ ] 8.3 On selection: collapse picker, fire haptic (`UIImpactFeedbackGenerator(.light)`), call enterScore
-  - [ ] 8.4 Touch targets: minimum 44pt (NFR14), scoring targets 52pt (`SpacingTokens.scoringTouchTarget`)
-  - [ ] 8.5 Accessibility: labeled "Select score for [name]"
+- [x] Task 8: Create `ScoreInputView` (AC: 1, 2)
+  - [x] 8.1 Create `HyzerApp/Views/Scoring/ScoreInputView.swift`
+  - [x] 8.2 Inline picker with values 1-10, defaulting to par for the current hole (FR18)
+  - [x] 8.3 On selection: collapse picker, fire haptic (`UIImpactFeedbackGenerator(.light)`), call enterScore
+  - [x] 8.4 Touch targets: minimum 44pt (NFR14), scoring targets 52pt (`SpacingTokens.scoringTouchTarget`)
+  - [x] 8.5 Accessibility: labeled "Select score for [name]"
 
-- [ ] Task 9: Update `HomeView` to use `ScorecardContainerView` (AC: 5)
-  - [ ] 9.1 Replace `ActiveRoundView` placeholder in `ScoringTabView` with `ScorecardContainerView`
-  - [ ] 9.2 Pass the active `Round` object to `ScorecardContainerView`
+- [x] Task 9: Update `HomeView` to use `ScorecardContainerView` (AC: 5)
+  - [x] 9.1 Replace `ActiveRoundView` placeholder in `ScoringTabView` with `ScorecardContainerView`
+  - [x] 9.2 Pass the active `Round` object to `ScorecardContainerView`
 
-- [ ] Task 10: Create `ScoreEvent+Fixture.swift` (AC: all)
-  - [ ] 10.1 Create `HyzerKit/Tests/HyzerKitTests/Fixtures/ScoreEvent+Fixture.swift`
-  - [ ] 10.2 `ScoreEvent.fixture()` with customizable defaults matching existing fixture pattern
+- [x] Task 10: Create `ScoreEvent+Fixture.swift` (AC: all)
+  - [x] 10.1 Create `HyzerKit/Tests/HyzerKitTests/Fixtures/ScoreEvent+Fixture.swift`
+  - [x] 10.2 `ScoreEvent.fixture()` with customizable defaults matching existing fixture pattern
 
-- [ ] Task 11: Write `ScoreEventModelTests` in HyzerKitTests (AC: 2)
-  - [ ] 11.1 Create `HyzerKit/Tests/HyzerKitTests/Domain/ScoreEventModelTests.swift`
-  - [ ] 11.2 Test: init creates ScoreEvent with correct properties and nil supersedesEventID
-  - [ ] 11.3 Test: ScoreEvent persists and fetches in SwiftData (in-memory)
-  - [ ] 11.4 Test: CloudKit compatibility -- all properties have defaults
-  - [ ] 11.5 Test: Multiple ScoreEvents for same {round, hole, player} coexist (append-only)
+- [x] Task 11: Write `ScoreEventModelTests` in HyzerKitTests (AC: 2)
+  - [x] 11.1 Create `HyzerKit/Tests/HyzerKitTests/Domain/ScoreEventModelTests.swift`
+  - [x] 11.2 Test: init creates ScoreEvent with correct properties and nil supersedesEventID
+  - [x] 11.3 Test: ScoreEvent persists and fetches in SwiftData (in-memory)
+  - [x] 11.4 Test: CloudKit compatibility -- all properties have defaults
+  - [x] 11.5 Test: Multiple ScoreEvents for same {round, hole, player} coexist (append-only)
 
-- [ ] Task 12: Write `ScoringServiceTests` in HyzerKitTests (AC: 2, 3)
-  - [ ] 12.1 Create `HyzerKit/Tests/HyzerKitTests/Domain/ScoringServiceTests.swift`
-  - [ ] 12.2 Test: `createScoreEvent` persists event with correct roundID, holeNumber, playerID, strokeCount
-  - [ ] 12.3 Test: `createScoreEvent` sets reportedByPlayerID and deviceID correctly
-  - [ ] 12.4 Test: `createScoreEvent` sets supersedesEventID to nil
-  - [ ] 12.5 Test: `createScoreEvent` returns the created ScoreEvent
-  - [ ] 12.6 Test: multiple events for same {round, hole, player} all persist (no uniqueness constraint)
+- [x] Task 12: Write `ScoringServiceTests` in HyzerKitTests (AC: 2, 3)
+  - [x] 12.1 Create `HyzerKit/Tests/HyzerKitTests/Domain/ScoringServiceTests.swift`
+  - [x] 12.2 Test: `createScoreEvent` persists event with correct roundID, holeNumber, playerID, strokeCount
+  - [x] 12.3 Test: `createScoreEvent` sets reportedByPlayerID and deviceID correctly
+  - [x] 12.4 Test: `createScoreEvent` sets supersedesEventID to nil
+  - [x] 12.5 Test: `createScoreEvent` returns the created ScoreEvent
+  - [x] 12.6 Test: multiple events for same {round, hole, player} all persist (no uniqueness constraint)
 
-- [ ] Task 13: Write `ScorecardViewModelTests` in HyzerAppTests (AC: 1, 2, 3)
-  - [ ] 13.1 Create `HyzerAppTests/ScorecardViewModelTests.swift`
-  - [ ] 13.2 Test: `enterScore` creates ScoreEvent via ScoringService
-  - [ ] 13.3 Test: `enterScore` passes correct roundID and reportedByPlayerID from init
-  - [ ] 13.4 Test: `enterScore` with different playerIDs creates separate events (distributed scoring)
+- [x] Task 13: Write `ScorecardViewModelTests` in HyzerAppTests (AC: 1, 2, 3)
+  - [x] 13.1 Create `HyzerAppTests/ScorecardViewModelTests.swift`
+  - [x] 13.2 Test: `enterScore` creates ScoreEvent via ScoringService
+  - [x] 13.3 Test: `enterScore` passes correct roundID and reportedByPlayerID from init
+  - [x] 13.4 Test: `enterScore` with different playerIDs creates separate events (distributed scoring)
 
 ## Dev Notes
 
@@ -523,10 +523,37 @@ Key learnings from Story 3.1 that directly apply:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Created `ScoreEvent` SwiftData model with append-only invariant (no public update/delete API), CloudKit-compatible (all properties have defaults, no @Attribute(.unique), no @Relationship, playerID as String for guest support).
+- Created `ScoringService` — plain class (not actor) using main ModelContext; `createScoreEvent` always throws on failure (never try?). supersedesEventID set to nil for all Story 3.2 events.
+- Registered `ScoreEvent.self` in domain ModelContainer schema in `HyzerApp.swift`.
+- Added `scoringService: ScoringService` to `AppServices` composition root; device ID sourced from `UIDevice.current.identifierForVendor`.
+- `ScorecardViewModel` is `@MainActor @Observable` with `enterScore` throwing method and `saveError` for alert binding.
+- `ScorecardContainerView` uses `TabView(.page)` for horizontal hole card stack; client-side filters for ScoreEvents and Holes (max ~108 events per round); queries Courses for course name display; initializes ViewModel on appear.
+- `ScorecardPlayer` struct unifies registered players (Player.id.uuidString) and guests ("guest:{name}") into a single identifiable list.
+- `HoleCardView` implements Amendment A7 current-score resolution (leaf node in supersession chain); score-state color coding via ColorTokens (scoreUnderPar/scoreAtPar/scoreOverPar/scoreWayOver); animated inline picker expansion; full accessibility labels.
+- `ScoreInputView` shows 1–10 scores with par visually anchored (accent color background); 52pt touch targets per NFR14; UIImpactFeedbackGenerator(.light) haptic on selection.
+- Removed `ActiveRoundView` placeholder and its unused helper methods/queries from `HomeView`.
+- HyzerKit tests (35/35 pass). iOS simulator tests blocked by pre-existing iOS 26 + SwiftData + AppGroup incompatibility (same as all prior stories — not a code issue).
+- SwiftLint: no errors or warnings.
+
 ### File List
+
+- `HyzerKit/Sources/HyzerKit/Models/ScoreEvent.swift` — created
+- `HyzerKit/Sources/HyzerKit/Domain/ScoringService.swift` — created
+- `HyzerApp/App/HyzerApp.swift` — modified (added ScoreEvent to ModelContainer)
+- `HyzerApp/App/AppServices.swift` — modified (added scoringService, UIKit import)
+- `HyzerApp/ViewModels/ScorecardViewModel.swift` — created
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` — created
+- `HyzerApp/Views/Scoring/HoleCardView.swift` — created
+- `HyzerApp/Views/Scoring/ScoreInputView.swift` — created
+- `HyzerApp/Views/HomeView.swift` — modified (replaced ActiveRoundView with ScorecardContainerView, removed unused code)
+- `HyzerKit/Tests/HyzerKitTests/Fixtures/ScoreEvent+Fixture.swift` — created
+- `HyzerKit/Tests/HyzerKitTests/Domain/ScoreEventModelTests.swift` — created
+- `HyzerKit/Tests/HyzerKitTests/Domain/ScoringServiceTests.swift` — created
+- `HyzerAppTests/ScorecardViewModelTests.swift` — created
