@@ -64,14 +64,18 @@ final class CourseEditorViewModel {
             for i in 0..<min(oldCount, newCount) {
                 existingHoles[i].par = holePars[i]
             }
-            // Delete holes beyond new count
-            for i in newCount..<oldCount {
-                context.delete(existingHoles[i])
+            // Delete holes beyond new count (only valid when shrinking)
+            if newCount < oldCount {
+                for i in newCount..<oldCount {
+                    context.delete(existingHoles[i])
+                }
             }
-            // Insert new holes if count increased
-            for i in oldCount..<newCount {
-                let hole = Hole(courseID: courseID, number: i + 1, par: holePars[i])
-                context.insert(hole)
+            // Insert new holes if count increased (only valid when expanding)
+            if oldCount < newCount {
+                for i in oldCount..<newCount {
+                    let hole = Hole(courseID: courseID, number: i + 1, par: holePars[i])
+                    context.insert(hole)
+                }
             }
             // Update course properties
             course.name = trimmedName

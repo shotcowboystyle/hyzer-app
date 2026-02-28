@@ -14,6 +14,7 @@ final class AppServices {
     let modelContainer: ModelContainer
     let scoringService: ScoringService
     let standingsEngine: StandingsEngine
+    let roundLifecycleManager: RoundLifecycleManager
     private(set) var iCloudRecordName: String?
 
     private let iCloudIdentityProvider: any ICloudIdentityProvider
@@ -25,6 +26,7 @@ final class AppServices {
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
+        self.roundLifecycleManager = RoundLifecycleManager(modelContext: modelContainer.mainContext)
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 

@@ -26,6 +26,15 @@ struct ScorecardContainerView: View {
     @State private var leaderboardViewModel: LeaderboardViewModel?
     @State private var autoAdvanceTask: Task<Void, Never>?
 
+    /// Shown when finishRound returns .hasMissingScores — confirms early termination.
+    @State private var missingScoreCount: Int = 0
+    @State private var isShowingEarlyFinishWarning = false
+    /// Controls the finalization prompt separately from `isAwaitingFinalization` so
+    /// that SwiftUI can dismiss the alert without an infinite re-presentation loop (H1 fix).
+    @State private var isShowingFinalizationPrompt = false
+    /// Shown when a lifecycle operation raises an error.
+    @State private var lifecycleError: Error?
+
     // MARK: - Client-side filters
 
     private var roundScoreEvents: [ScoreEvent] {
@@ -60,6 +69,7 @@ struct ScorecardContainerView: View {
                         courseName: courseName,
                         players: scorecardPlayers,
                         scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
+                        isRoundFinished: round.isFinished,
                         onScore: { playerID, strokeCount in
                             enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
                         },
@@ -85,22 +95,62 @@ struct ScorecardContainerView: View {
             }
         }
         .background(Color.backgroundPrimary)
-        .sheet(isPresented: Binding(
-            get: { leaderboardViewModel?.isExpanded ?? false },
-            set: { leaderboardViewModel?.isExpanded = $0 }
-        )) {
-            if let lvm = leaderboardViewModel {
-                LeaderboardExpandedView(viewModel: lvm, totalHoles: round.holeCount)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !round.isFinished {
+                    Menu {
+                        Button(role: .destructive) {
+                            finishRoundTapped()
+                        } label: {
+                            Label("Finish Round", systemImage: "checkmark.circle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .foregroundStyle(Color.textPrimary)
+                    }
+                }
             }
         }
-        .alert("Score Entry Error", isPresented: showingErrorBinding) {
+        // Finalization prompt: all scores recorded, user confirms
+        .alert(
+            "Finalize Round?",
+            isPresented: $isShowingFinalizationPrompt
+        ) {
+            Button("Finalize") { finalizeRoundConfirmed() }
+            Button("Keep Scoring", role: .cancel) {
+                viewModel?.dismissFinalizationPrompt()
+            }
+        } message: {
+            Text("All scores recorded. Finalize the round?")
+        }
+        .onChange(of: viewModel?.isAwaitingFinalization) { _, newValue in
+            if newValue == true {
+                isShowingFinalizationPrompt = true
+            }
+        }
+        // Early finish warning: unscored holes remain
+        .alert(
+            "Missing Scores",
+            isPresented: $isShowingEarlyFinishWarning
+        ) {
+            Button("Finish Anyway", role: .destructive) { finishRoundForced() }
+            Button("Keep Playing", role: .cancel) { }
+        } message: {
+            Text("\(missingScoreCount) score\(missingScoreCount == 1 ? "" : "s") missing. Finish anyway?")
+        }
+        // General lifecycle error alert
+        .alert("Error", isPresented: showingLifecycleErrorBinding) {
+            Button("OK") { lifecycleError = nil }
+        } message: {
+            Text(lifecycleError?.localizedDescription ?? "")
+        }
+        .alert("Score Entry Error", isPresented: showingScoreErrorBinding) {
             Button("OK") { }
         } message: {
             Text(viewModel?.saveError?.localizedDescription ?? "")
         }
         .onAppear { initializeViewModels() }
         .onChange(of: currentHole) {
-            // Cancel any pending auto-advance when the user swipes manually
             autoAdvanceTask?.cancel()
         }
     }
@@ -110,9 +160,9 @@ struct ScorecardContainerView: View {
     private func initializeViewModels() {
         guard viewModel == nil else { return }
         guard let organizer = allPlayers.first(where: { $0.id.uuidString == round.playerIDs.first }) else {
-            // Fall back to organizerID if organizer player not in query results yet
             viewModel = ScorecardViewModel(
                 scoringService: appServices.scoringService,
+                lifecycleManager: appServices.roundLifecycleManager,
                 roundID: round.id,
                 reportedByPlayerID: round.organizerID
             )
@@ -126,6 +176,7 @@ struct ScorecardContainerView: View {
         }
         viewModel = ScorecardViewModel(
             scoringService: appServices.scoringService,
+            lifecycleManager: appServices.roundLifecycleManager,
             roundID: round.id,
             reportedByPlayerID: organizer.id
         )
@@ -140,7 +191,7 @@ struct ScorecardContainerView: View {
     private func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) {
         guard let vm = viewModel else { return }
         do {
-            try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+            try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount, isRoundFinished: round.isFinished)
             leaderboardViewModel?.handleScoreEntered()
             handleAutoAdvance()
         } catch {
@@ -155,13 +206,58 @@ struct ScorecardContainerView: View {
                 previousEventID: previousEventID,
                 playerID: playerID,
                 holeNumber: holeNumber,
-                strokeCount: strokeCount
+                strokeCount: strokeCount,
+                isRoundFinished: round.isFinished
             )
             leaderboardViewModel?.handleScoreEntered()
         } catch {
             vm.saveError = error
         }
     }
+
+    // MARK: - Finish Round (manual early finish, Task 7)
+
+    private func finishRoundTapped() {
+        guard let vm = viewModel else { return }
+        do {
+            let result = try vm.finishRound(force: false)
+            switch result {
+            case .hasMissingScores(let count):
+                missingScoreCount = count
+                isShowingEarlyFinishWarning = true
+            case .completed:
+                // No missing scores — round completed directly (post-completion nav is automatic)
+                break
+            }
+        } catch {
+            lifecycleError = error
+        }
+    }
+
+    private func finishRoundForced() {
+        guard let vm = viewModel else { return }
+        do {
+            try vm.finishRound(force: true)
+            // Post-completion navigation: HomeView's @Query no longer includes this round,
+            // so ScoringTabView automatically switches back to the "Start Round" state.
+        } catch {
+            lifecycleError = error
+        }
+    }
+
+    // MARK: - Finalization (after auto-completion prompt, Task 6)
+
+    private func finalizeRoundConfirmed() {
+        guard let vm = viewModel else { return }
+        do {
+            try vm.finalizeRound()
+            // Post-completion navigation happens automatically (HomeView @Query update)
+        } catch {
+            lifecycleError = error
+        }
+    }
+
+    // MARK: - Auto advance
 
     /// Triggers auto-advance if all players are scored on the current hole after a new score entry.
     ///
@@ -196,10 +292,17 @@ struct ScorecardContainerView: View {
         allCourses.first { $0.id == round.courseID }?.name ?? "Unknown Course"
     }
 
-    private var showingErrorBinding: Binding<Bool> {
+    private var showingScoreErrorBinding: Binding<Bool> {
         Binding(
             get: { viewModel?.saveError != nil },
             set: { if !$0 { viewModel?.saveError = nil } }
+        )
+    }
+
+    private var showingLifecycleErrorBinding: Binding<Bool> {
+        Binding(
+            get: { lifecycleError != nil },
+            set: { if !$0 { lifecycleError = nil } }
         )
     }
 }

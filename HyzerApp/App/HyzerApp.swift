@@ -32,16 +32,12 @@ struct HyzerApp: App {
             "DomainStore",
             schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self])
         )
-        // Operational store: future SyncMetadata — local only, never syncs
-        let operationalConfig = ModelConfiguration(
-            "OperationalStore",
-            schema: Schema([]),
-            isStoredInMemoryOnly: false
-        )
+        // Note: Operational store (for SyncMetadata) is added when SyncMetadata is implemented.
+        // An empty Schema([]) configuration causes CoreData to reject the store at startup.
         do {
             return try ModelContainer(
                 for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
-                configurations: domainConfig, operationalConfig
+                configurations: domainConfig
             )
         } catch {
             // Fatal: the app cannot function without persistent storage.

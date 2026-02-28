@@ -1,6 +1,14 @@
 import Foundation
 import SwiftData
 
+/// String status values for `Round.status`. Stored as strings for CloudKit compatibility.
+public enum RoundStatus {
+    public static let setup = "setup"
+    public static let active = "active"
+    public static let awaitingFinalization = "awaitingFinalization"
+    public static let completed = "completed"
+}
+
 /// A disc golf round. Stored in the domain SwiftData store.
 ///
 /// CloudKit compatibility constraints:
@@ -29,14 +37,17 @@ public final class Round {
     public var playerIDs: [String] = []
     /// Round-scoped guest labels — no persistent Player identity (FR12b).
     public var guestNames: [String] = []
-    /// Lifecycle: "setup" | "active" (more states added in Story 3.5).
+    /// Lifecycle: "setup" | "active" | "awaitingFinalization" | "completed".
     /// Stored as String for CloudKit compatibility (CloudKit doesn't support Swift enums).
+    /// Use `RoundStatus` constants for comparisons.
     public var status: String = "setup"
     /// Denormalized from Course at creation time for efficient scoring access.
     public var holeCount: Int = 18
     public var createdAt: Date = Date()
     /// Non-nil once `start()` has been called.
     public var startedAt: Date?
+    /// Non-nil once `complete()` has been called.
+    public var completedAt: Date?
 
     public init(
         courseID: UUID,
@@ -54,8 +65,12 @@ public final class Round {
 
     // MARK: - Status helpers
 
-    public var isActive: Bool { status == "active" }
-    public var isSetup: Bool { status == "setup" }
+    public var isSetup: Bool { status == RoundStatus.setup }
+    public var isActive: Bool { status == RoundStatus.active }
+    public var isAwaitingFinalization: Bool { status == RoundStatus.awaitingFinalization }
+    public var isCompleted: Bool { status == RoundStatus.completed }
+    /// True when the round is in either `awaitingFinalization` or `completed` — no more scoring.
+    public var isFinished: Bool { isAwaitingFinalization || isCompleted }
 
     // MARK: - Lifecycle
 
@@ -64,8 +79,34 @@ public final class Round {
     /// - Precondition: `status` must be "setup". Calling `start()` on an already-active
     ///   round is a programming error.
     public func start() {
-        precondition(status == "setup", "Round.start() called on a non-setup round (status: \(status))")
-        status = "active"
+        precondition(status == RoundStatus.setup, "Round.start() called on a non-setup round (status: \(status))")
+        status = RoundStatus.active
         startedAt = Date()
+    }
+
+    /// Transitions the round from "active" to "awaitingFinalization".
+    ///
+    /// Called by `RoundLifecycleManager` when all (player, hole) pairs have resolved scores.
+    /// - Precondition: `status` must be "active".
+    public func awaitFinalization() {
+        precondition(
+            status == RoundStatus.active,
+            "Round.awaitFinalization() called on a non-active round (status: \(status))"
+        )
+        status = RoundStatus.awaitingFinalization
+    }
+
+    /// Transitions the round to "completed" and records the completion time.
+    ///
+    /// Accepts from either "active" (early finish with `force`) or "awaitingFinalization"
+    /// (user confirmed all scores). Sets `completedAt` to the current time.
+    /// - Precondition: `status` must be "active" or "awaitingFinalization".
+    public func complete() {
+        precondition(
+            status == RoundStatus.active || status == RoundStatus.awaitingFinalization,
+            "Round.complete() called on round in unexpected status: \(status)"
+        )
+        status = RoundStatus.completed
+        completedAt = Date()
     }
 }
