@@ -42,6 +42,8 @@ targets:
         UILaunchScreen: {}
         UIBackgroundModes:
           - remote-notification
+        NSMicrophoneUsageDescription: "HyzerApp uses the microphone to hear player names and scores for hands-free scoring."
+        NSSpeechRecognitionUsageDescription: "HyzerApp uses speech recognition to convert spoken scores into game entries. All processing happens on-device."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp

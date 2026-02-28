@@ -10,6 +10,7 @@
 		04E543641263753B01CC98B2 /* RoundSummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E63536A325A8FD3F5E743896 /* RoundSummaryView.swift */; };
 		079960697F1DB732A0FE5870 /* ScorecardContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4619B6CC10DE1F2616549B7E /* ScorecardContainerView.swift */; };
 		0F9A0D4BCB7C9197C852E4D5 /* CourseEditorViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F2A20DA3AF53A4644D429F /* CourseEditorViewModelTests.swift */; };
+		142C71682F24A3434B25C712 /* VoiceRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751B4A4FAE27078A43BE3A3F /* VoiceRecognitionService.swift */; };
 		1B216ACD7E371E7C974AA480 /* RoundSetupViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5B4334F9A1744E9A0EA28B0 /* RoundSetupViewModelTests.swift */; };
 		1FD1D4A3ADFD21C470D1189F /* LeaderboardPillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E77E4E336452EAE570A4531 /* LeaderboardPillView.swift */; };
 		264848715C0438CE283A1429 /* ScorecardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0271AF96B676CB2280840B30 /* ScorecardViewModel.swift */; };
@@ -98,6 +99,7 @@
 		54DB32460AB85326B67BFFE3 /* ScorecardViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardViewModelTests.swift; sourceTree = "<group>"; };
 		6A5193A54F5E0E9F5E5BA893 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6E77E4E336452EAE570A4531 /* LeaderboardPillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardPillView.swift; sourceTree = "<group>"; };
+		751B4A4FAE27078A43BE3A3F /* VoiceRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecognitionService.swift; sourceTree = "<group>"; };
 		800D115E8B8669538227512F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
 		902F00FF404EE9264C780629 /* CourseEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseEditorView.swift; sourceTree = "<group>"; };
@@ -333,6 +335,7 @@
 				99BEC27ED6A658066DE3B9F9 /* LiveCloudKitClient.swift */,
 				41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */,
 				D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */,
+				751B4A4FAE27078A43BE3A3F /* VoiceRecognitionService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -540,6 +543,7 @@
 				079960697F1DB732A0FE5870 /* ScorecardContainerView.swift in Sources */,
 				264848715C0438CE283A1429 /* ScorecardViewModel.swift in Sources */,
 				64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */,
+				142C71682F24A3434B25C712 /* VoiceRecognitionService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

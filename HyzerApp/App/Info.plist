@@ -18,6 +18,10 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>HyzerApp uses the microphone to hear player names and scores for hands-free scoring.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>HyzerApp uses speech recognition to convert spoken scores into game entries. All processing happens on-device.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

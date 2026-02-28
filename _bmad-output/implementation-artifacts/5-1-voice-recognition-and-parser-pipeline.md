@@ -1,6 +1,6 @@
 # Story 5.1: Voice Recognition & Parser Pipeline
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,46 +24,46 @@ so that I can enter scores without touching the screen.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `VoiceParseResult` enum and supporting types (AC: 6)
-  - [ ] 1.1: Create `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — `Sendable` enum with `.success([ScoreCandidate])`, `.partial(recognized:unresolved:)`, `.failed(transcript:)`
-  - [ ] 1.2: Create `ScoreCandidate` struct (playerID: String, displayName: String, strokeCount: Int) — `Sendable`
-  - [ ] 1.3: Create `Token` enum/struct for classified tokens (name, number, noise) — `Sendable`
+- [x] Task 1: Create `VoiceParseResult` enum and supporting types (AC: 6)
+  - [x] 1.1: Create `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — `Sendable` enum with `.success([ScoreCandidate])`, `.partial(recognized:unresolved:)`, `.failed(transcript:)`
+  - [x] 1.2: Create `ScoreCandidate` struct (playerID: String, displayName: String, strokeCount: Int) — `Sendable`
+  - [x] 1.3: Create `Token` enum/struct for classified tokens (name, number, noise) — `Sendable`
 
-- [ ] Task 2: Create `FuzzyNameMatcher` (AC: 3)
-  - [ ] 2.1: Create `HyzerKit/Sources/HyzerKit/Voice/FuzzyNameMatcher.swift` — `nonisolated`, `Sendable` struct
-  - [ ] 2.2: Implement alias map lookup: check `Player.aliases` array for exact case-insensitive match first
-  - [ ] 2.3: Implement Levenshtein distance fallback: accept >80% match, flag 50-80% as ambiguous, reject <50%
-  - [ ] 2.4: Initializer takes `[(playerID: String, displayName: String, aliases: [String])]` — no SwiftData dependency
-  - [ ] 2.5: Write `FuzzyNameMatcherTests.swift` in `HyzerKit/Tests/HyzerKitTests/Voice/`
+- [x] Task 2: Create `FuzzyNameMatcher` (AC: 3)
+  - [x] 2.1: Create `HyzerKit/Sources/HyzerKit/Voice/FuzzyNameMatcher.swift` — `nonisolated`, `Sendable` struct
+  - [x] 2.2: Implement alias map lookup: check `Player.aliases` array for exact case-insensitive match first
+  - [x] 2.3: Implement Levenshtein distance fallback: accept >80% match, flag 50-80% as ambiguous, reject <50%
+  - [x] 2.4: Initializer takes `[(playerID: String, displayName: String, aliases: [String])]` — no SwiftData dependency
+  - [x] 2.5: Write `FuzzyNameMatcherTests.swift` in `HyzerKit/Tests/HyzerKitTests/Voice/`
 
-- [ ] Task 3: Create `TokenClassifier` (AC: 2)
-  - [ ] 3.1: Create `HyzerKit/Sources/HyzerKit/Voice/TokenClassifier.swift` — `nonisolated`, `Sendable` struct
-  - [ ] 3.2: Classify tokens as `.name(String)`, `.number(Int)`, or `.noise(String)`
-  - [ ] 3.3: Handle both digit strings ("3") and word numbers ("three") — reject out-of-range (>10)
-  - [ ] 3.4: Write `TokenClassifierTests.swift` in `HyzerKit/Tests/HyzerKitTests/Voice/`
+- [x] Task 3: Create `TokenClassifier` (AC: 2)
+  - [x] 3.1: Create `HyzerKit/Sources/HyzerKit/Voice/TokenClassifier.swift` — `nonisolated`, `Sendable` struct
+  - [x] 3.2: Classify tokens as `.name(String)`, `.number(Int)`, or `.noise(String)`
+  - [x] 3.3: Handle both digit strings ("3") and word numbers ("three") — reject out-of-range (>10)
+  - [x] 3.4: Write `TokenClassifierTests.swift` in `HyzerKit/Tests/HyzerKitTests/Voice/`
 
-- [ ] Task 4: Create `VoiceParser` with tokenize-classify-assemble pipeline (AC: 2, 4)
-  - [ ] 4.1: Create `HyzerKit/Sources/HyzerKit/Voice/VoiceParser.swift` — `nonisolated`, `Sendable` struct
-  - [ ] 4.2: `parse(transcript:players:)` — tokenize transcript by whitespace/commas, classify each token, assemble name-number pairs
-  - [ ] 4.3: Return `.success` when all names resolved, `.partial` when some unresolved, `.failed` when none resolved
-  - [ ] 4.4: Handle subset scoring — "Jake 4" alone is valid (only scores Jake)
-  - [ ] 4.5: Write `VoiceParserTests.swift` in `HyzerKit/Tests/HyzerKitTests/Voice/`
+- [x] Task 4: Create `VoiceParser` with tokenize-classify-assemble pipeline (AC: 2, 4)
+  - [x] 4.1: Create `HyzerKit/Sources/HyzerKit/Voice/VoiceParser.swift` — `nonisolated`, `Sendable` struct
+  - [x] 4.2: `parse(transcript:players:)` — tokenize transcript by whitespace/commas, classify each token, assemble name-number pairs
+  - [x] 4.3: Return `.success` when all names resolved, `.partial` when some unresolved, `.failed` when none resolved
+  - [x] 4.4: Handle subset scoring — "Jake 4" alone is valid (only scores Jake)
+  - [x] 4.5: Write `VoiceParserTests.swift` in `HyzerKit/Tests/HyzerKitTests/Voice/`
 
-- [ ] Task 5: Create `VoiceRecognitionService` iOS-only wrapper (AC: 1, 5)
-  - [ ] 5.1: Create `HyzerApp/Services/VoiceRecognitionService.swift` — `@MainActor` class, imports `Speech` framework
-  - [ ] 5.2: Request microphone + speech recognition permissions (throw `VoiceParseError` on denial)
-  - [ ] 5.3: Configure `SFSpeechRecognizer` with `requiresOnDeviceRecognition = true`
-  - [ ] 5.4: `recognize()` async method returns transcript `String` (or throws `VoiceParseError`)
-  - [ ] 5.5: Add `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription` to `project.yml` under HyzerApp target
+- [x] Task 5: Create `VoiceRecognitionService` iOS-only wrapper (AC: 1, 5)
+  - [x] 5.1: Create `HyzerApp/Services/VoiceRecognitionService.swift` — `@MainActor` class, imports `Speech` framework
+  - [x] 5.2: Request microphone + speech recognition permissions (throw `VoiceParseError` on denial)
+  - [x] 5.3: Configure `SFSpeechRecognizer` with `requiresOnDeviceRecognition = true`
+  - [x] 5.4: `recognize()` async method returns transcript `String` (or throws `VoiceParseError`)
+  - [x] 5.5: Add `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription` to `project.yml` under HyzerApp target
 
-- [ ] Task 6: Create `VoiceParseError` enum (AC: 5)
-  - [ ] 6.1: Create in `HyzerKit/Sources/HyzerKit/Voice/VoiceParseError.swift` — `Error`, `Sendable`
-  - [ ] 6.2: Cases: `.microphonePermissionDenied`, `.recognitionUnavailable`, `.noSpeechDetected`
+- [x] Task 6: Create `VoiceParseError` enum (AC: 5)
+  - [x] 6.1: Create in `HyzerKit/Sources/HyzerKit/Voice/VoiceParseError.swift` — `Error`, `Sendable`
+  - [x] 6.2: Cases: `.microphonePermissionDenied`, `.recognitionUnavailable`, `.noSpeechDetected`
 
-- [ ] Task 7: Integration test — voice-to-standings pipeline (AC: 2, 4)
-  - [ ] 7.1: Create `HyzerKit/Tests/HyzerKitTests/Integration/VoiceToStandingsIntegrationTests.swift`
-  - [ ] 7.2: Feed transcript string into `VoiceParser.parse()`, assert `VoiceParseResult`, create `ScoreEvent`s via `ScoringService`, call `StandingsEngine.recompute()`, assert correct standings
-  - [ ] 7.3: No `SFSpeechRecognizer` needed — tests the parser-to-standings pipeline only
+- [x] Task 7: Integration test — voice-to-standings pipeline (AC: 2, 4)
+  - [x] 7.1: Create `HyzerKit/Tests/HyzerKitTests/Integration/VoiceToStandingsIntegrationTests.swift`
+  - [x] 7.2: Feed transcript string into `VoiceParser.parse()`, assert `VoiceParseResult`, create `ScoreEvent`s via `ScoringService`, call `StandingsEngine.recompute()`, assert correct standings
+  - [x] 7.3: No `SFSpeechRecognizer` needed — tests the parser-to-standings pipeline only
 
 ## Dev Notes
 
@@ -225,8 +225,40 @@ NSSpeechRecognitionUsageDescription: "HyzerApp uses speech recognition to conver
 
 ### Agent Model Used
 
+claude-sonnet-4-6
+
 ### Debug Log References
+
+- TokenClassifier word-number range check: initial implementation omitted range guard for word numbers (e.g. "thirty"). Fixed by broadening wordToNumber map to include out-of-range values (11–100) and applying `(1...10).contains(int)` guard to both digit and word paths.
 
 ### Completion Notes List
 
+- All HyzerKit voice types are `nonisolated`, `Sendable`, and import-free (no `Speech` framework).
+- `VoiceRecognitionService` lives exclusively in `HyzerApp/Services/` per platform isolation constraint.
+- `FuzzyNameMatcher` uses 4-tier matching: alias → display name exact → unique prefix → Levenshtein.
+- `TokenClassifier` uses a broad word-number map (one–hundred) with 1–10 range gate to correctly classify out-of-range words as `.noise` rather than `.name`.
+- `VoiceParser` assembly step correctly handles name-with-no-number (skips silently) and subset scoring.
+- 166 HyzerKit tests pass (0 regressions). iOS build succeeds with iPhone 17 simulator.
+- `project.yml` updated with `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`; `xcodegen generate` run and committed.
+
+### Code Review Fixes (claude-opus-4-6)
+
+- **H1**: `VoiceRecognitionService.recognize()` — added `hasResumed` guard to prevent `withCheckedThrowingContinuation` double-resume crash from `SFSpeechRecognitionTask` callback re-entry after `cancel()`.
+- **H2**: `VoiceRecognitionService.requestPermissions()` — speech recognition denial now throws `.recognitionUnavailable` instead of `.microphonePermissionDenied`.
+- **H3**: `VoiceRecognitionService.recognize()` — changed `[weak self]` to `[self]` in recognition callback to prevent async hang from unresumed continuation when service is deallocated during recording.
+- **M1**: Added `test_match_mediumSimilarity_returnsAmbiguous` to `FuzzyNameMatcherTests` — verifies Levenshtein 50-80% similarity returns `.ambiguous` (AC3 coverage gap).
+
 ### File List
+
+- HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift (new)
+- HyzerKit/Sources/HyzerKit/Voice/VoiceParseError.swift (new)
+- HyzerKit/Sources/HyzerKit/Voice/FuzzyNameMatcher.swift (new)
+- HyzerKit/Sources/HyzerKit/Voice/TokenClassifier.swift (new)
+- HyzerKit/Sources/HyzerKit/Voice/VoiceParser.swift (new)
+- HyzerKit/Tests/HyzerKitTests/Voice/FuzzyNameMatcherTests.swift (new)
+- HyzerKit/Tests/HyzerKitTests/Voice/TokenClassifierTests.swift (new)
+- HyzerKit/Tests/HyzerKitTests/Voice/VoiceParserTests.swift (new)
+- HyzerKit/Tests/HyzerKitTests/Integration/VoiceToStandingsIntegrationTests.swift (new)
+- HyzerApp/Services/VoiceRecognitionService.swift (new)
+- project.yml (modified — added NSMicrophoneUsageDescription, NSSpeechRecognitionUsageDescription)
+- HyzerApp/App/Info.plist (modified — generated by xcodegen)
