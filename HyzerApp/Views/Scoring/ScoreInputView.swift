@@ -8,9 +8,16 @@ import HyzerKit
 /// The par value is visually highlighted as the anchor (FR18).
 /// Tapping a value fires haptic feedback, collapses the picker, and saves the score (FR17).
 /// Touch targets are at least `SpacingTokens.scoringTouchTarget` (52pt) per NFR14.
+///
+/// For corrections (Story 3.3), `preSelectedScore` is set to the current score:
+/// - Scroll anchors at the pre-selected value instead of par
+/// - The pre-selected value shows a distinct ring indicator
+/// - Tapping the same value fires `onCancel` (no new event created)
 struct ScoreInputView: View {
     let playerName: String
     let par: Int
+    /// When non-nil, this is a correction — anchors scroll here and shows a ring indicator.
+    var preSelectedScore: Int? = nil
     let onSelect: (Int) -> Void
     let onCancel: () -> Void
 
@@ -37,6 +44,11 @@ struct ScoreInputView: View {
                 HStack(spacing: SpacingTokens.xs) {
                     ForEach(scores, id: \.self) { value in
                         Button {
+                            // Same-value correction: collapse without creating a new event
+                            if value == preSelectedScore {
+                                onCancel()
+                                return
+                            }
                             haptic.impactOccurred()
                             onSelect(value)
                         } label: {
@@ -53,15 +65,22 @@ struct ScoreInputView: View {
                                         : Color.backgroundPrimary.opacity(0.6)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    // Ring indicator for the current correction value
+                                    value == preSelectedScore
+                                        ? RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.textSecondary, lineWidth: 2)
+                                        : nil
+                                )
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Score \(value)\(value == par ? ", par" : "")")
+                        .accessibilityLabel(accessibilityLabel(for: value))
                     }
                 }
                 .scrollTargetLayout()
                 .padding(.horizontal, SpacingTokens.sm)
             }
-            .defaultScrollAnchor(parScrollAnchor)
+            .defaultScrollAnchor(scrollAnchor)
         }
         .padding(.vertical, SpacingTokens.sm)
         .background(Color.backgroundElevated)
@@ -71,9 +90,17 @@ struct ScoreInputView: View {
         .onAppear { haptic.prepare() }
     }
 
-    /// Scroll anchor that centers the par value in the visible area.
-    private var parScrollAnchor: UnitPoint {
-        let fraction = Double(par - 1) / Double(scores.count - 1)
+    /// Scroll anchor: pre-selected value for corrections, par for initial scoring.
+    private var scrollAnchor: UnitPoint {
+        let anchor = preSelectedScore ?? par
+        let fraction = Double(anchor - 1) / Double(scores.count - 1)
         return UnitPoint(x: fraction, y: 0.5)
+    }
+
+    private func accessibilityLabel(for value: Int) -> String {
+        var label = "Score \(value)"
+        if value == par { label += ", par" }
+        if value == preSelectedScore { label += ", current score" }
+        return label
     }
 }
