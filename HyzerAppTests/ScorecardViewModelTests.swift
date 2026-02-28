@@ -147,8 +147,8 @@ struct ScorecardViewModelTests {
 
     // MARK: - correctScore sets saveError on failure
 
-    @Test("correctScore sets saveError when previous event not found")
-    func test_correctScore_setsSaveErrorOnFailure() throws {
+    @Test("correctScore throws ScoringServiceError when previous event not found")
+    func test_correctScore_throwsOnMissingPreviousEvent() throws {
         let (_, service) = try makeContextAndService()
         let vm = ScorecardViewModel(
             scoringService: service,

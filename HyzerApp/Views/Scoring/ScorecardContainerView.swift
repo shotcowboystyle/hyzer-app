@@ -142,6 +142,7 @@ struct ScorecardContainerView: View {
 
         autoAdvanceTask?.cancel()
         autoAdvanceTask = Task { @MainActor in
+            // Safe to ignore: CancellationError is expected when user swipes manually; handled by isCancelled check below
             try? await Task.sleep(for: .milliseconds(750))
             guard !Task.isCancelled else { return }
             withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
@@ -151,7 +152,7 @@ struct ScorecardContainerView: View {
     }
 
     /// Returns true if every player in the round has a resolved (leaf node) score for the given hole.
-    func allPlayersScored(for holeNumber: Int) -> Bool {
+    private func allPlayersScored(for holeNumber: Int) -> Bool {
         scorecardPlayers.allSatisfy { player in
             resolveCurrentScore(for: player.id, hole: holeNumber, in: roundScoreEvents) != nil
         }
