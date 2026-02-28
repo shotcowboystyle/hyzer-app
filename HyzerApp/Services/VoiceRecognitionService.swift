@@ -9,7 +9,7 @@ import HyzerKit
 ///
 /// `@MainActor` — interacts with UI permission prompts and AVAudioEngine.
 @MainActor
-public final class VoiceRecognitionService {
+public final class VoiceRecognitionService: VoiceRecognitionServiceProtocol {
 
     private let speechRecognizer: SFSpeechRecognizer?
     private var recognitionTask: SFSpeechRecognitionTask?
@@ -80,6 +80,13 @@ public final class VoiceRecognitionService {
                 }
             }
         }
+    }
+
+    /// Stops the audio engine and cancels any active recognition task.
+    ///
+    /// Safe to call when no recognition is active — all operations are idempotent.
+    public func stopListening() {
+        stopAudioEngine()
     }
 
     private func stopAudioEngine() {
