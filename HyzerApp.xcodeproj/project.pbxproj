@@ -23,6 +23,8 @@
 		58FA343D3CDA32A3BBEDB9C0 /* LeaderboardExpandedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C43F8D9BA1A412FA48DB61 /* LeaderboardExpandedView.swift */; };
 		596A35E4701C525655211716 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */; };
 		602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6AEC89D27BF2CC224C8D55BB /* HyzerKit */; };
+		64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */; };
+		689356B498827861015A14A4 /* LiveNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */; };
 		6D665492C05385E1FB50E3B0 /* ScoreInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7876535734787458D7B0129 /* ScoreInputView.swift */; };
 		70D0955366D0881623788723 /* WatchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65E7DE08C3408533CBAE374 /* WatchRootView.swift */; };
 		7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */; };
@@ -88,6 +90,7 @@
 		2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudIdentityResolutionTests.swift; sourceTree = "<group>"; };
 		2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerApp.swift; sourceTree = "<group>"; };
 		39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncIndicatorView.swift; sourceTree = "<group>"; };
 		41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveICloudIdentityProvider.swift; sourceTree = "<group>"; };
 		4619B6CC10DE1F2616549B7E /* ScorecardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardContainerView.swift; sourceTree = "<group>"; };
 		46C43F8D9BA1A412FA48DB61 /* LeaderboardExpandedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardExpandedView.swift; sourceTree = "<group>"; };
@@ -107,9 +110,11 @@
 		A11CB2EA23B021251B93ADEE /* LeaderboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewModel.swift; sourceTree = "<group>"; };
 		B04BA312C596DB4B88277D5D /* RoundSummaryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryViewModel.swift; sourceTree = "<group>"; };
 		B5B4334F9A1744E9A0EA28B0 /* RoundSetupViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSetupViewModelTests.swift; sourceTree = "<group>"; };
+		BC03976642023E145926871B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BEA34634C0B7110CFCB8DDC4 /* HoleCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleCardView.swift; sourceTree = "<group>"; };
 		C2DE096DC71267D6C2C700CD /* HyzerApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HyzerApp.entitlements; sourceTree = "<group>"; };
 		CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNetworkMonitor.swift; sourceTree = "<group>"; };
 		D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		D567388ADB189B6F28DF15C2 /* CourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListView.swift; sourceTree = "<group>"; };
 		E1F2A20DA3AF53A4644D429F /* CourseEditorViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseEditorViewModelTests.swift; sourceTree = "<group>"; };
@@ -165,6 +170,7 @@
 		3F9EE8EAEFE2495CF3D31074 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				8FC692C15A07F650EB7E475A /* Components */,
 				9550B01599FC7C965A2ED49F /* Courses */,
 				BFA70554C01BF131C096FBB7 /* Leaderboard */,
 				4058938EE2AEF93A9B8E92C9 /* Onboarding */,
@@ -198,6 +204,14 @@
 				07943A8909080D9EEB547B64 /* HyzerKit */,
 			);
 			name = Packages;
+			sourceTree = "<group>";
+		};
+		8FC692C15A07F650EB7E475A /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		8FEB21AC3B5648E636889527 /* App */ = {
@@ -247,6 +261,7 @@
 				D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */,
 				C2DE096DC71267D6C2C700CD /* HyzerApp.entitlements */,
 				2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */,
+				BC03976642023E145926871B /* Info.plist */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -317,6 +332,7 @@
 			children = (
 				99BEC27ED6A658066DE3B9F9 /* LiveCloudKitClient.swift */,
 				41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */,
+				D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -513,6 +529,7 @@
 				4355F22606C5C352805D9DE6 /* LeaderboardViewModel.swift in Sources */,
 				7823F1D6F90939B940EFAD1F /* LiveCloudKitClient.swift in Sources */,
 				A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */,
+				689356B498827861015A14A4 /* LiveNetworkMonitor.swift in Sources */,
 				A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */,
 				AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */,
 				A74792297AFB13394CA53E4C /* RoundSetupView.swift in Sources */,
@@ -522,6 +539,7 @@
 				6D665492C05385E1FB50E3B0 /* ScoreInputView.swift in Sources */,
 				079960697F1DB732A0FE5870 /* ScorecardContainerView.swift in Sources */,
 				264848715C0438CE283A1429 /* ScorecardViewModel.swift in Sources */,
+				64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,8 +576,7 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerApp/App/HyzerApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_FILE = HyzerApp/App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -718,8 +735,7 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerApp/App/HyzerApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_FILE = HyzerApp/App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
