@@ -19,7 +19,11 @@ final class ScorecardViewModel {
 
     var saveError: Error?
     /// True when all (player, hole) pairs are scored — prompts the finalization confirmation.
+    /// Reset to `false` when the user dismisses the prompt (so the alert can be re-triggered later
+    /// without creating an infinite presentation loop).
     var isAwaitingFinalization: Bool = false
+    /// Set to `true` after `finalizeRound` or `finishRound` completes successfully.
+    private(set) var isRoundCompleted: Bool = false
 
     init(
         scoringService: ScoringService,
@@ -39,7 +43,8 @@ final class ScorecardViewModel {
     ///   - playerID: Player.id.uuidString or "guest:{name}" for guests.
     ///   - holeNumber: 1-based hole number.
     ///   - strokeCount: The score (1-10).
-    func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) throws {
+    func enterScore(playerID: String, holeNumber: Int, strokeCount: Int, isRoundFinished: Bool) throws {
+        guard !isRoundFinished else { return }
         try scoringService.createScoreEvent(
             roundID: roundID,
             holeNumber: holeNumber,
@@ -59,7 +64,8 @@ final class ScorecardViewModel {
     ///   - playerID: Player.id.uuidString or "guest:{name}" for guests.
     ///   - holeNumber: 1-based hole number.
     ///   - strokeCount: The corrected score (1-10).
-    func correctScore(previousEventID: UUID, playerID: String, holeNumber: Int, strokeCount: Int) throws {
+    func correctScore(previousEventID: UUID, playerID: String, holeNumber: Int, strokeCount: Int, isRoundFinished: Bool) throws {
+        guard !isRoundFinished else { return }
         try scoringService.correctScore(
             previousEventID: previousEventID,
             roundID: roundID,
@@ -69,6 +75,28 @@ final class ScorecardViewModel {
             reportedByPlayerID: reportedByPlayerID
         )
         checkCompletionIfActive()
+    }
+
+    // MARK: - Lifecycle actions (delegated from the View)
+
+    /// Attempts to finish the round. Returns `.hasMissingScores` if a warning is needed.
+    func finishRound(force: Bool) throws -> FinishRoundResult {
+        let result = try lifecycleManager.finishRound(roundID: roundID, force: force)
+        if case .completed = result {
+            isRoundCompleted = true
+        }
+        return result
+    }
+
+    /// Confirms the finalization prompt — transitions awaitingFinalization → completed.
+    func finalizeRound() throws {
+        try lifecycleManager.finalizeRound(roundID: roundID)
+        isRoundCompleted = true
+    }
+
+    /// Dismisses the finalization prompt so the user can keep scoring.
+    func dismissFinalizationPrompt() {
+        isAwaitingFinalization = false
     }
 
     // MARK: - Private

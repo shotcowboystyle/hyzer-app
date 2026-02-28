@@ -206,10 +206,31 @@ claude-sonnet-4-6
 ### Completion Notes List
 
 - All 12 tasks implemented across HyzerKit and HyzerApp layers.
-- 67 HyzerKit tests pass (`swift test --package-path HyzerKit`).
-- 76 iOS app tests pass (`xcodebuild test … ** TEST SUCCEEDED **`).
+- 71 HyzerKit tests pass (`swift test --package-path HyzerKit`).
+- 77 iOS app tests pass (`xcodebuild test … ** TEST SUCCEEDED **`).
 - Two pre-existing bugs fixed as side-effects of making the iOS test suite runnable: empty `OperationalStore` config and unguarded `saveCourse` edit-mode loops.
 - Player list immutability (Task 5): `RoundSetupView` only exists before a round is created so no mutation path exists post-start; no UI guard needed beyond the service-layer `validatePlayerMutation`.
+
+### Senior Developer Review (AI)
+
+**Reviewer:** claude-opus-4-6
+**Date:** 2026-02-28
+
+**Findings (9 total): 1 HIGH, 5 MEDIUM, 3 LOW — all resolved.**
+
+| ID | Severity | Finding | Fix |
+|----|----------|---------|-----|
+| H1 | HIGH | Finalization alert "Keep Scoring" button caused infinite re-presentation loop — `isPresented` binding had no-op setter so SwiftUI couldn't dismiss | Added separate `@State isShowingFinalizationPrompt` decoupled from lifecycle flag; `.onChange(of:)` bridges the two |
+| M1 | MEDIUM | `finalizeRound()` lacked state precondition — could crash on non-awaitingFinalization rounds | Added `guard round.isAwaitingFinalization` with `invalidStateForTransition` error |
+| M2 | MEDIUM | `finishRound()` lacked state precondition — could crash on setup/completed rounds | Added `guard round.isActive \|\| round.isAwaitingFinalization` with `invalidStateForTransition` error |
+| M3 | MEDIUM | `ScorecardContainerView` bypassed ViewModel for lifecycle operations, calling `appServices.roundLifecycleManager` directly | Moved `finishRound`, `finalizeRound`, `dismissFinalizationPrompt` into `ScorecardViewModel`; View delegates through VM |
+| M4 | MEDIUM | `validatePlayerMutation()` never called in production code | Documented as intentional future guard (no mutation path exists post-start); added doc comment |
+| M5 | MEDIUM | Scoring guard in View layer instead of ViewModel (Task 8.1 deviation) | Added `isRoundFinished` parameter to `enterScore`/`correctScore` in ViewModel; guard now enforced at VM level |
+| L1 | LOW | `checkCompletion()` returns `.incomplete(missing: 0)` for non-active rounds (misleading) | Accepted as-is — mitigated by `guard !isAwaitingFinalization` in VM |
+| L2 | LOW | No test for `finishRound` on already-completed round | Added 2 tests: completed round and setup round |
+| L3 | LOW | No test for `finalizeRound` on non-awaitingFinalization round | Added 2 tests: active round and completed round |
+
+**Test counts after review:** 71 HyzerKit + 77 HyzerApp = 148 total tests passing.
 
 ### File List
 

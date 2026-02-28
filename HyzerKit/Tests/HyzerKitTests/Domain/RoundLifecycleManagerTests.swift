@@ -343,4 +343,72 @@ struct RoundLifecycleManagerTests {
             try manager.checkCompletion(roundID: fakeID)
         }
     }
+
+    // MARK: - State validation: finishRound on invalid states (L2 fix)
+
+    @Test("finishRound throws invalidStateForTransition on a completed round")
+    func test_finishRound_throwsOnCompletedRound() throws {
+        let (_, context) = try makeContext()
+        let manager = RoundLifecycleManager(modelContext: context)
+        let round = try insertActiveRound(context: context)
+        _ = try manager.finishRound(roundID: round.id, force: true)
+        #expect(round.isCompleted)
+
+        #expect(throws: RoundLifecycleError.invalidStateForTransition(
+            current: "completed",
+            expected: "active or awaitingFinalization"
+        )) {
+            try manager.finishRound(roundID: round.id, force: true)
+        }
+    }
+
+    @Test("finishRound throws invalidStateForTransition on a setup round")
+    func test_finishRound_throwsOnSetupRound() throws {
+        let (_, context) = try makeContext()
+        let manager = RoundLifecycleManager(modelContext: context)
+        let round = Round.fixture()
+        context.insert(round)
+        try context.save()
+        #expect(round.isSetup)
+
+        #expect(throws: RoundLifecycleError.invalidStateForTransition(
+            current: "setup",
+            expected: "active or awaitingFinalization"
+        )) {
+            try manager.finishRound(roundID: round.id, force: true)
+        }
+    }
+
+    // MARK: - State validation: finalizeRound on invalid states (L3 fix)
+
+    @Test("finalizeRound throws invalidStateForTransition on an active round")
+    func test_finalizeRound_throwsOnActiveRound() throws {
+        let (_, context) = try makeContext()
+        let manager = RoundLifecycleManager(modelContext: context)
+        let round = try insertActiveRound(context: context)
+        #expect(round.isActive)
+
+        #expect(throws: RoundLifecycleError.invalidStateForTransition(
+            current: "active",
+            expected: "awaitingFinalization"
+        )) {
+            try manager.finalizeRound(roundID: round.id)
+        }
+    }
+
+    @Test("finalizeRound throws invalidStateForTransition on a completed round")
+    func test_finalizeRound_throwsOnCompletedRound() throws {
+        let (_, context) = try makeContext()
+        let manager = RoundLifecycleManager(modelContext: context)
+        let round = try insertActiveRound(context: context)
+        _ = try manager.finishRound(roundID: round.id, force: true)
+        #expect(round.isCompleted)
+
+        #expect(throws: RoundLifecycleError.invalidStateForTransition(
+            current: "completed",
+            expected: "awaitingFinalization"
+        )) {
+            try manager.finalizeRound(roundID: round.id)
+        }
+    }
 }

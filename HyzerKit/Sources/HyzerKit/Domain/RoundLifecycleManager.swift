@@ -25,6 +25,8 @@ public enum RoundLifecycleError: Error, Sendable, Equatable {
     case playerMutationForbidden(String)
     /// The specified round could not be found in the store.
     case roundNotFound(UUID)
+    /// A lifecycle operation was attempted on a round in an invalid state.
+    case invalidStateForTransition(current: String, expected: String)
 }
 
 // MARK: - RoundLifecycleManager
@@ -60,6 +62,11 @@ public final class RoundLifecycleManager {
     // MARK: - Player mutation guard
 
     /// Throws if the round's player list may no longer be mutated.
+    ///
+    /// Currently no production code path mutates players after round start —
+    /// `RoundSetupView` only exists before a round is created. This method is provided
+    /// as a programmatic guard for any future feature that adds player editing (e.g., mid-round
+    /// substitutions). Any such feature MUST call this before mutating `playerIDs`/`guestNames`.
     ///
     /// - Parameter round: The round to validate.
     /// - Throws: `RoundLifecycleError.playerMutationForbidden` when status is not "setup".
@@ -115,6 +122,12 @@ public final class RoundLifecycleManager {
     @discardableResult
     public func finishRound(roundID: UUID, force: Bool) throws -> FinishRoundResult {
         let round = try fetchRound(roundID)
+        guard round.isActive || round.isAwaitingFinalization else {
+            throw RoundLifecycleError.invalidStateForTransition(
+                current: round.status,
+                expected: "\(RoundStatus.active) or \(RoundStatus.awaitingFinalization)"
+            )
+        }
         let missingCount = try missingScoreCount(for: round)
 
         if !force && missingCount > 0 {
@@ -137,6 +150,12 @@ public final class RoundLifecycleManager {
     ///           Rethrows SwiftData persistence errors.
     public func finalizeRound(roundID: UUID) throws {
         let round = try fetchRound(roundID)
+        guard round.isAwaitingFinalization else {
+            throw RoundLifecycleError.invalidStateForTransition(
+                current: round.status,
+                expected: RoundStatus.awaitingFinalization
+            )
+        }
         round.complete()
         try modelContext.save()
     }

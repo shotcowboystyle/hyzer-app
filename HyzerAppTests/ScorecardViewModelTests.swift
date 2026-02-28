@@ -52,7 +52,7 @@ struct ScorecardViewModelTests {
 
         let vm = makeVM(context: context, service: service, roundID: roundID, reporterID: reporterID)
 
-        try vm.enterScore(playerID: "player-abc", holeNumber: 5, strokeCount: 4)
+        try vm.enterScore(playerID: "player-abc", holeNumber: 5, strokeCount: 4, isRoundFinished: false)
 
         let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
         #expect(fetched.count == 1)
@@ -71,7 +71,7 @@ struct ScorecardViewModelTests {
 
         let vm = makeVM(context: context, service: service, roundID: roundID, reporterID: reporterID)
 
-        try vm.enterScore(playerID: "player-xyz", holeNumber: 3, strokeCount: 3)
+        try vm.enterScore(playerID: "player-xyz", holeNumber: 3, strokeCount: 3, isRoundFinished: false)
 
         let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
         #expect(fetched.count == 1)
@@ -88,9 +88,9 @@ struct ScorecardViewModelTests {
 
         let vm = makeVM(context: context, service: service, roundID: roundID)
 
-        try vm.enterScore(playerID: "player-one", holeNumber: 1, strokeCount: 3)
-        try vm.enterScore(playerID: "player-two", holeNumber: 1, strokeCount: 4)
-        try vm.enterScore(playerID: "guest:Dave", holeNumber: 1, strokeCount: 5)
+        try vm.enterScore(playerID: "player-one", holeNumber: 1, strokeCount: 3, isRoundFinished: false)
+        try vm.enterScore(playerID: "player-two", holeNumber: 1, strokeCount: 4, isRoundFinished: false)
+        try vm.enterScore(playerID: "guest:Dave", holeNumber: 1, strokeCount: 5, isRoundFinished: false)
 
         let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
         #expect(fetched.count == 3)
@@ -114,7 +114,7 @@ struct ScorecardViewModelTests {
         )
 
         // Correct it via the ViewModel
-        try vm.correctScore(previousEventID: original.id, playerID: "player-abc", holeNumber: 4, strokeCount: 3)
+        try vm.correctScore(previousEventID: original.id, playerID: "player-abc", holeNumber: 4, strokeCount: 3, isRoundFinished: false)
 
         let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
         #expect(fetched.count == 2)
@@ -137,7 +137,7 @@ struct ScorecardViewModelTests {
             roundID: roundID, holeNumber: 2, playerID: "player-abc", strokeCount: 4, reportedByPlayerID: UUID()
         )
 
-        try vm.correctScore(previousEventID: original.id, playerID: "player-abc", holeNumber: 2, strokeCount: 2)
+        try vm.correctScore(previousEventID: original.id, playerID: "player-abc", holeNumber: 2, strokeCount: 2, isRoundFinished: false)
 
         let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
         let correction = fetched.first { $0.supersedesEventID == original.id }
@@ -154,7 +154,7 @@ struct ScorecardViewModelTests {
 
         let missingID = UUID()
         #expect(throws: ScoringServiceError.previousEventNotFound(missingID)) {
-            try vm.correctScore(previousEventID: missingID, playerID: "p", holeNumber: 1, strokeCount: 3)
+            try vm.correctScore(previousEventID: missingID, playerID: "p", holeNumber: 1, strokeCount: 3, isRoundFinished: false)
         }
     }
 
@@ -246,7 +246,7 @@ struct ScorecardViewModelTests {
         let vm = makeVM(context: context, service: service, roundID: roundID)
 
         // Should not throw even though checkCompletion finds no round (error is logged, not surfaced)
-        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3)
+        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3, isRoundFinished: false)
 
         let events = try context.fetch(FetchDescriptor<ScoreEvent>())
         #expect(events.count == 1)
@@ -274,29 +274,41 @@ struct ScorecardViewModelTests {
         let vm = makeVM(context: context, service: service, roundID: round.id)
 
         // Entering the single score for the single hole should trigger completion
-        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3)
+        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3, isRoundFinished: false)
 
         #expect(vm.isAwaitingFinalization == true)
         #expect(round.isAwaitingFinalization)
     }
 
-    // MARK: - Task 12.3: Score entry is rejected on completed rounds
+    // MARK: - Task 12.3: Score entry is rejected on completed rounds (guard in ViewModel)
 
-    @Test("enterScore is rejected when round is completed — guard in ScorecardContainerView")
-    func test_completedRound_scoringGuardedAtContainerLevel() throws {
-        // The guard lives in ScorecardContainerView.enterScore() where `round` is available.
-        // This test validates the Round.isFinished property used in that guard.
-        let round = Round(courseID: UUID(), organizerID: UUID(), playerIDs: [], guestNames: [], holeCount: 18)
-        round.start()
-        #expect(!round.isFinished)
+    @Test("enterScore no-ops when isRoundFinished is true — no ScoreEvent created")
+    func test_enterScore_noopsWhenRoundFinished() throws {
+        let (context, service) = try makeContextAndService()
+        let roundID = UUID()
+        let vm = makeVM(context: context, service: service, roundID: roundID)
 
-        round.complete()
-        #expect(round.isFinished)
+        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3, isRoundFinished: true)
 
-        // The guard: guard !round.isFinished else { return }
-        // If isFinished is true, enterScore would return early — no ScoreEvent created.
-        let guardPreventsEntry = round.isFinished
-        #expect(guardPreventsEntry == true)
+        let events = try context.fetch(FetchDescriptor<ScoreEvent>())
+        #expect(events.isEmpty)
+    }
+
+    @Test("correctScore no-ops when isRoundFinished is true — no correction event created")
+    func test_correctScore_noopsWhenRoundFinished() throws {
+        let (context, service) = try makeContextAndService()
+        let roundID = UUID()
+        let vm = makeVM(context: context, service: service, roundID: roundID)
+
+        // Create an initial score directly via the service
+        let original = try service.createScoreEvent(
+            roundID: roundID, holeNumber: 1, playerID: "p1", strokeCount: 5, reportedByPlayerID: UUID()
+        )
+
+        try vm.correctScore(previousEventID: original.id, playerID: "p1", holeNumber: 1, strokeCount: 3, isRoundFinished: true)
+
+        let events = try context.fetch(FetchDescriptor<ScoreEvent>())
+        #expect(events.count == 1) // only the original, no correction
     }
 
     @Test("isAwaitingFinalization flag is not re-set once true — avoids redundant lifecycle checks")
@@ -317,7 +329,7 @@ struct ScorecardViewModelTests {
         let vm = makeVM(context: context, service: service, roundID: round.id)
 
         // Score the only hole
-        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3)
+        try vm.enterScore(playerID: "p1", holeNumber: 1, strokeCount: 3, isRoundFinished: false)
         #expect(vm.isAwaitingFinalization == true)
 
         // Correction on the same hole — isAwaitingFinalization should remain true
@@ -326,7 +338,7 @@ struct ScorecardViewModelTests {
             Issue.record("No score event found")
             return
         }
-        try vm.correctScore(previousEventID: original.id, playerID: "p1", holeNumber: 1, strokeCount: 4)
+        try vm.correctScore(previousEventID: original.id, playerID: "p1", holeNumber: 1, strokeCount: 4, isRoundFinished: false)
         #expect(vm.isAwaitingFinalization == true)
     }
 }

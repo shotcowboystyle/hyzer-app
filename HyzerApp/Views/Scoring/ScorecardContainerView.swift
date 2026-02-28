@@ -29,7 +29,10 @@ struct ScorecardContainerView: View {
     /// Shown when finishRound returns .hasMissingScores — confirms early termination.
     @State private var missingScoreCount: Int = 0
     @State private var isShowingEarlyFinishWarning = false
-    /// Shown when lifecycleManager raises a round-finish error.
+    /// Controls the finalization prompt separately from `isAwaitingFinalization` so
+    /// that SwiftUI can dismiss the alert without an infinite re-presentation loop (H1 fix).
+    @State private var isShowingFinalizationPrompt = false
+    /// Shown when a lifecycle operation raises an error.
     @State private var lifecycleError: Error?
 
     // MARK: - Client-side filters
@@ -111,15 +114,19 @@ struct ScorecardContainerView: View {
         // Finalization prompt: all scores recorded, user confirms
         .alert(
             "Finalize Round?",
-            isPresented: Binding(
-                get: { viewModel?.isAwaitingFinalization ?? false },
-                set: { if !$0 { /* user dismissed — stay in awaitingFinalization */ } }
-            )
+            isPresented: $isShowingFinalizationPrompt
         ) {
             Button("Finalize") { finalizeRoundConfirmed() }
-            Button("Keep Scoring", role: .cancel) { }
+            Button("Keep Scoring", role: .cancel) {
+                viewModel?.dismissFinalizationPrompt()
+            }
         } message: {
             Text("All scores recorded. Finalize the round?")
+        }
+        .onChange(of: viewModel?.isAwaitingFinalization) { _, newValue in
+            if newValue == true {
+                isShowingFinalizationPrompt = true
+            }
         }
         // Early finish warning: unscored holes remain
         .alert(
@@ -182,10 +189,9 @@ struct ScorecardContainerView: View {
     }
 
     private func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) {
-        guard !round.isFinished else { return }
         guard let vm = viewModel else { return }
         do {
-            try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+            try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount, isRoundFinished: round.isFinished)
             leaderboardViewModel?.handleScoreEntered()
             handleAutoAdvance()
         } catch {
@@ -194,14 +200,14 @@ struct ScorecardContainerView: View {
     }
 
     private func correctScore(playerID: String, previousEventID: UUID, holeNumber: Int, strokeCount: Int) {
-        guard !round.isFinished else { return }
         guard let vm = viewModel else { return }
         do {
             try vm.correctScore(
                 previousEventID: previousEventID,
                 playerID: playerID,
                 holeNumber: holeNumber,
-                strokeCount: strokeCount
+                strokeCount: strokeCount,
+                isRoundFinished: round.isFinished
             )
             leaderboardViewModel?.handleScoreEntered()
         } catch {
@@ -212,8 +218,9 @@ struct ScorecardContainerView: View {
     // MARK: - Finish Round (manual early finish, Task 7)
 
     private func finishRoundTapped() {
+        guard let vm = viewModel else { return }
         do {
-            let result = try appServices.roundLifecycleManager.finishRound(roundID: round.id, force: false)
+            let result = try vm.finishRound(force: false)
             switch result {
             case .hasMissingScores(let count):
                 missingScoreCount = count
@@ -228,8 +235,9 @@ struct ScorecardContainerView: View {
     }
 
     private func finishRoundForced() {
+        guard let vm = viewModel else { return }
         do {
-            try appServices.roundLifecycleManager.finishRound(roundID: round.id, force: true)
+            try vm.finishRound(force: true)
             // Post-completion navigation: HomeView's @Query no longer includes this round,
             // so ScoringTabView automatically switches back to the "Start Round" state.
         } catch {
@@ -240,8 +248,9 @@ struct ScorecardContainerView: View {
     // MARK: - Finalization (after auto-completion prompt, Task 6)
 
     private func finalizeRoundConfirmed() {
+        guard let vm = viewModel else { return }
         do {
-            try appServices.roundLifecycleManager.finalizeRound(roundID: round.id)
+            try vm.finalizeRound()
             // Post-completion navigation happens automatically (HomeView @Query update)
         } catch {
             lifecycleError = error
