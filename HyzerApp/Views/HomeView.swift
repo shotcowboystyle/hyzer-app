@@ -34,20 +34,13 @@ private struct ScoringTabView: View {
         sort: \Round.startedAt
     ) private var activeRounds: [Round]
 
-    @Query(sort: \Course.name) private var courses: [Course]
-    @Query(sort: \Player.displayName) private var allPlayers: [Player]
-
     @State private var isShowingRoundSetup = false
 
     var body: some View {
         NavigationStack {
             Group {
                 if let activeRound = activeRounds.first {
-                    ActiveRoundView(
-                        round: activeRound,
-                        courseName: courseName(for: activeRound),
-                        playerNames: playerNames(for: activeRound)
-                    )
+                    ScorecardContainerView(round: activeRound)
                 } else {
                     noRoundView
                 }
@@ -74,42 +67,6 @@ private struct ScoringTabView: View {
         }
     }
 
-    private func courseName(for round: Round) -> String {
-        courses.first { $0.id == round.courseID }?.name ?? "Unknown Course"
-    }
-
-    private func playerNames(for round: Round) -> [String] {
-        let registered = round.playerIDs.compactMap { playerID in
-            allPlayers.first { $0.id.uuidString == playerID }?.displayName
-        }
-        return registered + round.guestNames
-    }
-}
-
-// MARK: - Active Round (placeholder for Story 3.2)
-
-private struct ActiveRoundView: View {
-    let round: Round
-    let courseName: String
-    let playerNames: [String]
-
-    var body: some View {
-        VStack(spacing: SpacingTokens.lg) {
-            Text("Round at \(courseName)")
-                .font(TypographyTokens.h2)
-                .foregroundStyle(Color.textPrimary)
-            Text("\(round.holeCount) holes · \(playerNames.count) players")
-                .font(TypographyTokens.body)
-                .foregroundStyle(Color.textSecondary)
-            Text(playerNames.joined(separator: ", "))
-                .font(TypographyTokens.caption)
-                .foregroundStyle(Color.textSecondary)
-            Text("Scoring coming in Story 3.2")
-                .font(TypographyTokens.caption)
-                .foregroundStyle(Color.textSecondary)
-        }
-        .padding(SpacingTokens.xl)
-    }
 }
 
 // MARK: - History Tab (placeholder for Epic 8)

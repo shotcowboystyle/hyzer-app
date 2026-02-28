@@ -1,0 +1,112 @@
+import SwiftUI
+import SwiftData
+import HyzerKit
+
+/// A horizontal card stack showing one hole card per hole in the round.
+///
+/// Receives a `Round` object; queries ScoreEvents, Holes, and Players via `@Query`.
+/// Client-side filtering keeps relevant data per hole — the dataset is small
+/// (max ~108 ScoreEvents, 18 Holes, ~6 Players per round).
+///
+/// `@Query` lives in the View per the architecture rule — the ViewModel only handles actions.
+struct ScorecardContainerView: View {
+    let round: Round
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppServices.self) private var appServices
+
+    @Query private var allScoreEvents: [ScoreEvent]
+    @Query(sort: \Hole.number) private var allHoles: [Hole]
+    @Query(sort: \Player.displayName) private var allPlayers: [Player]
+    @Query(sort: \Course.name) private var allCourses: [Course]
+
+    @State private var currentHole: Int = 1
+    @State private var viewModel: ScorecardViewModel?
+
+    // MARK: - Client-side filters
+
+    private var roundScoreEvents: [ScoreEvent] {
+        allScoreEvents.filter { $0.roundID == round.id }
+    }
+
+    private var courseHoles: [Hole] {
+        allHoles.filter { $0.courseID == round.courseID }
+    }
+
+    /// Unified player row list: registered players + guests, ordered as they were added.
+    private var scorecardPlayers: [ScorecardPlayer] {
+        let registered = round.playerIDs.compactMap { playerID -> ScorecardPlayer? in
+            guard let player = allPlayers.first(where: { $0.id.uuidString == playerID }) else { return nil }
+            return ScorecardPlayer(id: playerID, displayName: player.displayName, isGuest: false)
+        }
+        let guests = round.guestNames.map { name in
+            ScorecardPlayer(id: "guest:\(name)", displayName: name, isGuest: true)
+        }
+        return registered + guests
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        TabView(selection: $currentHole) {
+            ForEach(1...max(1, round.holeCount), id: \.self) { holeNumber in
+                HoleCardView(
+                    holeNumber: holeNumber,
+                    par: par(forHole: holeNumber),
+                    courseName: courseName,
+                    players: scorecardPlayers,
+                    scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
+                    onScore: { playerID, strokeCount in
+                        enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+                    }
+                )
+                .tag(holeNumber)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .automatic))
+        .background(Color.backgroundPrimary)
+        .alert("Score Entry Error", isPresented: .constant(viewModel?.saveError != nil)) {
+            Button("OK") { viewModel?.saveError = nil }
+        } message: {
+            Text(viewModel?.saveError?.localizedDescription ?? "")
+        }
+        .onAppear { initializeViewModel() }
+    }
+
+    // MARK: - Private
+
+    private func initializeViewModel() {
+        guard viewModel == nil else { return }
+        guard let organizer = allPlayers.first(where: { $0.id.uuidString == round.playerIDs.first }) else {
+            // Fall back to organizerID if organizer player not in query results yet
+            viewModel = ScorecardViewModel(
+                scoringService: appServices.scoringService,
+                roundID: round.id,
+                reportedByPlayerID: round.organizerID
+            )
+            return
+        }
+        viewModel = ScorecardViewModel(
+            scoringService: appServices.scoringService,
+            roundID: round.id,
+            reportedByPlayerID: organizer.id
+        )
+    }
+
+    private func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) {
+        guard let vm = viewModel else { return }
+        do {
+            try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+        } catch {
+            vm.saveError = error
+        }
+    }
+
+    private func par(forHole holeNumber: Int) -> Int {
+        courseHoles.first { $0.number == holeNumber }?.par ?? 3
+    }
+
+    private var courseName: String {
+        allCourses.first { $0.id == round.courseID }?.name ?? "Unknown Course"
+    }
+}

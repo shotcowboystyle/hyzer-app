@@ -27,10 +27,10 @@ struct HyzerApp: App {
     // MARK: - Private
 
     private static func makeModelContainer() -> ModelContainer {
-        // Domain store: Player, Course, Hole, Round (and future: ScoreEvent) — synced via manual CloudKit
+        // Domain store: Player, Course, Hole, Round, ScoreEvent — synced via manual CloudKit
         let domainConfig = ModelConfiguration(
             "DomainStore",
-            schema: Schema([Player.self, Course.self, Hole.self, Round.self])
+            schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self])
         )
         // Operational store: future SyncMetadata — local only, never syncs
         let operationalConfig = ModelConfiguration(
@@ -40,7 +40,7 @@ struct HyzerApp: App {
         )
         do {
             return try ModelContainer(
-                for: Player.self, Course.self, Hole.self, Round.self,
+                for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
                 configurations: domainConfig, operationalConfig
             )
         } catch {
