@@ -123,6 +123,25 @@ struct FuzzyNameMatcherTests {
         }
     }
 
+    @Test("medium similarity (50-80%) returns ambiguous via Levenshtein")
+    func test_match_mediumSimilarity_returnsAmbiguous() {
+        // Given: "Jako" vs "Jake" → distance=1, maxLen=4, similarity=0.75 → ambiguous (50-80%)
+        let matcher = FuzzyNameMatcher(players: [
+            (playerID: "p1", displayName: "Jake", aliases: [])
+        ])
+
+        // When
+        let result = matcher.match(token: "Jako")
+
+        // Then: 75% similarity falls in ambiguous range
+        if case .ambiguous(let candidates) = result {
+            #expect(candidates.count == 1)
+            #expect(candidates[0].playerID == "p1")
+        } else {
+            Issue.record("Expected .ambiguous for Jako~Jake (75% sim), got \(result)")
+        }
+    }
+
     @Test("low similarity (<50%) returns unmatched")
     func test_match_lowSimilarity_returnsUnmatched() {
         // Given

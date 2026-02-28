@@ -238,8 +238,15 @@ claude-sonnet-4-6
 - `FuzzyNameMatcher` uses 4-tier matching: alias → display name exact → unique prefix → Levenshtein.
 - `TokenClassifier` uses a broad word-number map (one–hundred) with 1–10 range gate to correctly classify out-of-range words as `.noise` rather than `.name`.
 - `VoiceParser` assembly step correctly handles name-with-no-number (skips silently) and subset scoring.
-- 165 HyzerKit tests pass (0 regressions). iOS build succeeds with iPhone 17 simulator.
+- 166 HyzerKit tests pass (0 regressions). iOS build succeeds with iPhone 17 simulator.
 - `project.yml` updated with `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`; `xcodegen generate` run and committed.
+
+### Code Review Fixes (claude-opus-4-6)
+
+- **H1**: `VoiceRecognitionService.recognize()` — added `hasResumed` guard to prevent `withCheckedThrowingContinuation` double-resume crash from `SFSpeechRecognitionTask` callback re-entry after `cancel()`.
+- **H2**: `VoiceRecognitionService.requestPermissions()` — speech recognition denial now throws `.recognitionUnavailable` instead of `.microphonePermissionDenied`.
+- **H3**: `VoiceRecognitionService.recognize()` — changed `[weak self]` to `[self]` in recognition callback to prevent async hang from unresumed continuation when service is deallocated during recording.
+- **M1**: Added `test_match_mediumSimilarity_returnsAmbiguous` to `FuzzyNameMatcherTests` — verifies Levenshtein 50-80% similarity returns `.ambiguous` (AC3 coverage gap).
 
 ### File List
 

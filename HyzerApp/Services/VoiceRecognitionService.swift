@@ -53,10 +53,12 @@ public final class VoiceRecognitionService {
                 return
             }
 
-            recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
-                guard let self else { return }
+            var hasResumed = false
+            recognitionTask = recognizer.recognitionTask(with: request) { [self] result, error in
+                guard !hasResumed else { return }
 
                 if let error = error {
+                    hasResumed = true
                     self.stopAudioEngine()
                     let nsError = error as NSError
                     if nsError.code == 1110 {
@@ -68,6 +70,7 @@ public final class VoiceRecognitionService {
                 }
 
                 guard let result, result.isFinal else { return }
+                hasResumed = true
                 self.stopAudioEngine()
                 let transcript = result.bestTranscription.formattedString
                 if transcript.isEmpty {
@@ -101,6 +104,6 @@ public final class VoiceRecognitionService {
                 continuation.resume(returning: status)
             }
         }
-        guard speechStatus == .authorized else { throw VoiceParseError.microphonePermissionDenied }
+        guard speechStatus == .authorized else { throw VoiceParseError.recognitionUnavailable }
     }
 }
