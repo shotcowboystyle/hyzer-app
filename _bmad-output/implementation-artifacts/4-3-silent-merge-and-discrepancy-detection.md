@@ -1,6 +1,6 @@
 # Story 4.3: Silent Merge & Discrepancy Detection
 
-Status: review
+Status: done
 
 ## Story
 

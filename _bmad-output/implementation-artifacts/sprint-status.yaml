@@ -56,7 +56,7 @@ stories:
     epic: 4
   "4.3":
     title: "Silent Merge & Discrepancy Detection"
-    status: review
+    status: done
     epic: 4
   "5.1":
     title: "Voice Recognition & Parser Pipeline"
