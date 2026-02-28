@@ -1,6 +1,6 @@
 # Story 4.1: CloudKit Sync Engine & Architectural Spike
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -47,71 +47,71 @@ so that the group shares a live leaderboard during the round.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `SyncMetadata` SwiftData model (AC: #5)
-  - [ ] 1.1 Define `SyncMetadata` model in `HyzerKit/Sources/HyzerKit/Sync/SyncMetadata.swift`
-  - [ ] 1.2 Define `SyncStatus` enum (`.pending`, `.inFlight`, `.synced`, `.failed`) as `String, Codable, Sendable`
-  - [ ] 1.3 Properties: `id: UUID`, `recordID: String`, `recordType: String`, `syncStatus: SyncStatus`, `lastAttempt: Date?`, `createdAt: Date`
-  - [ ] 1.4 All properties must have defaults (CloudKit constraint pattern)
-  - [ ] 1.5 Write unit tests for SyncMetadata model and SyncStatus transitions
+- [x] Task 1: Create `SyncMetadata` SwiftData model (AC: #5)
+  - [x] 1.1 Define `SyncMetadata` model in `HyzerKit/Sources/HyzerKit/Sync/SyncMetadata.swift`
+  - [x] 1.2 Define `SyncStatus` enum (`.pending`, `.inFlight`, `.synced`, `.failed`) as `String, Codable, Sendable`
+  - [x] 1.3 Properties: `id: UUID`, `recordID: String`, `recordType: String`, `syncStatus: SyncStatus`, `lastAttempt: Date?`, `createdAt: Date`
+  - [x] 1.4 All properties must have defaults (CloudKit constraint pattern)
+  - [x] 1.5 Write unit tests for SyncMetadata model and SyncStatus transitions
 
-- [ ] Task 2: Create sync DTOs (AC: #1, #2)
-  - [ ] 2.1 Define `ScoreEventRecord` struct in `HyzerKit/Sources/HyzerKit/Sync/DTOs/ScoreEventRecord.swift`
-  - [ ] 2.2 Must be `Sendable` (crosses actor isolation boundaries)
-  - [ ] 2.3 Implement `toCKRecord() -> CKRecord` and `init(from ckRecord: CKRecord)` conversions
-  - [ ] 2.4 Define `RoundRecord`, `PlayerRecord`, `CourseRecord` DTO stubs (minimal, spike scope is ScoreEvent only)
-  - [ ] 2.5 Write unit tests for DTO <-> CKRecord round-trip conversions
+- [x] Task 2: Create sync DTOs (AC: #1, #2)
+  - [x] 2.1 Define `ScoreEventRecord` struct in `HyzerKit/Sources/HyzerKit/Sync/DTOs/ScoreEventRecord.swift`
+  - [x] 2.2 Must be `Sendable` (crosses actor isolation boundaries)
+  - [x] 2.3 Implement `toCKRecord() -> CKRecord` and `init(from ckRecord: CKRecord)` conversions
+  - [x] 2.4 Define `RoundRecord`, `PlayerRecord`, `CourseRecord` DTO stubs (minimal, spike scope is ScoreEvent only)
+  - [x] 2.5 Write unit tests for DTO <-> CKRecord round-trip conversions
 
-- [ ] Task 3: Define `CloudKitClient` protocol (AC: #1, #2)
-  - [ ] 3.1 Create protocol in `HyzerKit/Sources/HyzerKit/Sync/CloudKitClient.swift`
-  - [ ] 3.2 Methods: `save(_ records: [CKRecord]) async throws -> [CKRecord]`, `fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord]`
-  - [ ] 3.3 Protocol must be `Sendable` for cross-actor usage
-  - [ ] 3.4 Define `SyncError` enum: `.networkUnavailable`, `.cloudKitFailure(CKError)`, `.recordConflict(...)`, `.quotaExceeded` — all `Error, Sendable`
+- [x] Task 3: Define `CloudKitClient` protocol (AC: #1, #2)
+  - [x] 3.1 Create protocol in `HyzerKit/Sources/HyzerKit/Sync/CloudKitClient.swift`
+  - [x] 3.2 Methods: `save(_ records: [CKRecord]) async throws -> [CKRecord]`, `fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord]`
+  - [x] 3.3 Protocol must be `Sendable` for cross-actor usage
+  - [x] 3.4 Define `SyncError` enum: `.networkUnavailable`, `.cloudKitFailure(CKError)`, `.recordConflict(...)`, `.quotaExceeded` — all `Error, Sendable`
 
-- [ ] Task 4: Implement `LiveCloudKitClient` (AC: #1, #2)
-  - [ ] 4.1 Create `HyzerApp/Services/LiveCloudKitClient.swift` (app target, not HyzerKit — depends on CloudKit framework)
-  - [ ] 4.2 Wraps `CKDatabase` operations on `iCloud.com.shotcowboystyle.hyzerapp` public database, default zone
-  - [ ] 4.3 All operations use `async/await` CloudKit APIs (no completion handlers)
+- [x] Task 4: Implement `LiveCloudKitClient` (AC: #1, #2)
+  - [x] 4.1 Create `HyzerApp/Services/LiveCloudKitClient.swift` (app target, not HyzerKit — depends on CloudKit framework)
+  - [x] 4.2 Wraps `CKDatabase` operations on `iCloud.com.shotcowboystyle.hyzerapp` public database, default zone
+  - [x] 4.3 All operations use `async/await` CloudKit APIs (no completion handlers)
 
-- [ ] Task 5: Create `MockCloudKitClient` (AC: #4)
-  - [ ] 5.1 Create `HyzerKit/Tests/HyzerKitTests/Mocks/MockCloudKitClient.swift`
-  - [ ] 5.2 In-memory `[CKRecord.ID: CKRecord]` dictionary storage
-  - [ ] 5.3 `savedRecords: [CKRecord]` inspection property for test assertions
-  - [ ] 5.4 `shouldSimulateError: CKError?` — when set, all operations throw this error
-  - [ ] 5.5 `simulatedLatency: Duration?` — when set, operations sleep before executing (for `.inFlight` timing tests)
+- [x] Task 5: Create `MockCloudKitClient` (AC: #4)
+  - [x] 5.1 Create `HyzerKit/Tests/HyzerKitTests/Mocks/MockCloudKitClient.swift`
+  - [x] 5.2 In-memory `[CKRecord.ID: CKRecord]` dictionary storage
+  - [x] 5.3 `savedRecords: [CKRecord]` inspection property for test assertions
+  - [x] 5.4 `shouldSimulateError: CKError?` — when set, all operations throw this error
+  - [x] 5.5 `simulatedLatency: Duration?` — when set, operations sleep before executing (for `.inFlight` timing tests)
 
-- [ ] Task 6: Implement `SyncEngine` actor (AC: #1, #2, #3, #4)
-  - [ ] 6.1 Create `HyzerKit/Sources/HyzerKit/Sync/SyncEngine.swift` as `actor`
-  - [ ] 6.2 Dependencies: `CloudKitClient`, `StandingsEngine`, background `ModelContext`
-  - [ ] 6.3 `pushPending()`: fetch `.pending` SyncMetadata, mark `.inFlight`, push via CloudKitClient, mark `.synced` on success / `.failed` on error
-  - [ ] 6.4 `pullRecords()`: fetch new CKRecords, convert DTOs to ScoreEvents, insert into SwiftData, create SyncMetadata as `.synced`, call `StandingsEngine.recompute(for:trigger:.remoteSync)`
-  - [ ] 6.5 The `.inFlight` guard: mark entries `.inFlight` BEFORE `await`, revert to `.failed` on error — prevents duplicate pushes from actor reentrancy
-  - [ ] 6.6 SyncEngine must use a background `ModelContext` (`@ModelActor` pattern), NOT the main context
+- [x] Task 6: Implement `SyncEngine` actor (AC: #1, #2, #3, #4)
+  - [x] 6.1 Create `HyzerKit/Sources/HyzerKit/Sync/SyncEngine.swift` as `actor`
+  - [x] 6.2 Dependencies: `CloudKitClient`, `StandingsEngine`, background `ModelContext`
+  - [x] 6.3 `pushPending()`: fetch `.pending` SyncMetadata, mark `.inFlight`, push via CloudKitClient, mark `.synced` on success / `.failed` on error
+  - [x] 6.4 `pullRecords()`: fetch new CKRecords, convert DTOs to ScoreEvents, insert into SwiftData, create SyncMetadata as `.synced`, call `StandingsEngine.recompute(for:trigger:.remoteSync)`
+  - [x] 6.5 The `.inFlight` guard: mark entries `.inFlight` BEFORE `await`, revert to `.failed` on error — prevents duplicate pushes from actor reentrancy
+  - [x] 6.6 SyncEngine must use a background `ModelContext` (`@ModelActor` pattern), NOT the main context
 
-- [ ] Task 7: Create `SyncState` observable enum (AC: #1, #2)
-  - [ ] 7.1 Define in `HyzerKit/Sources/HyzerKit/Sync/SyncState.swift`
-  - [ ] 7.2 Cases: `.idle`, `.syncing`, `.offline`, `.error(Error)` — must be `@Observable` compatible
-  - [ ] 7.3 Will drive future `SyncIndicatorView` (Story 4.2 — not built in this spike)
+- [x] Task 7: Create `SyncState` observable enum (AC: #1, #2)
+  - [x] 7.1 Define in `HyzerKit/Sources/HyzerKit/Sync/SyncState.swift`
+  - [x] 7.2 Cases: `.idle`, `.syncing`, `.offline`, `.error(Error)` — must be `@Observable` compatible
+  - [x] 7.3 Will drive future `SyncIndicatorView` (Story 4.2 — not built in this spike)
 
-- [ ] Task 8: Update `ModelContainer` for dual store (AC: #5)
-  - [ ] 8.1 Modify `HyzerApp.swift` `makeModelContainer()` to add operational store config for `SyncMetadata`
-  - [ ] 8.2 Domain store: `Player`, `Course`, `Hole`, `Round`, `ScoreEvent` (unchanged)
-  - [ ] 8.3 Operational store: `SyncMetadata` with `isStoredInMemoryOnly: false`, local-only
-  - [ ] 8.4 Add recovery path: if operational store fails to load, delete and recreate it
-  - [ ] 8.5 Add recovery path: if domain store fails, delete BOTH stores and recreate (safe — CloudKit has full history)
+- [x] Task 8: Update `ModelContainer` for dual store (AC: #5)
+  - [x] 8.1 Modify `HyzerApp.swift` `makeModelContainer()` to add operational store config for `SyncMetadata`
+  - [x] 8.2 Domain store: `Player`, `Course`, `Hole`, `Round`, `ScoreEvent` (unchanged)
+  - [x] 8.3 Operational store: `SyncMetadata` with `isStoredInMemoryOnly: false`, local-only
+  - [x] 8.4 Add recovery path: if operational store fails to load, delete and recreate it
+  - [x] 8.5 Add recovery path: if domain store fails, delete BOTH stores and recreate (safe — CloudKit has full history)
 
-- [ ] Task 9: Wire `SyncEngine` into `AppServices` (AC: #1, #2)
-  - [ ] 9.1 Add `cloudKitClient: CloudKitClient` and `syncEngine: SyncEngine` properties to `AppServices`
-  - [ ] 9.2 Construction order: `ModelContainer` -> `StandingsEngine` -> `RoundLifecycleManager` -> `CloudKitClient` -> `SyncEngine` -> `ScoringService`
-  - [ ] 9.3 SyncEngine gets background `ModelContext` (via `ModelContext(modelContainer)` on background actor)
-  - [ ] 9.4 Add `.task { await appServices.syncEngine.start() }` in `HyzerApp.swift` body
+- [x] Task 9: Wire `SyncEngine` into `AppServices` (AC: #1, #2)
+  - [x] 9.1 Add `cloudKitClient: CloudKitClient` and `syncEngine: SyncEngine` properties to `AppServices`
+  - [x] 9.2 Construction order: `ModelContainer` -> `StandingsEngine` -> `RoundLifecycleManager` -> `CloudKitClient` -> `SyncEngine` -> `ScoringService`
+  - [x] 9.3 SyncEngine gets background `ModelContext` (via `ModelContext(modelContainer)` on background actor)
+  - [x] 9.4 Add `.task { await appServices.syncEngine.start() }` in `HyzerApp.swift` body
 
-- [ ] Task 10: Write comprehensive tests (AC: #1, #2, #3, #4, #5)
-  - [ ] 10.1 SyncEngine push tests: create ScoreEvent locally -> pushPending() -> verify MockCloudKitClient received correct CKRecord
-  - [ ] 10.2 SyncEngine pull tests: populate MockCloudKitClient with CKRecords -> pullRecords() -> verify ScoreEvents created in SwiftData
-  - [ ] 10.3 SyncMetadata state machine tests: verify `.pending` -> `.inFlight` -> `.synced` transitions and `.inFlight` -> `.failed` on error
-  - [ ] 10.4 Concurrent push test: two `.pending` entries + `pushPending()` twice via `TaskGroup` -> assert each entry results in exactly one `save()` call
-  - [ ] 10.5 Dual ModelConfiguration test: verify domain and operational stores are separate
-  - [ ] 10.6 DTO round-trip test: ScoreEvent -> ScoreEventRecord -> CKRecord -> ScoreEventRecord -> verify all fields preserved
+- [x] Task 10: Write comprehensive tests (AC: #1, #2, #3, #4, #5)
+  - [x] 10.1 SyncEngine push tests: create ScoreEvent locally -> pushPending() -> verify MockCloudKitClient received correct CKRecord
+  - [x] 10.2 SyncEngine pull tests: populate MockCloudKitClient with CKRecords -> pullRecords() -> verify ScoreEvents created in SwiftData
+  - [x] 10.3 SyncMetadata state machine tests: verify `.pending` -> `.inFlight` -> `.synced` transitions and `.inFlight` -> `.failed` on error
+  - [x] 10.4 Concurrent push test: two `.pending` entries + `pushPending()` twice via `TaskGroup` -> assert each entry results in exactly one `save()` call
+  - [x] 10.5 Dual ModelConfiguration test: verify domain and operational stores are separate
+  - [x] 10.6 DTO round-trip test: ScoreEvent -> ScoreEventRecord -> CKRecord -> ScoreEventRecord -> verify all fields preserved
 
 ## Dev Notes
 
@@ -286,9 +286,39 @@ Startup sequence for `makeModelContainer()`:
 ## Dev Agent Record
 
 ### Agent Model Used
+claude-sonnet-4-6
 
 ### Debug Log References
+- `@ModelActor` macro always synthesizes its own `init(modelContainer:)` even when a custom init is provided — must manually conform to `ModelActor` protocol instead (declare `modelExecutor`, `modelContainer`, and `modelContext` explicitly).
+- `SyncStatus` enum with `#Predicate` may have unpredictable behavior on macOS test host; using fetch-all-and-filter in Swift for spike reliability.
+- `CKRecord` is `@unchecked Sendable` in iOS 18 SDK, making it safe to use in `Sendable` protocols.
 
 ### Completion Notes List
+- All 10 tasks and subtasks completed. 97 tests pass (71 previous + 26 new).
+- `SyncEngine` conforms manually to `ModelActor` protocol instead of using `@ModelActor` macro, achieving equivalent background ModelContext isolation with custom init dependencies.
+- Dual `ModelContainer` configured with `DomainStore` (ScoreEvent + domain models) and `OperationalStore` (SyncMetadata only); full recovery path implemented per Amendment A6.
+- `SyncEngine.pushPending()` marks entries `.inFlight` BEFORE the CloudKit `await` — this is the reentrancy guard (Amendment A1).
+- `SyncEngine.pullRecords()` deduplicates by `ScoreEvent.id` before inserting, preserving append-only invariant (NFR19).
+- `LiveCloudKitClient` uses modern batch `modifyRecords` API with cursor-based pagination for fetch.
+- `SyncState.error(Error)` uses `@unchecked Sendable` since the associated `Error` type is not formally Sendable; safe in practice as it's only written/read within the actor.
 
 ### File List
+**New files:**
+- `HyzerKit/Sources/HyzerKit/Sync/SyncMetadata.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/SyncError.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/CloudKitClient.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/SyncState.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/SyncEngine.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/DTOs/ScoreEventRecord.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/DTOs/RoundRecord.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/DTOs/PlayerRecord.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/DTOs/CourseRecord.swift`
+- `HyzerApp/Services/LiveCloudKitClient.swift`
+- `HyzerKit/Tests/HyzerKitTests/Mocks/MockCloudKitClient.swift`
+- `HyzerKit/Tests/HyzerKitTests/SyncMetadataTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/ScoreEventRecordTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/SyncEngineTests.swift`
+
+**Modified files:**
+- `HyzerApp/App/HyzerApp.swift` — dual ModelContainer + recovery + `.task` for syncEngine.start()
+- `HyzerApp/App/AppServices.swift` — added CloudKitClient + SyncEngine, updated init signature
