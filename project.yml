@@ -36,12 +36,16 @@ targets:
       - package: HyzerKit
         product: HyzerKit
       - target: HyzerWatch
+    info:
+      path: HyzerApp/App/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UIBackgroundModes:
+          - remote-notification
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp
         CODE_SIGN_ENTITLEMENTS: HyzerApp/App/HyzerApp.entitlements
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

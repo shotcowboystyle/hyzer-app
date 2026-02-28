@@ -18,6 +18,9 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
     /// When set, operations sleep for this duration before executing (simulates latency).
     var simulatedLatency: Duration?
 
+    /// Number of times `fetch(matching:in:)` has been called.
+    private(set) var fetchCallCount: Int = 0
+
     /// Internal store keyed by record ID.
     private var store: [CKRecord.ID: CKRecord] = [:]
 
@@ -38,6 +41,7 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
     }
 
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] {
+        fetchCallCount += 1
         if let latency = simulatedLatency {
             try await Task.sleep(for: latency)
         }
@@ -45,6 +49,34 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
             throw error
         }
         return store.values.filter { $0.recordType == query.recordType }
+    }
+
+    // MARK: - Subscription tracking
+
+    /// Record types that have been subscribed via `subscribe(to:predicate:)`.
+    private(set) var subscribedRecordTypes: [CKRecord.RecordType] = []
+
+    /// IDs that have been deleted via `deleteSubscription(_:)`.
+    private(set) var deletedSubscriptionIDs: [CKSubscription.ID] = []
+
+    /// Pre-seeded subscription IDs returned by `fetchAllSubscriptionIDs()`.
+    var existingSubscriptionIDs: [CKSubscription.ID] = []
+
+    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID {
+        if let error = shouldSimulateError { throw error }
+        subscribedRecordTypes.append(recordType)
+        let id = "mock-subscription-\(recordType)"
+        return id
+    }
+
+    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {
+        if let error = shouldSimulateError { throw error }
+        deletedSubscriptionIDs.append(subscriptionID)
+    }
+
+    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] {
+        if let error = shouldSimulateError { throw error }
+        return existingSubscriptionIDs
     }
 
     // MARK: - Test helpers
@@ -56,9 +88,13 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
         }
     }
 
-    /// Clears all stored records and saved-records history.
+    /// Clears all stored records, saved-records history, and subscription tracking.
     func reset() {
         store.removeAll()
         savedRecords.removeAll()
+        fetchCallCount = 0
+        subscribedRecordTypes.removeAll()
+        deletedSubscriptionIDs.removeAll()
+        existingSubscriptionIDs.removeAll()
     }
 }

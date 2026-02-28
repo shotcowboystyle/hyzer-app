@@ -1,18 +1,26 @@
 import SwiftUI
 import SwiftData
+import UIKit
 import HyzerKit
 
 @main
 struct HyzerApp: App {
     let appServices: AppServices
+    @Environment(\.scenePhase) private var scenePhase
+
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
         let container = Self.makeModelContainer()
+        let networkMonitor = LiveNetworkMonitor()
         appServices = AppServices(
             modelContainer: container,
             iCloudIdentityProvider: LiveICloudIdentityProvider(),
-            cloudKitClient: LiveCloudKitClient()
+            cloudKitClient: LiveCloudKitClient(),
+            networkMonitor: networkMonitor
         )
+        // Give AppDelegate a reference to forward remote notifications
+        AppDelegate.shared = appServices
     }
 
     var body: some Scene {
@@ -22,7 +30,17 @@ struct HyzerApp: App {
                 .modelContainer(appServices.modelContainer)
                 .task { await appServices.resolveICloudIdentity() }
                 .task { await appServices.seedCoursesIfNeeded() }
-                .task { await appServices.syncEngine.start() }
+                .task { await appServices.startSync() }
+                .onChange(of: scenePhase) { _, newPhase in
+                    switch newPhase {
+                    case .active:
+                        Task { await appServices.performForegroundDiscovery() }
+                    case .background:
+                        Task { await appServices.handleAppBackground() }
+                    default:
+                        break
+                    }
+                }
         }
     }
 
@@ -100,6 +118,37 @@ struct HyzerApp: App {
         let shmURL = storeURL.appendingPathExtension("shm")
         for url in [storeURL, walURL, shmURL] {
             try? fm.removeItem(at: url)
+        }
+    }
+}
+
+// MARK: - AppDelegate (remote notification handler)
+
+/// Minimal UIApplicationDelegate to handle CKSubscription silent push notifications.
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    /// Set by `HyzerApp.init` so `AppDelegate` can forward notifications to `AppServices`.
+    static weak var shared: AppServices?
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        application.registerForRemoteNotifications()
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+        fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
+    ) {
+        Task { @MainActor in
+            guard let services = AppDelegate.shared else {
+                completionHandler(.noData)
+                return
+            }
+            await services.handleRemoteNotification()
+            completionHandler(.newData)
         }
     }
 }

@@ -39,6 +39,9 @@ public extension Color {
     static let scoreAtPar    = Color(hex: "#F5F5F7")  // Par
     static let scoreWayOver  = Color(hex: "#FF453A")  // Double bogey+
 
+    // Warning state (sync errors, non-destructive alerts)
+    static let warning = Color(hex: "#FF9F0A")
+
     // Destructive actions only
     static let destructive = Color(hex: "#FF3B30")
 }

@@ -9,9 +9,9 @@ import HyzerKit
 /// Created once at app startup and injected into the SwiftUI environment.
 /// ViewModels receive individual services via constructor injection — never this container.
 ///
-/// Construction order (Story 4.1):
+/// Construction order (Story 4.2):
 ///   ModelContainer → StandingsEngine → RoundLifecycleManager
-///   → CloudKitClient → SyncEngine → ScoringService
+///   → CloudKitClient → NetworkMonitor → SyncEngine → SyncScheduler → ScoringService
 @MainActor
 @Observable
 final class AppServices {
@@ -20,7 +20,12 @@ final class AppServices {
     let standingsEngine: StandingsEngine
     let roundLifecycleManager: RoundLifecycleManager
     let syncEngine: SyncEngine
+    let syncScheduler: SyncScheduler
     private(set) var iCloudRecordName: String?
+
+    /// Observable sync state, bridged from the `SyncEngine` actor via an async stream.
+    /// Drives `SyncIndicatorView`.
+    private(set) var syncState: SyncState = .idle
 
     private let iCloudIdentityProvider: any ICloudIdentityProvider
     private let iCloudLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "ICloudIdentity")
@@ -29,7 +34,8 @@ final class AppServices {
     init(
         modelContainer: ModelContainer,
         iCloudIdentityProvider: any ICloudIdentityProvider,
-        cloudKitClient: any CloudKitClient
+        cloudKitClient: any CloudKitClient,
+        networkMonitor: any NetworkMonitor
     ) {
         self.modelContainer = modelContainer
         self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
@@ -39,10 +45,62 @@ final class AppServices {
             standingsEngine: standingsEngine,
             modelContainer: modelContainer
         )
+        self.syncScheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: cloudKitClient,
+            networkMonitor: networkMonitor
+        )
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
+
+    // MARK: - Sync
+
+    /// Starts the SyncScheduler (subscriptions + connectivity listener) and bridges
+    /// `SyncEngine.syncState` to the `@Observable` `syncState` property for SwiftUI.
+    ///
+    /// Must be called from a `.task` modifier so it runs in a cancellable async context.
+    func startSync() async {
+        await syncScheduler.start()
+        await syncEngine.start()
+
+        // Bridge: consume the syncStateStream and propagate to @MainActor-observable property.
+        for await state in await syncEngine.syncStateStream {
+            syncState = state
+        }
+    }
+
+    /// Notifies the scheduler that an active round started — begins periodic polling.
+    func roundDidStart() async {
+        await syncScheduler.startActiveRoundPolling()
+    }
+
+    /// Notifies the scheduler that a round ended — stops periodic polling.
+    func roundDidEnd() async {
+        await syncScheduler.stopActiveRoundPolling()
+    }
+
+    /// Handles a CKSubscription silent push notification.
+    func handleRemoteNotification() async {
+        await syncScheduler.handleRemoteNotification()
+    }
+
+    /// Performs app-foreground round discovery (covers missed CKSubscription pushes).
+    func performForegroundDiscovery() async {
+        guard let userID = iCloudRecordName else { return }
+        await syncScheduler.foregroundDiscovery(currentUserID: userID)
+    }
+
+    /// Stops active round polling when the app enters background.
+    ///
+    /// Separate from `roundDidEnd()` because the round is still logically active —
+    /// polling resumes when the app returns to foreground via `roundDidStart()`.
+    func handleAppBackground() async {
+        await syncScheduler.stopActiveRoundPolling()
+    }
+
+    // MARK: - iCloud Identity
 
     /// Resolves iCloud identity and updates the Player record.
     ///
@@ -78,6 +136,8 @@ final class AppServices {
             iCloudLogger.error("iCloud identity resolution failed: \(error)")
         }
     }
+
+    // MARK: - Course seeding
 
     /// Seeds pre-defined local courses on first launch.
     ///

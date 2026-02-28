@@ -52,7 +52,7 @@ stories:
     epic: 4
   "4.2":
     title: "Offline Queue & Sync Recovery"
-    status: in-progress
+    status: review
     epic: 4
   "4.3":
     title: "Silent Merge & Discrepancy Detection"

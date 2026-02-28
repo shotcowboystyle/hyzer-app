@@ -37,8 +37,21 @@ public actor SyncEngine: ModelActor {
 
     // MARK: - Observable state
 
-    /// Reflects the current sync phase. Observed by future `SyncIndicatorView` (Story 4.2).
-    public private(set) var syncState: SyncState = .idle
+    /// Reflects the current sync phase. Observed via `syncStateStream` by AppServices.
+    public private(set) var syncState: SyncState = .idle {
+        didSet { stateContinuation.yield(syncState) }
+    }
+
+    /// Continuation that feeds `syncStateStream`.
+    private let stateContinuation: AsyncStream<SyncState>.Continuation
+
+    /// Async stream that emits whenever `syncState` changes.
+    ///
+    /// Consumed by a `@MainActor` task in `AppServices` to bridge actor-isolated state
+    /// to the `@Observable` `syncState` property visible to SwiftUI views.
+    ///
+    /// Single-subscriber: only one task should consume this stream at a time.
+    public let syncStateStream: AsyncStream<SyncState>
 
     // MARK: - Init
 
@@ -52,6 +65,11 @@ public actor SyncEngine: ModelActor {
         let context = ModelContext(modelContainer)
         self.modelExecutor = DefaultSerialModelExecutor(modelContext: context)
         self.modelContainer = modelContainer
+
+        // Create the state stream and continuation together so they're always in sync.
+        let (stream, continuation) = AsyncStream<SyncState>.makeStream()
+        self.syncStateStream = stream
+        self.stateContinuation = continuation
     }
 
     // MARK: - Public API
@@ -62,13 +80,41 @@ public actor SyncEngine: ModelActor {
         await pullRecords()
     }
 
-    /// Pushes all `.pending` `SyncMetadata` entries to CloudKit.
+    /// Resets all `.failed` entries to `.pending` and flushes them via `pushPending()`.
+    ///
+    /// Called by `SyncScheduler` when connectivity is restored after an offline period.
+    /// The explicit `.pending` reset creates a clean state-machine transition that allows
+    /// subsequent `pushPending()` calls to pick them up even if the caller doesn't call
+    /// `retryFailed()` first.
+    public func retryFailed() async {
+        let failedEntries = fetchAllMetadata().filter { $0.syncStatus == .failed }
+        guard !failedEntries.isEmpty else { return }
+
+        for entry in failedEntries {
+            entry.syncStatus = .pending
+        }
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("SyncEngine.retryFailed: failed to reset .failed entries to .pending: \(error)")
+            return
+        }
+        logger.info("SyncEngine.retryFailed: reset \(failedEntries.count) .failed entries to .pending")
+        await pushPending()
+    }
+
+    /// Pushes all `.pending` and `.failed` `SyncMetadata` entries to CloudKit.
+    ///
+    /// Picks up both `.pending` and `.failed` entries for belt-and-suspenders coverage.
+    /// `.retryFailed()` resets entries explicitly; this method handles any that slipped through.
     ///
     /// `.inFlight` status is set **before** the `await CloudKitClient.save()` call.
     /// This is the reentrancy guard described in Amendment A1: a second concurrent call
     /// to `pushPending()` will skip entries already marked `.inFlight`.
     public func pushPending() async {
-        let pendingEntries = fetchAllMetadata().filter { $0.syncStatus == .pending }
+        let pendingEntries = fetchAllMetadata().filter {
+            $0.syncStatus == .pending || $0.syncStatus == .failed
+        }
         guard !pendingEntries.isEmpty else { return }
 
         // Hoist event fetch outside loop and build O(1) lookup dictionary
@@ -143,7 +189,7 @@ public actor SyncEngine: ModelActor {
             } catch {
                 logger.error("SyncEngine.pushPending: failed to persist .failed status after unexpected error: \(error)")
             }
-            syncState = .idle
+            syncState = .error(error)
             logger.error("SyncEngine.pushPending: unexpected error: \(error)")
         }
     }

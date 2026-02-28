@@ -15,6 +15,7 @@ struct ScorecardContainerView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppServices.self) private var appServices
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     @Query private var allScoreEvents: [ScoreEvent]
     @Query(sort: \Hole.number) private var allHoles: [Hole]
@@ -100,6 +101,9 @@ struct ScorecardContainerView: View {
         }
         .background(Color.backgroundPrimary)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                SyncIndicatorView()
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !round.isFinished {
                     Menu {
@@ -180,6 +184,18 @@ struct ScorecardContainerView: View {
         .onAppear { initializeViewModels() }
         .onChange(of: currentHole) {
             autoAdvanceTask?.cancel()
+        }
+        .task {
+            guard !round.isFinished else { return }
+            await appServices.roundDidStart()
+        }
+        .onDisappear {
+            Task { await appServices.roundDidEnd() }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active && !round.isFinished {
+                Task { await appServices.roundDidStart() }
+            }
         }
     }
 
