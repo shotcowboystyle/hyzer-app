@@ -42,11 +42,16 @@ struct LiveCloudKitClient: CloudKitClient, Sendable {
         return saved
     }
 
+    /// Safety cap on total records fetched in a single pull.
+    /// Story 4.2 will implement incremental sync with CKSubscription + change tokens,
+    /// eliminating the need for full-table pulls.
+    private static let maxFetchRecords = 2000
+
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] {
         var allRecords: [CKRecord] = []
         var cursor: CKQueryOperation.Cursor?
 
-        // Page through all results
+        // Page through results, capped at maxFetchRecords to prevent unbounded growth
         repeat {
             let (results, nextCursor) = cursor == nil
                 ? try await Self.publicDB.records(matching: query, inZoneWith: zone)
@@ -58,7 +63,7 @@ struct LiveCloudKitClient: CloudKitClient, Sendable {
                 }
             }
             cursor = nextCursor
-        } while cursor != nil
+        } while cursor != nil && allRecords.count < Self.maxFetchRecords
 
         return allRecords
     }

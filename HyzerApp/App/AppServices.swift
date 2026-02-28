@@ -34,13 +34,13 @@ final class AppServices {
         self.modelContainer = modelContainer
         self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
         self.roundLifecycleManager = RoundLifecycleManager(modelContext: modelContainer.mainContext)
-        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.syncEngine = SyncEngine(
             cloudKitClient: cloudKitClient,
             standingsEngine: standingsEngine,
             modelContainer: modelContainer
         )
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 

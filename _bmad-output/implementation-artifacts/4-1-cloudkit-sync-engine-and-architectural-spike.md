@@ -318,7 +318,31 @@ claude-sonnet-4-6
 - `HyzerKit/Tests/HyzerKitTests/SyncMetadataTests.swift`
 - `HyzerKit/Tests/HyzerKitTests/ScoreEventRecordTests.swift`
 - `HyzerKit/Tests/HyzerKitTests/SyncEngineTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/Fixtures/SyncMetadata+Fixture.swift`
 
 **Modified files:**
 - `HyzerApp/App/HyzerApp.swift` — dual ModelContainer + recovery + `.task` for syncEngine.start()
-- `HyzerApp/App/AppServices.swift` — added CloudKitClient + SyncEngine, updated init signature
+- `HyzerApp/App/AppServices.swift` — added CloudKitClient + SyncEngine, updated init signature and construction order
+
+## Senior Developer Review (AI)
+
+**Reviewer:** claude-opus-4-6
+**Date:** 2026-02-28
+**Result:** PASSED — all HIGH and MEDIUM issues fixed
+
+### Issues Found and Fixed
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| H1 | HIGH | Non-ScoreEvent SyncMetadata entries permanently stuck as `.inFlight` in `pushPending()` | Restructured to build batch FIRST, then mark only matched entries `.inFlight`; unmatched entries marked `.failed` |
+| H2 | HIGH | N+1 fetch — `fetchAllScoreEvents()` called per loop iteration in `pushPending()` | Hoisted fetch outside loop, use `Dictionary` for O(1) lookup |
+| H3 | HIGH | Unbounded `pullRecords()` fetches ALL records from CloudKit public database | Added `maxFetchRecords = 2000` safety cap in `LiveCloudKitClient.fetch` |
+| H4 | HIGH | Silent `try?` exception swallowing (3 instances in SyncEngine error paths) | Replaced with `do/try/catch` blocks with proper `logger.error()` calls |
+| M1 | MEDIUM | Unbounded `fetchAllMetadata()` and `fetchAllScoreEvents()` helpers | Added doc comments explaining `#Predicate` enum limitation and bounded data in practice |
+| M2 | MEDIUM | `SyncMetadata.fixture()` missing per testing standards | Created `SyncMetadata+Fixture.swift` |
+| M3 | MEDIUM | Weak test assertions — state machine tests never checked `.syncStatus` | Added `Task.sleep` + `FetchDescriptor` + `#expect(syncStatus == .synced/.failed)` assertions |
+| M4 | MEDIUM | AppServices construction order didn't match documented order | Reordered: SyncEngine created before ScoringService |
+
+### Remaining Low-Severity Items (not fixed — acceptable for spike scope)
+- L1: `deleteStore` hardcoded `.store` extension — verify at runtime if recovery ever triggers
+- L2: `SyncState` not directly `@Observable` — acceptable via actor property access; Story 4.2 will add the bridging view

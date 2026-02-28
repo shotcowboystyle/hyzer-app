@@ -71,9 +71,45 @@ public actor SyncEngine: ModelActor {
         let pendingEntries = fetchAllMetadata().filter { $0.syncStatus == .pending }
         guard !pendingEntries.isEmpty else { return }
 
-        // CRITICAL: Mark .inFlight BEFORE the async CloudKit call (AC4 / Amendment A1)
-        let now = Date()
+        // Hoist event fetch outside loop and build O(1) lookup dictionary
+        let allEvents = fetchAllScoreEvents()
+        let eventsByID = Dictionary(uniqueKeysWithValues: allEvents.map { ($0.id, $0) })
+
+        // Build batch FIRST to identify which entries can actually be pushed.
+        // Only matched entries get marked .inFlight; unmatched are marked .failed
+        // so they don't stay .pending forever (spike: ScoreEvent records only).
+        var batch: [(metadata: SyncMetadata, record: CKRecord)] = []
+        var unmatchedEntries: [SyncMetadata] = []
+
         for entry in pendingEntries {
+            guard entry.recordType == ScoreEventRecord.recordType,
+                  let eventID = UUID(uuidString: entry.recordID),
+                  let event = eventsByID[eventID] else {
+                unmatchedEntries.append(entry)
+                continue
+            }
+            batch.append((entry, ScoreEventRecord(from: event).toCKRecord()))
+        }
+
+        // Mark unmatched entries as .failed so they don't stay .pending forever
+        if !unmatchedEntries.isEmpty {
+            for entry in unmatchedEntries {
+                entry.syncStatus = .failed
+            }
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("SyncEngine.pushPending: failed to save unmatched entry statuses: \(error)")
+            }
+        }
+
+        guard !batch.isEmpty else { return }
+
+        // CRITICAL: Mark .inFlight BEFORE the async CloudKit call (AC4 / Amendment A1).
+        // Only batch entries are marked — a concurrent pushPending() call that arrives
+        // during the `await` below will see these as .inFlight and skip them.
+        let now = Date()
+        for (entry, _) in batch {
             entry.syncStatus = .inFlight
             entry.lastAttempt = now
         }
@@ -81,23 +117,6 @@ public actor SyncEngine: ModelActor {
             try modelContext.save()
         } catch {
             logger.error("SyncEngine.pushPending: failed to persist .inFlight status: \(error)")
-            return
-        }
-
-        // Build CKRecords for each in-flight entry (spike: ScoreEvent records only)
-        var batch: [(metadata: SyncMetadata, record: CKRecord)] = []
-        for entry in pendingEntries {
-            guard entry.recordType == ScoreEventRecord.recordType else { continue }
-            guard let eventID = UUID(uuidString: entry.recordID) else { continue }
-            let all = fetchAllScoreEvents()
-            guard let event = all.first(where: { $0.id == eventID }) else { continue }
-            batch.append((entry, ScoreEventRecord(from: event).toCKRecord()))
-        }
-
-        guard !batch.isEmpty else {
-            // No matching domain objects — mark as synced to unblock the pipeline
-            for entry in pendingEntries { entry.syncStatus = .synced }
-            try? modelContext.save()
             return
         }
 
@@ -110,12 +129,20 @@ public actor SyncEngine: ModelActor {
             logger.info("SyncEngine.pushPending: pushed \(batch.count) record(s)")
         } catch let ckError as CKError {
             for (entry, _) in batch { entry.syncStatus = .failed }
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("SyncEngine.pushPending: failed to persist .failed status: \(error)")
+            }
             syncState = isNetworkError(ckError) ? .offline : .error(SyncError.cloudKitFailure(ckError))
             logger.error("SyncEngine.pushPending: CloudKit error: \(ckError)")
         } catch {
             for (entry, _) in batch { entry.syncStatus = .failed }
-            try? modelContext.save()
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("SyncEngine.pushPending: failed to persist .failed status after unexpected error: \(error)")
+            }
             syncState = .idle
             logger.error("SyncEngine.pushPending: unexpected error: \(error)")
         }
@@ -199,10 +226,15 @@ public actor SyncEngine: ModelActor {
 
     // MARK: - Private helpers
 
+    /// Fetches all SyncMetadata entries. Uses fetch-all-and-filter-in-Swift because
+    /// `#Predicate` with custom enum types (SyncStatus) has unpredictable behavior
+    /// on macOS test hosts. Bounded in practice: one entry per sync attempt.
     private func fetchAllMetadata() -> [SyncMetadata] {
         (try? modelContext.fetch(FetchDescriptor<SyncMetadata>())) ?? []
     }
 
+    /// Fetches all ScoreEvents. Same fetch-all strategy as `fetchAllMetadata()`.
+    /// Bounded in practice by round scope (~1,500 events/round peak).
     private func fetchAllScoreEvents() -> [ScoreEvent] {
         (try? modelContext.fetch(FetchDescriptor<ScoreEvent>())) ?? []
     }

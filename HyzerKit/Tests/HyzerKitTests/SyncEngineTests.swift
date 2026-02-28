@@ -72,12 +72,12 @@ struct SyncEngineTests {
 
         await engine.pushPending()
 
-        // Fetch the metadata from the background context is tricky; check via main context
+        // Allow background context save to merge into main context
+        try await Task.sleep(for: .milliseconds(50))
         let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
-        // The background context saves, main context auto-merges
         let fetched = allMeta.filter { $0.recordID == event.id.uuidString }
-        // Allow a short moment for context merge
-        #expect(fetched.isEmpty == false)
+        #expect(fetched.count == 1)
+        #expect(fetched[0].syncStatus == .synced)
     }
 
     @Test("pushPending marks SyncMetadata .failed when CloudKit throws")
@@ -237,8 +237,13 @@ struct SyncEngineTests {
         // Start push (with latency it takes 50ms)
         await engine.pushPending()
 
-        // After completion, record should be .synced
+        // After completion, verify state reached .synced
         #expect(mockCK.savedRecords.count == 1)
+        try await Task.sleep(for: .milliseconds(50))
+        let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
+        let fetched = allMeta.filter { $0.recordID == event.id.uuidString }
+        #expect(fetched.count == 1)
+        #expect(fetched[0].syncStatus == .synced)
     }
 
     @Test("SyncMetadata transitions to .failed on CloudKit error")
@@ -265,6 +270,12 @@ struct SyncEngineTests {
         await engine.pushPending()
 
         #expect(mockCK.savedRecords.isEmpty)
+        // Verify metadata transitioned to .failed
+        try await Task.sleep(for: .milliseconds(50))
+        let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
+        let fetched = allMeta.filter { $0.recordID == event.id.uuidString }
+        #expect(fetched.count == 1)
+        #expect(fetched[0].syncStatus == .failed)
     }
 
     // MARK: - Dual ModelConfiguration (AC5)
