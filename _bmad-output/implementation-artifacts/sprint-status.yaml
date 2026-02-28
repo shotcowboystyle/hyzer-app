@@ -40,7 +40,7 @@ stories:
     epic: 3
   "3.5":
     title: "Round Lifecycle & Player Immutability"
-    status: ready-for-dev
+    status: in-progress
     epic: 3
   "3.6":
     title: "Round Completion & Summary"
