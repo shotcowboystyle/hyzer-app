@@ -117,7 +117,7 @@ struct SyncEngineConflictTests {
         #expect(discrepancy.status == .unresolved)
         // The two conflicting event IDs are stored (order may vary)
         let eventIDs = Set([discrepancy.eventID1, discrepancy.eventID2])
-        #expect(eventIDs.contains(localEvent.id) || eventIDs.contains(conflictingEvent.id))
+        #expect(eventIDs == Set([localEvent.id, conflictingEvent.id]))
     }
 
     // MARK: - AC3: Same-device correction — no discrepancy

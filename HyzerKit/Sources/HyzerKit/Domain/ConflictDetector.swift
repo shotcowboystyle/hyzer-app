@@ -44,7 +44,7 @@ public struct ConflictDetector: Sendable {
         }
 
         // Case 1: No other events exist → no conflict
-        guard let other = others.first else {
+        guard !others.isEmpty else {
             return .noConflict
         }
 
@@ -52,14 +52,18 @@ public struct ConflictDetector: Sendable {
         if let supersedesID = newEvent.supersedesEventID {
             // Find the event being superseded
             let target = existingEvents.first { $0.id == supersedesID }
-            let targetDeviceID = target?.deviceID ?? other.deviceID
+
+            guard let targetDeviceID = target?.deviceID else {
+                // Superseded event not found — treat as discrepancy (safe: flags for human review)
+                return .discrepancy(existingEventID: supersedesID, incomingEventID: newEvent.id)
+            }
 
             if targetDeviceID == newEvent.deviceID {
                 // Same-device correction
                 return .correction
             } else {
                 // Cross-device supersession → discrepancy (Case 4b)
-                return .discrepancy(existingEventID: other.id, incomingEventID: newEvent.id)
+                return .discrepancy(existingEventID: supersedesID, incomingEventID: newEvent.id)
             }
         }
 
