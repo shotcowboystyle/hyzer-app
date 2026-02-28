@@ -1,6 +1,6 @@
 # Story 5.2: Voice Confirmation Overlay & Auto-Commit
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,54 +24,54 @@ so that scoring is fast and hands-free in the common case.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `VoiceRecognitionServiceProtocol` for testability (AC: 6)
-  - [ ] 1.1: Create `HyzerApp/Protocols/VoiceRecognitionServiceProtocol.swift` — `@MainActor protocol VoiceRecognitionServiceProtocol: AnyObject` with `func recognize() async throws -> String` and `func stopListening()`
-  - [ ] 1.2: Conform existing `VoiceRecognitionService` to `VoiceRecognitionServiceProtocol`
-  - [ ] 1.3: Add `stopListening()` method to `VoiceRecognitionService` — stops `audioEngine`, cancels `recognitionTask`
+- [x] Task 1: Create `VoiceRecognitionServiceProtocol` for testability (AC: 6)
+  - [x] 1.1: Create `HyzerApp/Protocols/VoiceRecognitionServiceProtocol.swift` — `@MainActor protocol VoiceRecognitionServiceProtocol: AnyObject` with `func recognize() async throws -> String` and `func stopListening()`
+  - [x] 1.2: Conform existing `VoiceRecognitionService` to `VoiceRecognitionServiceProtocol`
+  - [x] 1.3: Add `stopListening()` method to `VoiceRecognitionService` — stops `audioEngine`, cancels `recognitionTask`
 
-- [ ] Task 2: Create `VoiceOverlayViewModel` (AC: 1, 2, 3, 4, 5, 6)
-  - [ ] 2.1: Create `HyzerApp/ViewModels/VoiceOverlayViewModel.swift` — `@MainActor @Observable final class`
-  - [ ] 2.2: Constructor injection: `voiceRecognitionService: any VoiceRecognitionServiceProtocol`, `scoringService: ScoringService`, `parser: VoiceParser`, `roundID: UUID`, `holeNumber: Int`, `reportedByPlayerID: UUID`, `players: [VoicePlayerEntry]`
-  - [ ] 2.3: Implement `startListening()` — calls `voiceRecognitionService.recognize()`, feeds transcript into `parser.parse()`, sets state to `.confirming`
-  - [ ] 2.4: Implement auto-commit timer — 1.5s countdown via `Task.sleep`, resets on correction, cancels on dismiss
-  - [ ] 2.5: Implement `correctScore(at index: Int, newStrokeCount: Int)` — updates the `ScoreCandidate` in the list, resets timer to 1.5s
-  - [ ] 2.6: Implement `commitScores()` — iterates `[ScoreCandidate]`, calls `scoringService.createScoreEvent()` for each, sets state to `.committed`
-  - [ ] 2.7: Implement `cancel()` — cancels timer, calls `stopListening()` if active, sets state to `.dismissed`
-  - [ ] 2.8: Implement VoiceOver timer pause — expose `isVoiceOverFocused: Bool` property, pause timer when `true`
-  - [ ] 2.9: State enum: `.idle`, `.listening`, `.confirming([ScoreCandidate])`, `.committed`, `.dismissed`, `.error(VoiceParseError)`
+- [x] Task 2: Create `VoiceOverlayViewModel` (AC: 1, 2, 3, 4, 5, 6)
+  - [x] 2.1: Create `HyzerApp/ViewModels/VoiceOverlayViewModel.swift` — `@MainActor @Observable final class`
+  - [x] 2.2: Constructor injection: `voiceRecognitionService: any VoiceRecognitionServiceProtocol`, `scoringService: ScoringService`, `parser: VoiceParser`, `roundID: UUID`, `holeNumber: Int`, `reportedByPlayerID: UUID`, `players: [VoicePlayerEntry]`
+  - [x] 2.3: Implement `startListening()` — calls `voiceRecognitionService.recognize()`, feeds transcript into `parser.parse()`, sets state to `.confirming`
+  - [x] 2.4: Implement auto-commit timer — 1.5s countdown via `Task.sleep`, resets on correction, cancels on dismiss
+  - [x] 2.5: Implement `correctScore(at index: Int, newStrokeCount: Int)` — updates the `ScoreCandidate` in the list, resets timer to 1.5s
+  - [x] 2.6: Implement `commitScores()` — iterates `[ScoreCandidate]`, calls `scoringService.createScoreEvent()` for each, sets state to `.committed`
+  - [x] 2.7: Implement `cancel()` — cancels timer, calls `stopListening()` if active, sets state to `.dismissed`
+  - [x] 2.8: Implement VoiceOver timer pause — expose `isVoiceOverFocused: Bool` property, pause timer when `true`
+  - [x] 2.9: State enum: `.idle`, `.listening`, `.confirming([ScoreCandidate])`, `.committed`, `.dismissed`, `.error(VoiceParseError)`
 
-- [ ] Task 3: Create `VoiceOverlayView` (AC: 1, 3, 4, 5)
-  - [ ] 3.1: Create `HyzerApp/Views/Scoring/VoiceOverlayView.swift` — translucent overlay (`.ultraThinMaterial`)
-  - [ ] 3.2: Title: "Scores heard" using `TypographyTokens.caption`, `Color.textSecondary`
-  - [ ] 3.3: Player-score rows — name (`TypographyTokens.h2`, `.textPrimary`), dotted leader, score (`TypographyTokens.scoreLarge`, SF Mono), 56pt row height, score color from par comparison
-  - [ ] 3.4: Auto-commit progress indicator — subtle linear progress bar or countdown ring, 1.5s duration, using `Color.accentPrimary`
-  - [ ] 3.5: "Tap to correct" hint text — `TypographyTokens.caption`, `Color.textSecondary`
-  - [ ] 3.6: Correction mode — tapped row expands inline number picker (1-10), same as `ScoreInputView` pattern
-  - [ ] 3.7: Explicit "Commit Scores" button for VoiceOver — visually de-emphasized (`textSecondary`), always present
-  - [ ] 3.8: Animations — slide up from bottom with `AnimationTokens.springStiff`, fade out on commit (0.2s), respect `accessibilityReduceMotion` via `AnimationCoordinator`
-  - [ ] 3.9: Listening state — waveform or pulsing mic indicator during active recording
+- [x] Task 3: Create `VoiceOverlayView` (AC: 1, 3, 4, 5)
+  - [x] 3.1: Create `HyzerApp/Views/Scoring/VoiceOverlayView.swift` — translucent overlay (`.ultraThinMaterial`)
+  - [x] 3.2: Title: "Scores heard" using `TypographyTokens.caption`, `Color.textSecondary`
+  - [x] 3.3: Player-score rows — name (`TypographyTokens.h2`, `.textPrimary`), dotted leader, score (`TypographyTokens.scoreLarge`, SF Mono), 56pt row height, score color from par comparison
+  - [x] 3.4: Auto-commit progress indicator — subtle linear progress bar or countdown ring, 1.5s duration, using `Color.accentPrimary`
+  - [x] 3.5: "Tap to correct" hint text — `TypographyTokens.caption`, `Color.textSecondary`
+  - [x] 3.6: Correction mode — tapped row expands inline number picker (1-10), same as `ScoreInputView` pattern
+  - [x] 3.7: Explicit "Commit Scores" button for VoiceOver — visually de-emphasized (`textSecondary`), always present
+  - [x] 3.8: Animations — slide up from bottom with `AnimationTokens.springStiff`, fade out on commit (0.2s), respect `accessibilityReduceMotion` via `AnimationCoordinator`
+  - [x] 3.9: Listening state — waveform or pulsing mic indicator during active recording
 
-- [ ] Task 4: Integrate into `ScorecardContainerView` (AC: 1, 2, 4)
-  - [ ] 4.1: Add microphone button to hole card UI — triggers `VoiceOverlayViewModel.startListening()`
-  - [ ] 4.2: Present `VoiceOverlayView` as an overlay (not sheet/modal) on `ScorecardContainerView`
-  - [ ] 4.3: On `.committed` — trigger `StandingsEngine.recompute()` and leaderboard pill pulse animation
-  - [ ] 4.4: Add `@State private var voiceOverlayViewModel: VoiceOverlayViewModel?` — presence drives overlay visibility
+- [x] Task 4: Integrate into `ScorecardContainerView` (AC: 1, 2, 4)
+  - [x] 4.1: Add microphone button to hole card UI — triggers `VoiceOverlayViewModel.startListening()`
+  - [x] 4.2: Present `VoiceOverlayView` as an overlay (not sheet/modal) on `ScorecardContainerView`
+  - [x] 4.3: On `.committed` — trigger `StandingsEngine.recompute()` and leaderboard pill pulse animation
+  - [x] 4.4: Add `@State private var voiceOverlayViewModel: VoiceOverlayViewModel?` — presence drives overlay visibility
 
-- [ ] Task 5: Wire `VoiceRecognitionService` into `AppServices` (AC: 6)
-  - [ ] 5.1: Add `let voiceRecognitionService: VoiceRecognitionService` to `AppServices`
-  - [ ] 5.2: Initialize in `AppServices.init()` — `self.voiceRecognitionService = VoiceRecognitionService()`
-  - [ ] 5.3: Pass to `VoiceOverlayViewModel` creation in `ScorecardContainerView`
+- [x] Task 5: Wire `VoiceRecognitionService` into `AppServices` (AC: 6)
+  - [x] 5.1: Add `let voiceRecognitionService: VoiceRecognitionService` to `AppServices`
+  - [x] 5.2: Initialize in `AppServices.init()` — `self.voiceRecognitionService = VoiceRecognitionService()`
+  - [x] 5.3: Pass to `VoiceOverlayViewModel` creation in `ScorecardContainerView`
 
-- [ ] Task 6: Write `VoiceOverlayViewModelTests` (AC: 1, 2, 3, 4, 5)
-  - [ ] 6.1: Create `HyzerAppTests/VoiceOverlayViewModelTests.swift` — `@MainActor @Suite`
-  - [ ] 6.2: Create `MockVoiceRecognitionService` implementing `VoiceRecognitionServiceProtocol` — configurable transcript return and error throwing
-  - [ ] 6.3: Test: `startListening` with successful transcript sets state to `.confirming` with correct `ScoreCandidate`s
-  - [ ] 6.4: Test: `commitScores` creates one ScoreEvent per candidate via `ScoringService`
-  - [ ] 6.5: Test: `correctScore` updates the candidate strokeCount and resets timer state
-  - [ ] 6.6: Test: `cancel` sets state to `.dismissed` and creates no ScoreEvents
-  - [ ] 6.7: Test: subset scoring — single player transcript only commits that player's score
-  - [ ] 6.8: Test: VoiceOver focus pauses timer (set `isVoiceOverFocused = true`, verify timer doesn't fire)
-  - [ ] 6.9: Test: recognition error sets state to `.error` with correct `VoiceParseError`
+- [x] Task 6: Write `VoiceOverlayViewModelTests` (AC: 1, 2, 3, 4, 5)
+  - [x] 6.1: Create `HyzerAppTests/VoiceOverlayViewModelTests.swift` — `@MainActor @Suite`
+  - [x] 6.2: Create `MockVoiceRecognitionService` implementing `VoiceRecognitionServiceProtocol` — configurable transcript return and error throwing
+  - [x] 6.3: Test: `startListening` with successful transcript sets state to `.confirming` with correct `ScoreCandidate`s
+  - [x] 6.4: Test: `commitScores` creates one ScoreEvent per candidate via `ScoringService`
+  - [x] 6.5: Test: `correctScore` updates the candidate strokeCount and resets timer state
+  - [x] 6.6: Test: `cancel` sets state to `.dismissed` and creates no ScoreEvents
+  - [x] 6.7: Test: subset scoring — single player transcript only commits that player's score
+  - [x] 6.8: Test: VoiceOver focus pauses timer (set `isVoiceOverFocused = true`, verify timer doesn't fire)
+  - [x] 6.9: Test: recognition error sets state to `.error` with correct `VoiceParseError`
 
 ## Dev Notes
 
@@ -340,10 +340,33 @@ final class MockVoiceRecognitionService: VoiceRecognitionServiceProtocol {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Created `VoiceRecognitionServiceProtocol` in `HyzerApp/Protocols/` with `recognize()` and `stopListening()` methods; `VoiceRecognitionService` now conforms and exposes `stopListening()` publicly.
+- `VoiceOverlayViewModel` is `@MainActor @Observable` with full state machine (idle → listening → confirming → committed/dismissed/error), 1.5s auto-commit timer via `Task.sleep`, VoiceOver timer-pause via `isVoiceOverFocused`, and `isTerminated`/`isCommitted` boolean flags for `Equatable` SwiftUI observation.
+- `VoiceOverlayView` uses `.ultraThinMaterial`, dotted leader rows (56pt height), a `GeometryReader`-based linear progress bar, listening waveform state, inline `ScoreInputView` correction, and an explicit "Commit Scores" button for VoiceOver. Reduce-motion respects `AnimationCoordinator`.
+- `ScorecardContainerView` now has a mic toolbar button (trailing, alongside the menu), `voiceOverlayContent` `@ViewBuilder` for the overlay, and `handleVoiceOverlayTerminated` method to avoid Swift type-checker complexity. Extracted `trailingToolbarContent` for the same reason.
+- `AppServices` gets `voiceRecognitionService: VoiceRecognitionService` property and init line.
+- 9 new `VoiceOverlayViewModelTests` written and passing; `MockVoiceRecognitionService` added in `HyzerAppTests/Mocks/`.
+- Fixed pre-existing test failure in `ICloudIdentityResolutionTests` (missing `cloudKitClient`/`networkMonitor` args) with local stub conformances.
+- All 97 HyzerApp tests pass; 166 HyzerKit tests continue passing; SwiftLint clean.
+
 ### File List
+
+**New files:**
+- `HyzerApp/Protocols/VoiceRecognitionServiceProtocol.swift`
+- `HyzerApp/ViewModels/VoiceOverlayViewModel.swift`
+- `HyzerApp/Views/Scoring/VoiceOverlayView.swift`
+- `HyzerAppTests/VoiceOverlayViewModelTests.swift`
+- `HyzerAppTests/Mocks/MockVoiceRecognitionService.swift`
+
+**Modified files:**
+- `HyzerApp/App/AppServices.swift`
+- `HyzerApp/Services/VoiceRecognitionService.swift`
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift`
+- `HyzerAppTests/ICloudIdentityResolutionTests.swift` (pre-existing bug fix: missing stub args)
+- `HyzerApp.xcodeproj/project.pbxproj` (regenerated by xcodegen for new directories)
