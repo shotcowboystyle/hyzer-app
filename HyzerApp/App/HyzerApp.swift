@@ -32,8 +32,13 @@ struct HyzerApp: App {
                 .task { await appServices.seedCoursesIfNeeded() }
                 .task { await appServices.startSync() }
                 .onChange(of: scenePhase) { _, newPhase in
-                    if newPhase == .active {
+                    switch newPhase {
+                    case .active:
                         Task { await appServices.performForegroundDiscovery() }
+                    case .background:
+                        Task { await appServices.handleAppBackground() }
+                    default:
+                        break
                     }
                 }
         }
@@ -138,7 +143,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
         Task { @MainActor in
-            await AppDelegate.shared?.handleRemoteNotification()
+            guard let services = AppDelegate.shared else {
+                completionHandler(.noData)
+                return
+            }
+            await services.handleRemoteNotification()
             completionHandler(.newData)
         }
     }

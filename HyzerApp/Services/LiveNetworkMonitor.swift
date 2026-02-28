@@ -38,6 +38,9 @@ final class LiveNetworkMonitor: NetworkMonitor, @unchecked Sendable {
         monitor.currentPath.status == .satisfied
     }
 
+    /// **Single-subscriber**: Each call creates a new stream and replaces the internal
+    /// continuation. Prior subscribers silently stop receiving updates. In practice,
+    /// only `SyncScheduler.startConnectivityListener()` subscribes.
     var pathUpdates: AsyncStream<Bool> {
         AsyncStream<Bool> { [weak self] continuation in
             guard let self else {

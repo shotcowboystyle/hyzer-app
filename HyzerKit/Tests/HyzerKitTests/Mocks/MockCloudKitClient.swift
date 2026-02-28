@@ -18,6 +18,9 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
     /// When set, operations sleep for this duration before executing (simulates latency).
     var simulatedLatency: Duration?
 
+    /// Number of times `fetch(matching:in:)` has been called.
+    private(set) var fetchCallCount: Int = 0
+
     /// Internal store keyed by record ID.
     private var store: [CKRecord.ID: CKRecord] = [:]
 
@@ -38,6 +41,7 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
     }
 
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] {
+        fetchCallCount += 1
         if let latency = simulatedLatency {
             try await Task.sleep(for: latency)
         }
@@ -88,6 +92,7 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
     func reset() {
         store.removeAll()
         savedRecords.removeAll()
+        fetchCallCount = 0
         subscribedRecordTypes.removeAll()
         deletedSubscriptionIDs.removeAll()
         existingSubscriptionIDs.removeAll()

@@ -22,9 +22,9 @@ struct SyncSchedulerTests {
 
     // MARK: - Polling lifecycle (AC3, Task 3.7)
 
-    @Test("startActiveRoundPolling fires push and pull within interval")
+    @Test("startActiveRoundPolling starts and stops without error, engine plumbing works")
     @MainActor
-    func test_startActiveRoundPolling_firesSync() async throws {
+    func test_startActiveRoundPolling_lifecycleAndPlumbing() async throws {
         let container = try makeSyncContainer()
         let context = container.mainContext
 
@@ -42,15 +42,14 @@ struct SyncSchedulerTests {
         let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
         let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
 
-        // Start polling with a very short interval is not directly testable via real Task.sleep.
-        // Instead, manually invoke pushPending + pullRecords to verify the engine plumbing.
+        // Timer uses 45s intervals so we can't test fire behavior directly.
+        // Verify start/stop lifecycle and that the push/pull plumbing works independently.
         await scheduler.startActiveRoundPolling()
-
-        // Give polling one cycle — but real polling uses 45s, so just verify it doesn't crash.
-        // The actual timer cycle test is covered by verifying start/stop doesn't throw.
         await scheduler.stopActiveRoundPolling()
-        // If we reach here, start/stop lifecycle works correctly.
-        #expect(Bool(true))
+
+        // Verify engine plumbing: manually push to confirm SyncEngine → MockCloudKitClient works
+        await syncEngine.pushPending()
+        #expect(mockCK.savedRecords.count == 1)
     }
 
     @Test("stopActiveRoundPolling is idempotent — calling twice does not crash")
@@ -66,9 +65,13 @@ struct SyncSchedulerTests {
         )
         let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
 
+        // Double-stop should not throw or crash
         await scheduler.stopActiveRoundPolling()
         await scheduler.stopActiveRoundPolling()
-        #expect(Bool(true))
+
+        // Verify scheduler is still usable after double-stop
+        await scheduler.handleRemoteNotification()
+        #expect(mockCK.fetchCallCount >= 1)
     }
 
     @Test("startActiveRoundPolling called twice does not create duplicate timers")
@@ -85,9 +88,12 @@ struct SyncSchedulerTests {
         let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
 
         await scheduler.startActiveRoundPolling()
-        await scheduler.startActiveRoundPolling()  // second call should be no-op
+        await scheduler.startActiveRoundPolling()  // second call should be no-op (guard pollingTask == nil)
         await scheduler.stopActiveRoundPolling()
-        #expect(Bool(true))
+
+        // Verify scheduler is usable after start-start-stop sequence
+        await scheduler.handleRemoteNotification()
+        #expect(mockCK.fetchCallCount >= 1)
     }
 
     // MARK: - Connectivity-triggered flush (AC2, Task 3.7)
@@ -223,17 +229,15 @@ struct SyncSchedulerTests {
         let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
         let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
 
-        // First call should execute
+        // First call should execute (triggers pullRecords → fetch)
         await scheduler.foregroundDiscovery(currentUserID: "user-1")
-        let firstFetchCount = mockCK.savedRecords.count
+        let firstFetchCount = mockCK.fetchCallCount
 
-        // Second rapid call should be throttled (< 30s)
+        // Second rapid call should be throttled (< 30s) — no additional fetch
         await scheduler.foregroundDiscovery(currentUserID: "user-1")
 
-        // Both calls should have the same effect (second was throttled)
-        // Verify by checking that fetch was called only once (mockCK doesn't track fetches separately,
-        // so we verify no crash and the throttle logic works via the timing guard)
-        #expect(Bool(true))  // Reached here without crash = throttle didn't throw
-        _ = firstFetchCount  // suppress unused warning
+        // Verify only one fetch was made (second call was throttled)
+        #expect(firstFetchCount == 1)
+        #expect(mockCK.fetchCallCount == 1)
     }
 }

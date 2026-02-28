@@ -92,6 +92,14 @@ final class AppServices {
         await syncScheduler.foregroundDiscovery(currentUserID: userID)
     }
 
+    /// Stops active round polling when the app enters background.
+    ///
+    /// Separate from `roundDidEnd()` because the round is still logically active —
+    /// polling resumes when the app returns to foreground via `roundDidStart()`.
+    func handleAppBackground() async {
+        await syncScheduler.stopActiveRoundPolling()
+    }
+
     // MARK: - iCloud Identity
 
     /// Resolves iCloud identity and updates the Player record.

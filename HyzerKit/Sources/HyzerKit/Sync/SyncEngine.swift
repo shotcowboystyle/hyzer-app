@@ -189,7 +189,7 @@ public actor SyncEngine: ModelActor {
             } catch {
                 logger.error("SyncEngine.pushPending: failed to persist .failed status after unexpected error: \(error)")
             }
-            syncState = .idle
+            syncState = .error(error)
             logger.error("SyncEngine.pushPending: unexpected error: \(error)")
         }
     }

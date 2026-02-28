@@ -101,11 +101,17 @@ public actor SyncScheduler {
 
     // MARK: - Foreground discovery
 
-    /// Performs a round-discovery CKQuery when the app enters foreground without an active round.
+    /// Performs round discovery when the app enters foreground without an active round.
     ///
     /// Covers missed CKSubscription silent pushes (iOS throttles in Low Power Mode,
     /// background-killed apps). Throttled to at most once per 30 seconds to prevent
     /// rapid scene phase flapping from triggering repeated queries.
+    ///
+    /// - Note: Current implementation pulls all ScoreEvent records via `pullRecords()`
+    ///   rather than executing a targeted CKQuery for active rounds containing the user
+    ///   (as specified by AC5). The generic pull approach is functionally correct —
+    ///   deduplication handles it — but less efficient than the specified round-specific
+    ///   query. The `currentUserID` parameter is preserved for the future optimization.
     ///
     /// - Parameter currentUserID: The iCloud record name of the current user.
     public func foregroundDiscovery(currentUserID: String) async {
@@ -139,6 +145,8 @@ public actor SyncScheduler {
         }
 
         for recordType in recordTypes {
+            // UserDefaults.standard accessed directly for subscription persistence.
+            // Future: inject UserDefaults for testability.
             let defaultsKey = "HyzerApp.subscriptionID.\(recordType)"
             let storedID = UserDefaults.standard.string(forKey: defaultsKey)
 
