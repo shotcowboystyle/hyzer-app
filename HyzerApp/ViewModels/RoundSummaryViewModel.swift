@@ -29,6 +29,7 @@ final class RoundSummaryViewModel {
     let courseName: String
     let holesPlayed: Int
     let coursePar: Int
+    let currentPlayerID: String
 
     /// Display name of the round organizer, derived from standings.
     var organizerName: String {
@@ -48,13 +49,15 @@ final class RoundSummaryViewModel {
         standings: [Standing],
         courseName: String,
         holesPlayed: Int,
-        coursePar: Int
+        coursePar: Int,
+        currentPlayerID: String
     ) {
         self.round = round
         self.standings = standings
         self.courseName = courseName
         self.holesPlayed = holesPlayed
         self.coursePar = coursePar
+        self.currentPlayerID = currentPlayerID
 
         let date = round.completedAt ?? Date()
         let formatter = DateFormatter()
@@ -78,14 +81,16 @@ final class RoundSummaryViewModel {
     // MARK: - Share
 
     /// Renders the summary card to a `UIImage` using `ImageRenderer`.
-    func shareSnapshot() -> UIImage? {
+    func shareSnapshot(displayScale: CGFloat) -> UIImage? {
         let view = SummaryCardSnapshotView(
             courseName: courseName,
             formattedDate: formattedDate,
-            playerRows: playerRows
+            playerRows: playerRows,
+            holesPlayed: holesPlayed,
+            organizerName: organizerName
         )
         let renderer = ImageRenderer(content: view)
-        renderer.scale = UIScreen.main.scale
+        renderer.scale = displayScale
         return renderer.uiImage
     }
 }

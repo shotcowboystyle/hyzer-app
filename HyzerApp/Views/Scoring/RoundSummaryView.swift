@@ -9,6 +9,7 @@ struct RoundSummaryView: View {
     let viewModel: RoundSummaryViewModel
     let onDismiss: () -> Void
 
+    @Environment(\.displayScale) private var displayScale
     @State private var isShareSheetPresented = false
     @State private var shareImage: UIImage?
 
@@ -101,8 +102,10 @@ struct RoundSummaryView: View {
 
     private var shareButton: some View {
         Button {
-            shareImage = viewModel.shareSnapshot()
-            isShareSheetPresented = true
+            shareImage = viewModel.shareSnapshot(displayScale: displayScale)
+            if shareImage != nil {
+                isShareSheetPresented = true
+            }
         } label: {
             Text("Share Results")
                 .font(TypographyTokens.body)
@@ -121,7 +124,7 @@ struct RoundSummaryView: View {
 
     private var accessibilityLabel: String {
         let winner = viewModel.playerRows.first(where: { $0.position == 1 })
-        let currentPlayer = viewModel.playerRows.last
+        let currentPlayer = viewModel.playerRows.first(where: { $0.id == viewModel.currentPlayerID })
         let winnerName = winner?.playerName ?? ""
         let winnerScore = winner?.formattedScore ?? ""
         let myPosition = currentPlayer?.position ?? 0
@@ -210,6 +213,8 @@ struct SummaryCardSnapshotView: View {
     let courseName: String
     let formattedDate: String
     let playerRows: [SummaryPlayerRow]
+    let holesPlayed: Int
+    let organizerName: String
 
     var body: some View {
         VStack(spacing: SpacingTokens.lg) {
@@ -230,6 +235,30 @@ struct SummaryCardSnapshotView: View {
             VStack(spacing: SpacingTokens.md) {
                 ForEach(playerRows) { row in
                     PlayerSummaryRow(row: row)
+                }
+            }
+
+            Divider()
+                .overlay(Color.backgroundElevated)
+
+            VStack(spacing: SpacingTokens.xs) {
+                HStack {
+                    Text("Holes played")
+                        .font(TypographyTokens.caption)
+                        .foregroundStyle(Color.textSecondary)
+                    Spacer()
+                    Text("\(holesPlayed)")
+                        .font(TypographyTokens.caption)
+                        .foregroundStyle(Color.textSecondary)
+                }
+                HStack {
+                    Text("Organizer")
+                        .font(TypographyTokens.caption)
+                        .foregroundStyle(Color.textSecondary)
+                    Spacer()
+                    Text(organizerName)
+                        .font(TypographyTokens.caption)
+                        .foregroundStyle(Color.textSecondary)
                 }
             }
         }

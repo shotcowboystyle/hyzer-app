@@ -217,6 +217,14 @@ None — clean implementation, no debugging required.
 - `xcodegen generate` must be run after adding new Swift files since `project.yml` uses directory-based source inclusion.
 - All 161 tests pass: 71 HyzerKit + 90 HyzerApp (77 baseline + 13 new).
 
+### Code Review Fixes (claude-opus-4-6)
+
+- **[H1] AC 5 fix**: Added `currentPlayerID` parameter to `RoundSummaryViewModel`. Accessibility label now correctly identifies the current user via `viewModel.currentPlayerID` instead of using `playerRows.last` (which was just the worst-ranked player, not the user). `ScorecardContainerView` passes `leaderboardViewModel.currentPlayerID` when constructing the summary VM.
+- **[H2] AC 3 fix**: `SummaryCardSnapshotView` now includes the metadata section (holes played, organizer name) so screenshots shared via the share sheet include full round context.
+- **[M1] Deprecated API fix**: `shareSnapshot()` now accepts a `displayScale: CGFloat` parameter instead of using deprecated `UIScreen.main.scale`. The view passes `@Environment(\.displayScale)` from SwiftUI.
+- **[M2] Nil guard fix**: Share button now guards against nil `shareImage` before presenting the share sheet, preventing an empty sheet if `ImageRenderer` fails.
+- **[M3] Design system note**: Story task 2.4 references `ColorTokens.border` but no such token exists in the design system. Implementation uses `Color.backgroundElevated` on dividers as the closest available alternative. This is a design system gap, not a code bug.
+
 ### File List
 
 - `HyzerApp/ViewModels/RoundSummaryViewModel.swift` — new

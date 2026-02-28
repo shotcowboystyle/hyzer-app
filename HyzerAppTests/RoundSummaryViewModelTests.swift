@@ -53,7 +53,8 @@ struct RoundSummaryViewModelTests {
         standings: [Standing]? = nil,
         courseName: String = "Hawk's Ridge",
         holesPlayed: Int = 9,
-        coursePar: Int = 27
+        coursePar: Int = 27,
+        currentPlayerID: String? = nil
     ) -> RoundSummaryViewModel {
         let r = round ?? makeRound(completedAt: Date())
         let s = standings ?? makeStandings(for: r)
@@ -62,7 +63,8 @@ struct RoundSummaryViewModelTests {
             standings: s,
             courseName: courseName,
             holesPlayed: holesPlayed,
-            coursePar: coursePar
+            coursePar: coursePar,
+            currentPlayerID: currentPlayerID ?? r.playerIDs[0]
         )
     }
 
@@ -81,7 +83,8 @@ struct RoundSummaryViewModelTests {
             standings: standings,
             courseName: "Test Course",
             holesPlayed: 9,
-            coursePar: 27
+            coursePar: 27,
+            currentPlayerID: "p1"
         )
         // playerRows order reflects the standings array order (VM does not re-sort; StandingsEngine provides sorted data)
         #expect(vm.playerRows[0].playerName == "Bob")
@@ -140,7 +143,8 @@ struct RoundSummaryViewModelTests {
             standings: standings,
             courseName: "Test",
             holesPlayed: 9,
-            coursePar: 27
+            coursePar: 27,
+            currentPlayerID: "p1"
         )
 
         let medals = vm.playerRows.map(\.hasMedal)
@@ -185,7 +189,8 @@ struct RoundSummaryViewModelTests {
             standings: standings,
             courseName: "Test",
             holesPlayed: 9,
-            coursePar: 27
+            coursePar: 27,
+            currentPlayerID: "p1"
         )
 
         #expect(vm.playerRows[0].scoreColor == Standing(
@@ -198,7 +203,7 @@ struct RoundSummaryViewModelTests {
     @Test("shareSnapshot produces a non-nil UIImage")
     func test_shareSnapshot_producesImage() {
         let vm = makeVM()
-        let image = vm.shareSnapshot()
+        let image = vm.shareSnapshot(displayScale: 2.0)
         #expect(image != nil)
     }
 
@@ -217,7 +222,8 @@ struct RoundSummaryViewModelTests {
             standings: standings,
             courseName: "Test",
             holesPlayed: 9,
-            coursePar: 27
+            coursePar: 27,
+            currentPlayerID: "p1"
         )
 
         #expect(vm.playerRows[0].position == 1)
@@ -242,7 +248,8 @@ struct RoundSummaryViewModelTests {
             standings: standings,
             courseName: "Early Exit Course",
             holesPlayed: 4,  // actual scored holes
-            coursePar: 27
+            coursePar: 27,
+            currentPlayerID: "p1"
         )
 
         #expect(vm.holesPlayed == 4)

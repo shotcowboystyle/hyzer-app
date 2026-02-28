@@ -137,12 +137,14 @@ struct ScorecardContainerView: View {
                 let standings = leaderboardViewModel?.currentStandings ?? []
                 let played = standings.first?.holesPlayed ?? round.holeCount
                 let par = courseHoles.reduce(0) { $0 + $1.par }
+                let playerID = leaderboardViewModel?.currentPlayerID ?? round.organizerID.uuidString
                 summaryViewModel = RoundSummaryViewModel(
                     round: round,
                     standings: standings,
                     courseName: courseName,
                     holesPlayed: played,
-                    coursePar: par
+                    coursePar: par,
+                    currentPlayerID: playerID
                 )
                 withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
                     isShowingSummary = true
