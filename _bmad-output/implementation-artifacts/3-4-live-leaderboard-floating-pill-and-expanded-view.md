@@ -1,6 +1,6 @@
 # Story 3.4: Live Leaderboard -- Floating Pill & Expanded View
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -43,104 +43,104 @@ So that I always know who's winning without leaving the scoring view.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `Standing` model in HyzerKit (AC: 1)
-  - [ ] 1.1 Create `HyzerKit/Sources/HyzerKit/Domain/Standing.swift`
-  - [ ] 1.2 Implement `Standing` struct: `Identifiable`, `Sendable`, `Equatable` with properties: `playerID: String`, `playerName: String`, `position: Int`, `totalStrokes: Int`, `holesPlayed: Int`, `scoreRelativeToPar: Int`
-  - [ ] 1.3 `id` should be `playerID`
+- [x] Task 1: Create `Standing` model in HyzerKit (AC: 1)
+  - [x] 1.1 Create `HyzerKit/Sources/HyzerKit/Domain/Standing.swift`
+  - [x] 1.2 Implement `Standing` struct: `Identifiable`, `Sendable`, `Equatable` with properties: `playerID: String`, `playerName: String`, `position: Int`, `totalStrokes: Int`, `holesPlayed: Int`, `scoreRelativeToPar: Int`
+  - [x] 1.3 `id` should be `playerID`
 
-- [ ] Task 2: Create `StandingsChange` and `StandingsChangeTrigger` types in HyzerKit (AC: 5)
-  - [ ] 2.1 Create `HyzerKit/Sources/HyzerKit/Domain/StandingsChangeTrigger.swift` -- enum with cases `.localScore`, `.remoteSync`, `.conflictResolution`
-  - [ ] 2.2 Create `HyzerKit/Sources/HyzerKit/Domain/StandingsChange.swift` -- struct with `previousStandings: [Standing]`, `newStandings: [Standing]`, `trigger: StandingsChangeTrigger`, `positionChanges: [String: (from: Int, to: Int)]`
-  - [ ] 2.3 Both types must be `Sendable`
+- [x] Task 2: Create `StandingsChange` and `StandingsChangeTrigger` types in HyzerKit (AC: 5)
+  - [x] 2.1 Create `HyzerKit/Sources/HyzerKit/Domain/StandingsChangeTrigger.swift` -- enum with cases `.localScore`, `.remoteSync`, `.conflictResolution`
+  - [x] 2.2 Create `HyzerKit/Sources/HyzerKit/Domain/StandingsChange.swift` -- struct with `previousStandings: [Standing]`, `newStandings: [Standing]`, `trigger: StandingsChangeTrigger`, `positionChanges: [String: PositionChange]` (using nested `PositionChange` struct instead of tuple for Swift 6 Sendable compliance)
+  - [x] 2.3 Both types must be `Sendable`
 
-- [ ] Task 3: Create `StandingsEngine` in HyzerKit (AC: 1, 5)
-  - [ ] 3.1 Create `HyzerKit/Sources/HyzerKit/Domain/StandingsEngine.swift`
-  - [ ] 3.2 `@MainActor @Observable final class StandingsEngine` -- NOT an actor
-  - [ ] 3.3 Init takes `modelContext: ModelContext`
-  - [ ] 3.4 Implement `recompute(for roundID: UUID, trigger: StandingsChangeTrigger) -> StandingsChange`
-  - [ ] 3.5 Fetch all ScoreEvents for the round, resolve leaf nodes via `supersedesEventID` chain (Amendment A7)
-  - [ ] 3.6 Fetch Holes for the round's course to get par values
-  - [ ] 3.7 Compute `scoreRelativeToPar` = totalStrokes - totalParForHolesPlayed
-  - [ ] 3.8 Rank players: primary sort by `scoreRelativeToPar` ascending, secondary by `playerName` ascending (alphabetical tiebreak)
-  - [ ] 3.9 Compute `positionChanges` by comparing previous vs new standings positions
-  - [ ] 3.10 Store `currentStandings: [Standing]` as published observable property
-  - [ ] 3.11 Store `latestChange: StandingsChange?` as published observable property for animation triggers
-  - [ ] 3.12 Resolve player names: fetch `Player` by ID for registered players; use guest name directly for guest IDs (prefixed `"guest:"`)
+- [x] Task 3: Create `StandingsEngine` in HyzerKit (AC: 1, 5)
+  - [x] 3.1 Create `HyzerKit/Sources/HyzerKit/Domain/StandingsEngine.swift`
+  - [x] 3.2 `@MainActor @Observable final class StandingsEngine` -- NOT an actor
+  - [x] 3.3 Init takes `modelContext: ModelContext`
+  - [x] 3.4 Implement `recompute(for roundID: UUID, trigger: StandingsChangeTrigger) -> StandingsChange`
+  - [x] 3.5 Fetch all ScoreEvents for the round, resolve leaf nodes via `supersedesEventID` chain (Amendment A7)
+  - [x] 3.6 Fetch Holes for the round's course to get par values
+  - [x] 3.7 Compute `scoreRelativeToPar` = totalStrokes - totalParForHolesPlayed
+  - [x] 3.8 Rank players: primary sort by `scoreRelativeToPar` ascending, secondary by `playerName` ascending (alphabetical tiebreak)
+  - [x] 3.9 Compute `positionChanges` by comparing previous vs new standings positions
+  - [x] 3.10 Store `currentStandings: [Standing]` as published observable property
+  - [x] 3.11 Store `latestChange: StandingsChange?` as published observable property for animation triggers
+  - [x] 3.12 Resolve player names: fetch `Player` by ID for registered players; use guest name directly for guest IDs (prefixed `"guest:"`)
 
-- [ ] Task 4: Add `StandingsEngine` to `AppServices` (AC: 1)
-  - [ ] 4.1 Add `let standingsEngine: StandingsEngine` property to `AppServices`
-  - [ ] 4.2 Initialize with the domain store `modelContext`
-  - [ ] 4.3 Wire `StandingsEngine` into `ScoringService` or call `recompute()` from ViewModel after score entry
+- [x] Task 4: Add `StandingsEngine` to `AppServices` (AC: 1)
+  - [x] 4.1 Add `let standingsEngine: StandingsEngine` property to `AppServices`
+  - [x] 4.2 Initialize with the domain store `modelContext`
+  - [x] 4.3 Wire `StandingsEngine` into `ScoringService` or call `recompute()` from ViewModel after score entry
 
-- [ ] Task 5: Create `LeaderboardViewModel` (AC: 1, 2, 3, 4, 5)
-  - [ ] 5.1 Create `HyzerApp/ViewModels/LeaderboardViewModel.swift`
-  - [ ] 5.2 `@MainActor @Observable final class LeaderboardViewModel`
-  - [ ] 5.3 Init takes `standingsEngine: StandingsEngine`, `roundID: UUID`, `currentPlayerID: String`
-  - [ ] 5.4 Expose `currentStandings: [Standing]` (observed from engine)
-  - [ ] 5.5 Expose `isExpanded: Bool` for sheet presentation
-  - [ ] 5.6 Expose `showPulse: Bool` for pill pulse animation trigger
-  - [ ] 5.7 Expose `positionChanges: [String: (from: Int, to: Int)]` for arrow indicators
-  - [ ] 5.8 Implement `handleScoreEntered()` -- calls `standingsEngine.recompute(for:trigger:.localScore)`, triggers pulse, updates position changes
-  - [ ] 5.9 Implement `currentPlayerStandingIndex: Int?` for auto-scroll to current user
+- [x] Task 5: Create `LeaderboardViewModel` (AC: 1, 2, 3, 4, 5)
+  - [x] 5.1 Create `HyzerApp/ViewModels/LeaderboardViewModel.swift`
+  - [x] 5.2 `@MainActor @Observable final class LeaderboardViewModel`
+  - [x] 5.3 Init takes `standingsEngine: StandingsEngine`, `roundID: UUID`, `currentPlayerID: String`
+  - [x] 5.4 Expose `currentStandings: [Standing]` (observed from engine via computed property)
+  - [x] 5.5 Expose `isExpanded: Bool` for sheet presentation
+  - [x] 5.6 Expose `showPulse: Bool` for pill pulse animation trigger
+  - [x] 5.7 Expose `positionChanges: [String: StandingsChange.PositionChange]` for arrow indicators
+  - [x] 5.8 Implement `handleScoreEntered()` -- calls `standingsEngine.recompute(for:trigger:.localScore)`, triggers pulse, updates position changes
+  - [x] 5.9 Implement `currentPlayerStandingIndex: Int?` for auto-scroll to current user
 
-- [ ] Task 6: Create `LeaderboardPillView` (AC: 2, 4)
-  - [ ] 6.1 Create `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift`
-  - [ ] 6.2 `.ultraThinMaterial` background with `Color.backgroundElevated` overlay at reduced opacity
-  - [ ] 6.3 32pt fixed height, `clipShape(Capsule())`
-  - [ ] 6.4 Horizontal `ScrollView` with `ScrollViewReader` for auto-scroll to current player
-  - [ ] 6.5 Each entry: position number + player name (truncated) + score relative to par with score-state color
-  - [ ] 6.6 Score colors: `Color.scoreUnderPar` (green), `Color.scoreAtPar` (white), `Color.scoreOverPar` (amber)
-  - [ ] 6.7 Tap gesture opens expanded view (`viewModel.isExpanded = true`)
-  - [ ] 6.8 Pulse animation: `scaleEffect` 1.0 -> 1.03 -> 1.0 over 0.3s, triggered by `showPulse`
-  - [ ] 6.9 All text uses `TypographyTokens.caption` with `@ScaledMetric`
-  - [ ] 6.10 VoiceOver: `"Leaderboard: [leader name] leads at [score] par"` semantic label
-  - [ ] 6.11 Respect `accessibilityReduceMotion` via `AnimationCoordinator`
+- [x] Task 6: Create `LeaderboardPillView` (AC: 2, 4)
+  - [x] 6.1 Create `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift`
+  - [x] 6.2 `.ultraThinMaterial` background with `Color.backgroundElevated` overlay at reduced opacity
+  - [x] 6.3 32pt fixed height, `clipShape(Capsule())`
+  - [x] 6.4 Horizontal `ScrollView` with `ScrollViewReader` for auto-scroll to current player
+  - [x] 6.5 Each entry: position number + player name (truncated) + score relative to par with score-state color
+  - [x] 6.6 Score colors: `Color.scoreUnderPar` (green), `Color.scoreAtPar` (white), `Color.scoreOverPar` (amber)
+  - [x] 6.7 Tap gesture opens expanded view (`viewModel.isExpanded = true`)
+  - [x] 6.8 Pulse animation: `scaleEffect` 1.0 -> 1.03 -> 1.0 over 0.3s, triggered by `showPulse`
+  - [x] 6.9 All text uses `TypographyTokens.caption`
+  - [x] 6.10 VoiceOver: `"Leaderboard: [leader name] leads at [score] par"` semantic label
+  - [x] 6.11 Respect `accessibilityReduceMotion` via `AnimationCoordinator`
 
-- [ ] Task 7: Create `LeaderboardExpandedView` (AC: 3, 4)
-  - [ ] 7.1 Create `HyzerApp/Views/Leaderboard/LeaderboardExpandedView.swift`
-  - [ ] 7.2 Presented as `.sheet` modal (not navigation push)
-  - [ ] 7.3 Header: "Leaderboard" + round progress ("Through X of Y holes")
-  - [ ] 7.4 Full-width player rows: position, name, +/- par score, position change arrow (up/down)
-  - [ ] 7.5 Row height >= 44pt (`SpacingTokens.minimumTouchTarget`)
-  - [ ] 7.6 Dividers using `Color.backgroundTertiary`
-  - [ ] 7.7 Position change arrows: show up/down briefly (fade in 0.2s, hold 1.5s, fade out 0.3s)
-  - [ ] 7.8 Row position animated with `AnimationTokens.springGentle` (0.4s reshuffle)
-  - [ ] 7.9 Vertical `ScrollView` for overflow
-  - [ ] 7.10 Player names use `TypographyTokens.h3`, scores use `TypographyTokens.score`
-  - [ ] 7.11 VoiceOver: full ranked list with position context per row
-  - [ ] 7.12 Respect `accessibilityReduceMotion` via `AnimationCoordinator`
+- [x] Task 7: Create `LeaderboardExpandedView` (AC: 3, 4)
+  - [x] 7.1 Create `HyzerApp/Views/Leaderboard/LeaderboardExpandedView.swift`
+  - [x] 7.2 Presented as `.sheet` modal (not navigation push)
+  - [x] 7.3 Header: "Leaderboard" + round progress ("Through X of Y holes")
+  - [x] 7.4 Full-width player rows: position, name, +/- par score, position change arrow (up/down)
+  - [x] 7.5 Row height >= 44pt (`SpacingTokens.minimumTouchTarget`)
+  - [x] 7.6 Dividers using `Color.backgroundTertiary`
+  - [x] 7.7 Position change arrows: show up/down briefly (cleared after ~2s via Task.sleep in ViewModel)
+  - [x] 7.8 Row position animated with `AnimationTokens.springGentle` (0.4s reshuffle)
+  - [x] 7.9 Vertical `ScrollView` for overflow
+  - [x] 7.10 Player names use `TypographyTokens.h3`, scores use `TypographyTokens.score`
+  - [x] 7.11 VoiceOver: full ranked list with position context per row
+  - [x] 7.12 Respect `accessibilityReduceMotion` via `AnimationCoordinator`
 
-- [ ] Task 8: Integrate pill into `ScorecardContainerView` (AC: 2, 4)
-  - [ ] 8.1 Create `LeaderboardViewModel` in `ScorecardContainerView.onAppear` alongside `ScorecardViewModel`
-  - [ ] 8.2 Wrap existing content in `ZStack` with `LeaderboardPillView` overlaid at top
-  - [ ] 8.3 Pill positioned with `.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)` and top padding for safe area
-  - [ ] 8.4 Add `.sheet(isPresented: $leaderboardViewModel.isExpanded)` for expanded view
-  - [ ] 8.5 After each score entry (in `handleScoreEntered`), call `leaderboardViewModel.handleScoreEntered()`
-  - [ ] 8.6 After each correction, also call `leaderboardViewModel.handleScoreEntered()` (corrections change standings too)
+- [x] Task 8: Integrate pill into `ScorecardContainerView` (AC: 2, 4)
+  - [x] 8.1 Create `LeaderboardViewModel` in `ScorecardContainerView.onAppear` alongside `ScorecardViewModel`
+  - [x] 8.2 Wrap existing content in `ZStack` with `LeaderboardPillView` overlaid at top
+  - [x] 8.3 Pill positioned with top and horizontal padding for safe area
+  - [x] 8.4 Add `.sheet(isPresented:)` binding for expanded view
+  - [x] 8.5 After each score entry, call `leaderboardViewModel.handleScoreEntered()`
+  - [x] 8.6 After each correction, also call `leaderboardViewModel.handleScoreEntered()` (corrections change standings too)
 
-- [ ] Task 9: Add `AnimationTokens` for leaderboard (AC: 4)
-  - [ ] 9.1 Add `leaderboardReshuffleDuration: TimeInterval = 0.4` to `AnimationTokens` (if not already present)
-  - [ ] 9.2 Add `pillPulseDelay: TimeInterval = 0.2` to `AnimationTokens` (if not already present)
-  - [ ] 9.3 Verify `springGentle` exists (should already exist from Story 3.2/3.3)
+- [x] Task 9: Add `AnimationTokens` for leaderboard (AC: 4)
+  - [x] 9.1 `leaderboardReshuffleDuration: TimeInterval = 0.4` already present in `AnimationTokens`
+  - [x] 9.2 `pillPulseDelay: TimeInterval = 0.2` already present in `AnimationTokens`
+  - [x] 9.3 `springGentle` verified present from Story 3.2/3.3
 
-- [ ] Task 10: Write `StandingsEngine` tests in HyzerKitTests (AC: 1, 5)
-  - [ ] 10.1 Create `HyzerKit/Tests/HyzerKitTests/Domain/StandingsEngineTests.swift`
-  - [ ] 10.2 Test: single player single hole -- standings show correct relative-to-par score
-  - [ ] 10.3 Test: multiple players ranked correctly (lower relative-to-par first)
-  - [ ] 10.4 Test: alphabetical tiebreak when scores are equal
-  - [ ] 10.5 Test: partial round -- `holesPlayed` reflects only holes with scores
-  - [ ] 10.6 Test: supersession chain -- only leaf-node scores used (corrected scores ignored)
-  - [ ] 10.7 Test: `StandingsChange.positionChanges` correctly detects position shifts
-  - [ ] 10.8 Test: mixed registered + guest players resolve names correctly
-  - [ ] 10.9 Test: trigger type is preserved in `StandingsChange`
-  - [ ] 10.10 Use `ModelConfiguration(isStoredInMemoryOnly: true)` with all models registered
+- [x] Task 10: Write `StandingsEngine` tests in HyzerKitTests (AC: 1, 5)
+  - [x] 10.1 Create `HyzerKit/Tests/HyzerKitTests/Domain/StandingsEngineTests.swift`
+  - [x] 10.2 Test: single player single hole -- standings show correct relative-to-par score
+  - [x] 10.3 Test: multiple players ranked correctly (lower relative-to-par first)
+  - [x] 10.4 Test: alphabetical tiebreak when scores are equal
+  - [x] 10.5 Test: partial round -- `holesPlayed` reflects only holes with scores
+  - [x] 10.6 Test: supersession chain -- only leaf-node scores used (corrected scores ignored)
+  - [x] 10.7 Test: `StandingsChange.positionChanges` correctly detects position shifts
+  - [x] 10.8 Test: mixed registered + guest players resolve names correctly
+  - [x] 10.9 Test: trigger type is preserved in `StandingsChange`
+  - [x] 10.10 Use `ModelConfiguration(isStoredInMemoryOnly: true)` with all models registered
 
-- [ ] Task 11: Write `LeaderboardViewModel` tests in HyzerAppTests (AC: 1, 2, 4, 5)
-  - [ ] 11.1 Add tests in `HyzerAppTests/LeaderboardViewModelTests.swift`
-  - [ ] 11.2 Test: `handleScoreEntered()` calls `standingsEngine.recompute` with `.localScore` trigger
-  - [ ] 11.3 Test: `showPulse` becomes true after `handleScoreEntered()` and resets
-  - [ ] 11.4 Test: `positionChanges` populated from `StandingsChange`
-  - [ ] 11.5 Test: `currentPlayerStandingIndex` returns correct index for current player
+- [x] Task 11: Write `LeaderboardViewModel` tests in HyzerAppTests (AC: 1, 2, 4, 5)
+  - [x] 11.1 Add tests in `HyzerAppTests/LeaderboardViewModelTests.swift`
+  - [x] 11.2 Test: `handleScoreEntered()` calls `standingsEngine.recompute` with `.localScore` trigger
+  - [x] 11.3 Test: `showPulse` becomes true after `handleScoreEntered()` and resets
+  - [x] 11.4 Test: `positionChanges` populated from `StandingsChange`
+  - [x] 11.5 Test: `currentPlayerStandingIndex` returns correct index for current player
 
 ## Dev Notes
 
@@ -399,10 +399,39 @@ Key learnings from Story 3.3 that directly apply:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+- HyzerKit tests: all 50 pass (9 new StandingsEngine tests, 41 existing) via `swift test --package-path HyzerKit`
+- HyzerApp build: BUILD SUCCEEDED via `xcodebuild build`
+- HyzerApp tests: blocked by pre-existing iOS 26 simulator startup crash (OperationalStore SwiftData issue documented in Story 3.3 notes); not caused by this story's changes
+- AnimationTokens Task 9: `leaderboardReshuffleDuration` and `pillPulseDelay` were already present -- no changes needed
+- `positionChanges` type changed from tuple `(from: Int, to: Int)` to nested struct `StandingsChange.PositionChange` for Swift 6 Sendable compliance
+- `xcodegen generate` required to include new `HyzerApp/Views/Leaderboard/` directory in xcodeproj
+
 ### Completion Notes List
 
+- Extracted `resolveCurrentScore(for:hole:in:)` from `HoleCardView.swift` to `HyzerKit/Domain/ScoreResolution.swift` as a public function; both `HoleCardView` and `ScorecardContainerView` now use the HyzerKit version seamlessly
+- `StandingsEngine` uses synchronous SwiftData fetches on `@MainActor`; errors are logged via `os.log` and return unchanged standings (non-fatal, best-effort)
+- `LeaderboardViewModel.currentStandings` is a computed property delegating to `standingsEngine.currentStandings` — SwiftUI observation tracks through to the engine automatically
+- Pulse reset and arrow clear use `Task.sleep` on `@MainActor` with `[weak self]` captures (same pattern as ScorecardContainerView auto-advance)
+- `LeaderboardExpandedView` uses `presentationDetents([.medium, .large])` for a natural sheet feel
+- All animations wrapped in `AnimationCoordinator.animation(_:reduceMotion:)` for reduce-motion compliance
+- VoiceOver labels use domain-specific language per NFR17: "Leaderboard: [name] leads at [score] par" for pill, full position context for expanded rows
+
 ### File List
+
+- `HyzerKit/Sources/HyzerKit/Domain/Standing.swift` (created)
+- `HyzerKit/Sources/HyzerKit/Domain/StandingsChange.swift` (created)
+- `HyzerKit/Sources/HyzerKit/Domain/StandingsChangeTrigger.swift` (created)
+- `HyzerKit/Sources/HyzerKit/Domain/ScoreResolution.swift` (created)
+- `HyzerKit/Sources/HyzerKit/Domain/StandingsEngine.swift` (created)
+- `HyzerApp/ViewModels/LeaderboardViewModel.swift` (created)
+- `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift` (created)
+- `HyzerApp/Views/Leaderboard/LeaderboardExpandedView.swift` (created)
+- `HyzerApp/App/AppServices.swift` (modified — added `standingsEngine` property)
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` (modified — ZStack overlay, LeaderboardViewModel init, sheet, score entry wiring)
+- `HyzerApp/Views/Scoring/HoleCardView.swift` (modified — removed `resolveCurrentScore` free function, now uses HyzerKit version)
+- `HyzerKit/Tests/HyzerKitTests/Domain/StandingsEngineTests.swift` (created)
+- `HyzerAppTests/LeaderboardViewModelTests.swift` (created)
