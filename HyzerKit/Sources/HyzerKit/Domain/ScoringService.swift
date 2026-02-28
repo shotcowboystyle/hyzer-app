@@ -35,6 +35,8 @@ public final class ScoringService {
         strokeCount: Int,
         reportedByPlayerID: UUID
     ) throws -> ScoreEvent {
+        precondition((1...10).contains(strokeCount), "strokeCount must be 1-10, got \(strokeCount)")
+        precondition(holeNumber >= 1, "holeNumber must be >= 1, got \(holeNumber)")
         let event = ScoreEvent(
             roundID: roundID,
             holeNumber: holeNumber,

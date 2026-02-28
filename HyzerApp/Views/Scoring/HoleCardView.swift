@@ -21,6 +21,7 @@ struct HoleCardView: View {
     let scores: [ScoreEvent]
     let onScore: (String, Int) -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var expandedPlayerID: String?
 
     var body: some View {
@@ -86,7 +87,7 @@ struct HoleCardView: View {
                 }
             }
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: expandedPlayerID)
+        .animation(AnimationCoordinator.animation(AnimationTokens.springStiff, reduceMotion: reduceMotion), value: expandedPlayerID)
     }
 
     private func playerRow(player: ScorecardPlayer, score: ScoreEvent?) -> some View {
@@ -114,7 +115,8 @@ struct HoleCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
         .onTapGesture {
-            withAnimation {
+            guard score == nil else { return }
+            withAnimation(AnimationCoordinator.animation(AnimationTokens.springStiff, reduceMotion: reduceMotion)) {
                 expandedPlayerID = player.id
             }
         }

@@ -65,8 +65,8 @@ struct ScorecardContainerView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .automatic))
         .background(Color.backgroundPrimary)
-        .alert("Score Entry Error", isPresented: .constant(viewModel?.saveError != nil)) {
-            Button("OK") { viewModel?.saveError = nil }
+        .alert("Score Entry Error", isPresented: showingErrorBinding) {
+            Button("OK") { }
         } message: {
             Text(viewModel?.saveError?.localizedDescription ?? "")
         }
@@ -108,5 +108,12 @@ struct ScorecardContainerView: View {
 
     private var courseName: String {
         allCourses.first { $0.id == round.courseID }?.name ?? "Unknown Course"
+    }
+
+    private var showingErrorBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel?.saveError != nil },
+            set: { if !$0 { viewModel?.saveError = nil } }
+        )
     }
 }

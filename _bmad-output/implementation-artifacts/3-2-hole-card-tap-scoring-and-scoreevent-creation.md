@@ -542,18 +542,34 @@ claude-sonnet-4-6
 - HyzerKit tests (35/35 pass). iOS simulator tests blocked by pre-existing iOS 26 + SwiftData + AppGroup incompatibility (same as all prior stories — not a code issue).
 - SwiftLint: no errors or warnings.
 
+### Senior Developer Review (AI)
+
+**Reviewer:** claude-opus-4-6 | **Date:** 2026-02-27
+
+**Result: PASSED** (7 findings, all resolved)
+
+| # | Severity | Finding | Resolution |
+|---|----------|---------|------------|
+| H1 | HIGH | Scored rows tappable — allows re-scoring without supersession chain (Story 3.3 scope leak) | Added `guard score == nil` in `onTapGesture` to disable tap on scored rows |
+| H2 | HIGH | ScoreInputView 10×52pt buttons overflow on all iPhones (NFR14 violation) | Wrapped HStack in horizontal `ScrollView` with `defaultScrollAnchor` centered on par |
+| M1 | MEDIUM | Alert binding uses `.constant()` — non-writable, may not dismiss | Replaced with computed `Binding` via `showingErrorBinding` property |
+| M2 | MEDIUM | Hardcoded `.spring()` animation instead of `AnimationTokens`/`AnimationCoordinator` | Switched to `AnimationCoordinator.animation(AnimationTokens.springStiff, reduceMotion:)` with `@Environment(\.accessibilityReduceMotion)` |
+| M3 | MEDIUM | Missing `precondition` for strokeCount range (1-10) in `ScoringService` | Added `precondition((1...10).contains(strokeCount))` and `precondition(holeNumber >= 1)` |
+| L1 | LOW | `UIImpactFeedbackGenerator` instantiated per tap | Moved to stored property with `.onAppear { haptic.prepare() }` |
+| L2 | LOW | Typo: `createsSeperateEvents` → `createsSeparateEvents` | Fixed method name |
+
 ### File List
 
 - `HyzerKit/Sources/HyzerKit/Models/ScoreEvent.swift` — created
-- `HyzerKit/Sources/HyzerKit/Domain/ScoringService.swift` — created
+- `HyzerKit/Sources/HyzerKit/Domain/ScoringService.swift` — created (review: added preconditions)
 - `HyzerApp/App/HyzerApp.swift` — modified (added ScoreEvent to ModelContainer)
 - `HyzerApp/App/AppServices.swift` — modified (added scoringService, UIKit import)
 - `HyzerApp/ViewModels/ScorecardViewModel.swift` — created
-- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` — created
-- `HyzerApp/Views/Scoring/HoleCardView.swift` — created
-- `HyzerApp/Views/Scoring/ScoreInputView.swift` — created
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` — created (review: fixed alert binding)
+- `HyzerApp/Views/Scoring/HoleCardView.swift` — created (review: disabled scored-row tap, AnimationTokens, reduce-motion)
+- `HyzerApp/Views/Scoring/ScoreInputView.swift` — created (review: ScrollView wrapper, haptic prepare, scroll anchor)
 - `HyzerApp/Views/HomeView.swift` — modified (replaced ActiveRoundView with ScorecardContainerView, removed unused code)
 - `HyzerKit/Tests/HyzerKitTests/Fixtures/ScoreEvent+Fixture.swift` — created
 - `HyzerKit/Tests/HyzerKitTests/Domain/ScoreEventModelTests.swift` — created
 - `HyzerKit/Tests/HyzerKitTests/Domain/ScoringServiceTests.swift` — created
-- `HyzerAppTests/ScorecardViewModelTests.swift` — created
+- `HyzerAppTests/ScorecardViewModelTests.swift` — created (review: fixed typo)

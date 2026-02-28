@@ -15,6 +15,7 @@ struct ScoreInputView: View {
     let onCancel: () -> Void
 
     private let scores = Array(1...10)
+    private let haptic = UIImpactFeedbackGenerator(style: .light)
 
     var body: some View {
         VStack(spacing: SpacingTokens.xs) {
@@ -32,36 +33,47 @@ struct ScoreInputView: View {
             }
             .padding(.horizontal, SpacingTokens.md)
 
-            HStack(spacing: SpacingTokens.xs) {
-                ForEach(scores, id: \.self) { value in
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        onSelect(value)
-                    } label: {
-                        Text("\(value)")
-                            .font(TypographyTokens.score)
-                            .foregroundStyle(value == par ? Color.backgroundPrimary : Color.textPrimary)
-                            .frame(
-                                minWidth: SpacingTokens.scoringTouchTarget,
-                                minHeight: SpacingTokens.scoringTouchTarget
-                            )
-                            .background(
-                                value == par
-                                    ? Color.accentPrimary
-                                    : Color.backgroundPrimary.opacity(0.6)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: SpacingTokens.xs) {
+                    ForEach(scores, id: \.self) { value in
+                        Button {
+                            haptic.impactOccurred()
+                            onSelect(value)
+                        } label: {
+                            Text("\(value)")
+                                .font(TypographyTokens.score)
+                                .foregroundStyle(value == par ? Color.backgroundPrimary : Color.textPrimary)
+                                .frame(
+                                    minWidth: SpacingTokens.scoringTouchTarget,
+                                    minHeight: SpacingTokens.scoringTouchTarget
+                                )
+                                .background(
+                                    value == par
+                                        ? Color.accentPrimary
+                                        : Color.backgroundPrimary.opacity(0.6)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Score \(value)\(value == par ? ", par" : "")")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Score \(value)\(value == par ? ", par" : "")")
                 }
+                .scrollTargetLayout()
+                .padding(.horizontal, SpacingTokens.sm)
             }
-            .padding(.horizontal, SpacingTokens.sm)
+            .defaultScrollAnchor(parScrollAnchor)
         }
         .padding(.vertical, SpacingTokens.sm)
         .background(Color.backgroundElevated)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Select score for \(playerName)")
+        .onAppear { haptic.prepare() }
+    }
+
+    /// Scroll anchor that centers the par value in the visible area.
+    private var parScrollAnchor: UnitPoint {
+        let fraction = Double(par - 1) / Double(scores.count - 1)
+        return UnitPoint(x: fraction, y: 0.5)
     }
 }

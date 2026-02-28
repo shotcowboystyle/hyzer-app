@@ -70,7 +70,7 @@ struct ScorecardViewModelTests {
     // MARK: - enterScore with different playerIDs creates separate events (distributed scoring)
 
     @Test("enterScore with different playerIDs creates separate events (distributed scoring)")
-    func test_enterScore_differentPlayerIDs_createsSeperateEvents() throws {
+    func test_enterScore_differentPlayerIDs_createsSeparateEvents() throws {
         let (context, service) = try makeContextAndService()
         let roundID = UUID()
 
