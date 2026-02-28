@@ -10,7 +10,6 @@ struct LeaderboardPillView: View {
     let viewModel: LeaderboardViewModel
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Namespace private var scrollSpace
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -44,7 +43,7 @@ struct LeaderboardPillView: View {
                 if let index = viewModel.currentPlayerStandingIndex,
                    index < viewModel.currentStandings.count {
                     let playerID = viewModel.currentStandings[index].playerID
-                    withAnimation {
+                    withAnimation(AnimationCoordinator.animation(.easeInOut(duration: 0.3), reduceMotion: reduceMotion)) {
                         proxy.scrollTo(playerID, anchor: .center)
                     }
                 }
@@ -63,9 +62,9 @@ struct LeaderboardPillView: View {
                 .font(TypographyTokens.caption)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
-            Text(formatScore(standing.scoreRelativeToPar))
+            Text(standing.formattedScore)
                 .font(TypographyTokens.caption)
-                .foregroundStyle(scoreColor(standing.scoreRelativeToPar))
+                .foregroundStyle(standing.scoreColor)
         }
         .padding(.horizontal, SpacingTokens.xs)
     }
@@ -76,18 +75,7 @@ struct LeaderboardPillView: View {
         guard let leader = viewModel.currentStandings.first else {
             return "Leaderboard: no scores yet"
         }
-        return "Leaderboard: \(leader.playerName) leads at \(formatScore(leader.scoreRelativeToPar)) par"
+        return "Leaderboard: \(leader.playerName) leads at \(leader.formattedScore) par"
     }
 
-    private func formatScore(_ relative: Int) -> String {
-        if relative < 0 { return "\(relative)" }
-        if relative == 0 { return "E" }
-        return "+\(relative)"
-    }
-
-    private func scoreColor(_ relative: Int) -> Color {
-        if relative < 0 { return .scoreUnderPar }
-        if relative == 0 { return .scoreAtPar }
-        return .scoreOverPar
-    }
 }

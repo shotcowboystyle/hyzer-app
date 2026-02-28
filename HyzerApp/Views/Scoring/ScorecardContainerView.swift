@@ -77,7 +77,8 @@ struct ScorecardContainerView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .automatic))
 
-            if let lvm = leaderboardViewModel {
+            if let lvm = leaderboardViewModel,
+               lvm.currentStandings.contains(where: { $0.holesPlayed > 0 }) {
                 LeaderboardPillView(viewModel: lvm)
                     .padding(.top, SpacingTokens.md)
                     .padding(.horizontal, SpacingTokens.md)
@@ -120,6 +121,7 @@ struct ScorecardContainerView: View {
                 roundID: round.id,
                 currentPlayerID: round.organizerID.uuidString
             )
+            appServices.standingsEngine.recompute(for: round.id, trigger: .localScore)
             return
         }
         viewModel = ScorecardViewModel(
@@ -132,6 +134,7 @@ struct ScorecardContainerView: View {
             roundID: round.id,
             currentPlayerID: organizer.id.uuidString
         )
+        appServices.standingsEngine.recompute(for: round.id, trigger: .localScore)
     }
 
     private func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) {

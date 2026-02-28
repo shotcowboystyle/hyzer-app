@@ -420,9 +420,18 @@ claude-sonnet-4-6
 - All animations wrapped in `AnimationCoordinator.animation(_:reduceMotion:)` for reduce-motion compliance
 - VoiceOver labels use domain-specific language per NFR17: "Leaderboard: [name] leads at [score] par" for pill, full position context for expanded rows
 
+### Code Review Fixes (2026-02-27)
+
+- Extracted duplicated `formatScore`/`scoreColor` from both views to shared `Standing+Formatting.swift` extension in HyzerKit
+- Suppressed leaderboard pill when no players have scored yet (avoids showing all players tied at "E" before round starts)
+- Added initial `recompute` call in `initializeViewModels()` so pill shows standings when returning to an in-progress round
+- Removed unused `@Namespace` declaration from `LeaderboardPillView`
+- Fixed pill auto-scroll animation to respect `accessibilityReduceMotion` via `AnimationCoordinator`
+
 ### File List
 
 - `HyzerKit/Sources/HyzerKit/Domain/Standing.swift` (created)
+- `HyzerKit/Sources/HyzerKit/Domain/Standing+Formatting.swift` (created — shared `formattedScore`/`scoreColor` helpers)
 - `HyzerKit/Sources/HyzerKit/Domain/StandingsChange.swift` (created)
 - `HyzerKit/Sources/HyzerKit/Domain/StandingsChangeTrigger.swift` (created)
 - `HyzerKit/Sources/HyzerKit/Domain/ScoreResolution.swift` (created)
@@ -431,7 +440,7 @@ claude-sonnet-4-6
 - `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift` (created)
 - `HyzerApp/Views/Leaderboard/LeaderboardExpandedView.swift` (created)
 - `HyzerApp/App/AppServices.swift` (modified — added `standingsEngine` property)
-- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` (modified — ZStack overlay, LeaderboardViewModel init, sheet, score entry wiring)
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` (modified — ZStack overlay, LeaderboardViewModel init, sheet, score entry wiring, initial recompute, pill suppression)
 - `HyzerApp/Views/Scoring/HoleCardView.swift` (modified — removed `resolveCurrentScore` free function, now uses HyzerKit version)
 - `HyzerKit/Tests/HyzerKitTests/Domain/StandingsEngineTests.swift` (created)
 - `HyzerAppTests/LeaderboardViewModelTests.swift` (created)

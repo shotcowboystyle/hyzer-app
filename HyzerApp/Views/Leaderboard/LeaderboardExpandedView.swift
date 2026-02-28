@@ -69,9 +69,9 @@ struct LeaderboardExpandedView: View {
 
             positionArrow(for: standing)
 
-            Text(formatScore(standing.scoreRelativeToPar))
+            Text(standing.formattedScore)
                 .font(TypographyTokens.score)
-                .foregroundStyle(scoreColor(standing.scoreRelativeToPar))
+                .foregroundStyle(standing.scoreColor)
                 .frame(width: 44, alignment: .trailing)
         }
         .padding(.horizontal, SpacingTokens.md)
@@ -106,19 +106,8 @@ struct LeaderboardExpandedView: View {
     // MARK: - Helpers
 
     private func rowAccessibilityLabel(for standing: Standing) -> String {
-        let scoreText = formatScore(standing.scoreRelativeToPar)
+        let scoreText = standing.formattedScore
         return "Position \(standing.position), \(standing.playerName), \(scoreText) par, \(standing.holesPlayed) holes played"
     }
 
-    private func formatScore(_ relative: Int) -> String {
-        if relative < 0 { return "\(relative)" }
-        if relative == 0 { return "E" }
-        return "+\(relative)"
-    }
-
-    private func scoreColor(_ relative: Int) -> Color {
-        if relative < 0 { return .scoreUnderPar }
-        if relative == 0 { return .scoreAtPar }
-        return .scoreOverPar
-    }
 }
