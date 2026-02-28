@@ -13,6 +13,7 @@ import HyzerKit
 final class AppServices {
     let modelContainer: ModelContainer
     let scoringService: ScoringService
+    let standingsEngine: StandingsEngine
     private(set) var iCloudRecordName: String?
 
     private let iCloudIdentityProvider: any ICloudIdentityProvider
@@ -23,6 +24,7 @@ final class AppServices {
         self.modelContainer = modelContainer
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
+        self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 

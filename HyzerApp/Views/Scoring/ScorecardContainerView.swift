@@ -23,6 +23,7 @@ struct ScorecardContainerView: View {
 
     @State private var currentHole: Int = 1
     @State private var viewModel: ScorecardViewModel?
+    @State private var leaderboardViewModel: LeaderboardViewModel?
     @State private var autoAdvanceTask: Task<Void, Never>?
 
     // MARK: - Client-side filters
@@ -50,37 +51,53 @@ struct ScorecardContainerView: View {
     // MARK: - Body
 
     var body: some View {
-        TabView(selection: $currentHole) {
-            ForEach(1...max(1, round.holeCount), id: \.self) { holeNumber in
-                HoleCardView(
-                    holeNumber: holeNumber,
-                    par: par(forHole: holeNumber),
-                    courseName: courseName,
-                    players: scorecardPlayers,
-                    scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
-                    onScore: { playerID, strokeCount in
-                        enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
-                    },
-                    onCorrection: { playerID, previousEventID, strokeCount in
-                        correctScore(
-                            playerID: playerID,
-                            previousEventID: previousEventID,
-                            holeNumber: holeNumber,
-                            strokeCount: strokeCount
-                        )
-                    }
-                )
-                .tag(holeNumber)
+        ZStack(alignment: .top) {
+            TabView(selection: $currentHole) {
+                ForEach(1...max(1, round.holeCount), id: \.self) { holeNumber in
+                    HoleCardView(
+                        holeNumber: holeNumber,
+                        par: par(forHole: holeNumber),
+                        courseName: courseName,
+                        players: scorecardPlayers,
+                        scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
+                        onScore: { playerID, strokeCount in
+                            enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+                        },
+                        onCorrection: { playerID, previousEventID, strokeCount in
+                            correctScore(
+                                playerID: playerID,
+                                previousEventID: previousEventID,
+                                holeNumber: holeNumber,
+                                strokeCount: strokeCount
+                            )
+                        }
+                    )
+                    .tag(holeNumber)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .automatic))
+
+            if let lvm = leaderboardViewModel {
+                LeaderboardPillView(viewModel: lvm)
+                    .padding(.top, SpacingTokens.md)
+                    .padding(.horizontal, SpacingTokens.md)
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .automatic))
         .background(Color.backgroundPrimary)
+        .sheet(isPresented: Binding(
+            get: { leaderboardViewModel?.isExpanded ?? false },
+            set: { leaderboardViewModel?.isExpanded = $0 }
+        )) {
+            if let lvm = leaderboardViewModel {
+                LeaderboardExpandedView(viewModel: lvm, totalHoles: round.holeCount)
+            }
+        }
         .alert("Score Entry Error", isPresented: showingErrorBinding) {
             Button("OK") { }
         } message: {
             Text(viewModel?.saveError?.localizedDescription ?? "")
         }
-        .onAppear { initializeViewModel() }
+        .onAppear { initializeViewModels() }
         .onChange(of: currentHole) {
             // Cancel any pending auto-advance when the user swipes manually
             autoAdvanceTask?.cancel()
@@ -89,7 +106,7 @@ struct ScorecardContainerView: View {
 
     // MARK: - Private
 
-    private func initializeViewModel() {
+    private func initializeViewModels() {
         guard viewModel == nil else { return }
         guard let organizer = allPlayers.first(where: { $0.id.uuidString == round.playerIDs.first }) else {
             // Fall back to organizerID if organizer player not in query results yet
@@ -98,6 +115,11 @@ struct ScorecardContainerView: View {
                 roundID: round.id,
                 reportedByPlayerID: round.organizerID
             )
+            leaderboardViewModel = LeaderboardViewModel(
+                standingsEngine: appServices.standingsEngine,
+                roundID: round.id,
+                currentPlayerID: round.organizerID.uuidString
+            )
             return
         }
         viewModel = ScorecardViewModel(
@@ -105,13 +127,19 @@ struct ScorecardContainerView: View {
             roundID: round.id,
             reportedByPlayerID: organizer.id
         )
+        leaderboardViewModel = LeaderboardViewModel(
+            standingsEngine: appServices.standingsEngine,
+            roundID: round.id,
+            currentPlayerID: organizer.id.uuidString
+        )
     }
 
     private func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) {
         guard let vm = viewModel else { return }
         do {
             try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
-            handleScoreEntered(isCorrection: false)
+            leaderboardViewModel?.handleScoreEntered()
+            handleAutoAdvance()
         } catch {
             vm.saveError = error
         }
@@ -126,7 +154,7 @@ struct ScorecardContainerView: View {
                 holeNumber: holeNumber,
                 strokeCount: strokeCount
             )
-            handleScoreEntered(isCorrection: true)
+            leaderboardViewModel?.handleScoreEntered()
         } catch {
             vm.saveError = error
         }
@@ -134,9 +162,8 @@ struct ScorecardContainerView: View {
 
     /// Triggers auto-advance if all players are scored on the current hole after a new score entry.
     ///
-    /// Auto-advance only fires for initial scores (not corrections) and only when not on the last hole.
-    private func handleScoreEntered(isCorrection: Bool) {
-        guard !isCorrection else { return }
+    /// Auto-advance only fires for initial scores and only when not on the last hole.
+    private func handleAutoAdvance() {
         guard allPlayersScored(for: currentHole) else { return }
         guard currentHole < round.holeCount else { return }
 
