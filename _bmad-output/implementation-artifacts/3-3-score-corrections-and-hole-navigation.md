@@ -1,6 +1,6 @@
 # Story 3.3: Score Corrections & Hole Navigation
 
-Status: review
+Status: done
 
 ## Story
 

@@ -32,7 +32,7 @@ stories:
     epic: 3
   "3.3":
     title: "Score Corrections & Hole Navigation"
-    status: review
+    status: done
     epic: 3
   "3.4":
     title: "Live Leaderboard -- Floating Pill & Expanded View"
