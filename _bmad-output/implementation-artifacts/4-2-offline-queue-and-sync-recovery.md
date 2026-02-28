@@ -1,6 +1,6 @@
 # Story 4.2: Offline Queue & Sync Recovery
 
-Status: review
+Status: done
 
 ## Story
 
