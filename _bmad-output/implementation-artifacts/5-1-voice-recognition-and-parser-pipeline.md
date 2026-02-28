@@ -1,6 +1,6 @@
 # Story 5.1: Voice Recognition & Parser Pipeline
 
-Status: review
+Status: done
 
 ## Story
 

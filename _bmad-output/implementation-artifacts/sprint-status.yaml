@@ -60,7 +60,7 @@ stories:
     epic: 4
   "5.1":
     title: "Voice Recognition & Parser Pipeline"
-    status: review
+    status: done
     epic: 5
   "5.2":
     title: "Voice Confirmation Overlay & Auto-Commit"
