@@ -100,6 +100,9 @@ struct ScorecardContainerView: View {
         }
         .background(Color.backgroundPrimary)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                SyncIndicatorView()
+            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !round.isFinished {
                     Menu {
