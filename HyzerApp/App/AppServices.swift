@@ -8,6 +8,10 @@ import HyzerKit
 ///
 /// Created once at app startup and injected into the SwiftUI environment.
 /// ViewModels receive individual services via constructor injection — never this container.
+///
+/// Construction order (Story 4.1):
+///   ModelContainer → StandingsEngine → RoundLifecycleManager
+///   → CloudKitClient → SyncEngine → ScoringService
 @MainActor
 @Observable
 final class AppServices {
@@ -15,18 +19,28 @@ final class AppServices {
     let scoringService: ScoringService
     let standingsEngine: StandingsEngine
     let roundLifecycleManager: RoundLifecycleManager
+    let syncEngine: SyncEngine
     private(set) var iCloudRecordName: String?
 
     private let iCloudIdentityProvider: any ICloudIdentityProvider
     private let iCloudLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "ICloudIdentity")
     private let seederLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "CourseSeeder")
 
-    init(modelContainer: ModelContainer, iCloudIdentityProvider: any ICloudIdentityProvider) {
+    init(
+        modelContainer: ModelContainer,
+        iCloudIdentityProvider: any ICloudIdentityProvider,
+        cloudKitClient: any CloudKitClient
+    ) {
         self.modelContainer = modelContainer
-        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
         self.roundLifecycleManager = RoundLifecycleManager(modelContext: modelContainer.mainContext)
+        self.syncEngine = SyncEngine(
+            cloudKitClient: cloudKitClient,
+            standingsEngine: standingsEngine,
+            modelContainer: modelContainer
+        )
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 
