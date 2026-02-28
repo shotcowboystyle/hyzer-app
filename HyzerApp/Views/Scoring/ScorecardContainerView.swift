@@ -34,6 +34,10 @@ struct ScorecardContainerView: View {
     @State private var isShowingFinalizationPrompt = false
     /// Shown when a lifecycle operation raises an error.
     @State private var lifecycleError: Error?
+    /// Bridges `ScorecardViewModel.isRoundCompleted` → fullScreenCover presentation.
+    /// Decoupled from the VM flag to avoid infinite re-presentation loop (same H1 pattern).
+    @State private var isShowingSummary = false
+    @State private var summaryViewModel: RoundSummaryViewModel?
 
     // MARK: - Client-side filters
 
@@ -126,6 +130,28 @@ struct ScorecardContainerView: View {
         .onChange(of: viewModel?.isAwaitingFinalization) { _, newValue in
             if newValue == true {
                 isShowingFinalizationPrompt = true
+            }
+        }
+        .onChange(of: viewModel?.isRoundCompleted) { _, newValue in
+            if newValue == true {
+                let standings = leaderboardViewModel?.currentStandings ?? []
+                let played = standings.first?.holesPlayed ?? round.holeCount
+                let par = courseHoles.reduce(0) { $0 + $1.par }
+                summaryViewModel = RoundSummaryViewModel(
+                    round: round,
+                    standings: standings,
+                    courseName: courseName,
+                    holesPlayed: played,
+                    coursePar: par
+                )
+                withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
+                    isShowingSummary = true
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $isShowingSummary) {
+            if let vm = summaryViewModel {
+                RoundSummaryView(viewModel: vm, onDismiss: { isShowingSummary = false })
             }
         }
         // Early finish warning: unscored holes remain
