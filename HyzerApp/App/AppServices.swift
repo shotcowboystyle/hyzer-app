@@ -21,6 +21,7 @@ final class AppServices {
     let roundLifecycleManager: RoundLifecycleManager
     let syncEngine: SyncEngine
     let syncScheduler: SyncScheduler
+    let voiceRecognitionService: VoiceRecognitionService
     private(set) var iCloudRecordName: String?
 
     /// Observable sync state, bridged from the `SyncEngine` actor via an async stream.
@@ -52,6 +53,7 @@ final class AppServices {
         )
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
+        self.voiceRecognitionService = VoiceRecognitionService()
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 
