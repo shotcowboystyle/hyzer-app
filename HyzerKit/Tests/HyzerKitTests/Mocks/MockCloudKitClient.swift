@@ -47,6 +47,34 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
         return store.values.filter { $0.recordType == query.recordType }
     }
 
+    // MARK: - Subscription tracking
+
+    /// Record types that have been subscribed via `subscribe(to:predicate:)`.
+    private(set) var subscribedRecordTypes: [CKRecord.RecordType] = []
+
+    /// IDs that have been deleted via `deleteSubscription(_:)`.
+    private(set) var deletedSubscriptionIDs: [CKSubscription.ID] = []
+
+    /// Pre-seeded subscription IDs returned by `fetchAllSubscriptionIDs()`.
+    var existingSubscriptionIDs: [CKSubscription.ID] = []
+
+    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID {
+        if let error = shouldSimulateError { throw error }
+        subscribedRecordTypes.append(recordType)
+        let id = "mock-subscription-\(recordType)"
+        return id
+    }
+
+    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {
+        if let error = shouldSimulateError { throw error }
+        deletedSubscriptionIDs.append(subscriptionID)
+    }
+
+    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] {
+        if let error = shouldSimulateError { throw error }
+        return existingSubscriptionIDs
+    }
+
     // MARK: - Test helpers
 
     /// Seeds the in-memory store with the given records (simulates remote state).
@@ -56,9 +84,12 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
         }
     }
 
-    /// Clears all stored records and saved-records history.
+    /// Clears all stored records, saved-records history, and subscription tracking.
     func reset() {
         store.removeAll()
         savedRecords.removeAll()
+        subscribedRecordTypes.removeAll()
+        deletedSubscriptionIDs.removeAll()
+        existingSubscriptionIDs.removeAll()
     }
 }
