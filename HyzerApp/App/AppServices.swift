@@ -1,5 +1,6 @@
 import SwiftData
 import Observation
+import UIKit
 import os.log
 import HyzerKit
 
@@ -11,6 +12,7 @@ import HyzerKit
 @Observable
 final class AppServices {
     let modelContainer: ModelContainer
+    let scoringService: ScoringService
     private(set) var iCloudRecordName: String?
 
     private let iCloudIdentityProvider: any ICloudIdentityProvider
@@ -19,6 +21,8 @@ final class AppServices {
 
     init(modelContainer: ModelContainer, iCloudIdentityProvider: any ICloudIdentityProvider) {
         self.modelContainer = modelContainer
+        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 
