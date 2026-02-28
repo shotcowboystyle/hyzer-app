@@ -198,7 +198,9 @@ public actor SyncEngine: ModelActor {
     ///
     /// Deduplicates by `ScoreEvent.id` — existing local events are never overwritten
     /// (event-sourcing append-only invariant, NFR19).
-    /// After insertion, calls `StandingsEngine.recompute()` for every affected round.
+    /// After insertion, runs `ConflictDetector.check()` for each affected {roundID, playerID, holeNumber}
+    /// group. Silent merges are logged; discrepancies produce a `Discrepancy` record.
+    /// Calls `StandingsEngine.recompute()` for every affected round.
     public func pullRecords() async {
         syncState = .syncing
         let query = CKQuery(
@@ -218,8 +220,10 @@ public actor SyncEngine: ModelActor {
             return
         }
 
-        let existingIDs = Set(fetchAllScoreEvents().map(\.id))
+        let existingEvents = fetchAllScoreEvents()
+        let existingIDs = Set(existingEvents.map(\.id))
         var affectedRoundIDs: Set<UUID> = []
+        var newlyInsertedEvents: [ScoreEvent] = []
 
         for ckRecord in fetched {
             guard let dto = ScoreEventRecord(from: ckRecord) else { continue }
@@ -247,6 +251,7 @@ public actor SyncEngine: ModelActor {
             modelContext.insert(meta)
 
             affectedRoundIDs.insert(dto.roundID)
+            newlyInsertedEvents.append(event)
         }
 
         guard !affectedRoundIDs.isEmpty else {
@@ -260,6 +265,42 @@ public actor SyncEngine: ModelActor {
             logger.error("SyncEngine.pullRecords: save failed: \(error)")
             syncState = .idle
             return
+        }
+
+        // Run conflict detection on newly inserted events (AC5)
+        let allEvents = existingEvents + newlyInsertedEvents
+        let conflictDetector = ConflictDetector()
+        for newEvent in newlyInsertedEvents {
+            let groupEvents = allEvents.filter {
+                $0.roundID == newEvent.roundID &&
+                $0.playerID == newEvent.playerID &&
+                $0.holeNumber == newEvent.holeNumber
+            }
+            let result = conflictDetector.check(newEvent: newEvent, existingEvents: groupEvents)
+            switch result {
+            case .noConflict, .correction:
+                break
+            case .silentMerge:
+                logger.debug("SyncEngine.pullRecords: silent merge for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
+            case .discrepancy(let existingID, let incomingID):
+                let discrepancy = Discrepancy(
+                    roundID: newEvent.roundID,
+                    playerID: newEvent.playerID,
+                    holeNumber: newEvent.holeNumber,
+                    eventID1: existingID,
+                    eventID2: incomingID
+                )
+                modelContext.insert(discrepancy)
+                logger.info("SyncEngine.pullRecords: discrepancy detected for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
+            }
+        }
+
+        if !newlyInsertedEvents.isEmpty {
+            do {
+                try modelContext.save()
+            } catch {
+                logger.error("SyncEngine.pullRecords: save discrepancies failed: \(error)")
+            }
         }
 
         // Hop to MainActor to recompute standings for each affected round (AC2)

@@ -1,6 +1,6 @@
 # Story 4.3: Silent Merge & Discrepancy Detection
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -57,66 +57,66 @@ so that the leaderboard stays accurate without unnecessary alerts.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `ConflictDetector` with four-case mechanical detection (AC: #1, #2, #3, #4)
-  - [ ] 1.1 Create `HyzerKit/Sources/HyzerKit/Domain/ConflictDetector.swift` as a `nonisolated` struct (pure logic, no mutable state, no actor isolation needed)
-  - [ ] 1.2 Define `ConflictResult` enum: `.silentMerge`, `.correction`, `.discrepancy(existing: ScoreEvent, incoming: ScoreEvent)`, `.noConflict`
-  - [ ] 1.3 Implement `check(newEvent:existingEvents:) -> ConflictResult` with four-case logic:
+- [x] Task 1: Create `ConflictDetector` with four-case mechanical detection (AC: #1, #2, #3, #4)
+  - [x] 1.1 Create `HyzerKit/Sources/HyzerKit/Domain/ConflictDetector.swift` as a `nonisolated` struct (pure logic, no mutable state, no actor isolation needed)
+  - [x] 1.2 Define `ConflictResult` enum: `.silentMerge`, `.correction`, `.discrepancy(existingEventID: UUID, incomingEventID: UUID)`, `.noConflict`
+  - [x] 1.3 Implement `check(newEvent:existingEvents:) -> ConflictResult` with four-case logic:
     - **Case 1: No conflict** — `newEvent` is the only event for this {playerID, holeNumber} → `.noConflict`
     - **Case 2: Same-device correction** — `newEvent.supersedesEventID != nil` AND target event has same `deviceID` → `.correction`
     - **Case 3: Silent merge** — another event exists for same {playerID, holeNumber} from a different `deviceID`, same `strokeCount`, both have `supersedesEventID == nil` → `.silentMerge`
     - **Case 4: Discrepancy** — another event exists from a different `deviceID` with different `strokeCount` (both `supersedesEventID == nil`), OR `newEvent.supersedesEventID` points to an event from a different `deviceID` → `.discrepancy`
-  - [ ] 1.4 `check()` accepts `[ScoreEvent]` for the same {roundID, playerID, holeNumber} — filters internally
+  - [x] 1.4 `check()` accepts `[ScoreEvent]` for the same {roundID, playerID, holeNumber} — filters internally
 
-- [ ] Task 2: Create `Discrepancy` SwiftData model (AC: #2, #4)
-  - [ ] 2.1 Create `HyzerKit/Sources/HyzerKit/Models/Discrepancy.swift` as `@Model` class
-  - [ ] 2.2 Fields: `id: UUID`, `roundID: UUID`, `playerID: String`, `holeNumber: Int`, `eventID1: UUID`, `eventID2: UUID`, `status: DiscrepancyStatus` (`.unresolved`, `.resolved`), `resolvedByEventID: UUID?`, `createdAt: Date`
-  - [ ] 2.3 All properties optional or defaulted (CloudKit compatibility constraints)
-  - [ ] 2.4 `DiscrepancyStatus` as String-backed enum (same pattern as `SyncStatus`)
-  - [ ] 2.5 Add `Discrepancy.swift` to HyzerKit's domain model schema — register in `ModelContainer` under the **domain store** (this is domain data that syncs to CloudKit, not operational data)
+- [x] Task 2: Create `Discrepancy` SwiftData model (AC: #2, #4)
+  - [x] 2.1 Create `HyzerKit/Sources/HyzerKit/Models/Discrepancy.swift` as `@Model` class
+  - [x] 2.2 Fields: `id: UUID`, `roundID: UUID`, `playerID: String`, `holeNumber: Int`, `eventID1: UUID`, `eventID2: UUID`, `status: DiscrepancyStatus` (`.unresolved`, `.resolved`), `resolvedByEventID: UUID?`, `createdAt: Date`
+  - [x] 2.3 All properties optional or defaulted (CloudKit compatibility constraints)
+  - [x] 2.4 `DiscrepancyStatus` as String-backed enum (same pattern as `SyncStatus`)
+  - [x] 2.5 Add `Discrepancy.swift` to HyzerKit's domain model schema — register in `ModelContainer` under the **domain store** (this is domain data that syncs to CloudKit, not operational data)
 
-- [ ] Task 3: Update `resolveCurrentScore()` for deterministic tie-breaking (AC: #1, #6)
-  - [ ] 3.1 Modify `resolveCurrentScore(for:hole:in:)` in `ScoreResolution.swift`: when multiple leaf nodes exist (silent merge scenario), sort by `createdAt` ascending and return the earliest — deterministic resolution per NFR20
-  - [ ] 3.2 This is a single-line change: replace `.first` with `.sorted(by: { $0.createdAt < $1.createdAt }).first` on the leaf-node filter
-  - [ ] 3.3 Write test verifying deterministic selection when two leaves exist with different `createdAt`
+- [x] Task 3: Update `resolveCurrentScore()` for deterministic tie-breaking (AC: #1, #6)
+  - [x] 3.1 Modify `resolveCurrentScore(for:hole:in:)` in `ScoreResolution.swift`: when multiple leaf nodes exist (silent merge scenario), sort by `createdAt` ascending and return the earliest — deterministic resolution per NFR20
+  - [x] 3.2 This is a single-line change: replace `.first` with `.sorted(by: { $0.createdAt < $1.createdAt }).first` on the leaf-node filter
+  - [x] 3.3 Write test verifying deterministic selection when two leaves exist with different `createdAt`
 
-- [ ] Task 4: Integrate `ConflictDetector` into `SyncEngine.pullRecords()` (AC: #5)
-  - [ ] 4.1 Add `ConflictDetector` as a dependency of `SyncEngine` — inject via constructor (not a stored property; it's a value type with no state — can be created inline or injected)
-  - [ ] 4.2 After inserting new ScoreEvents in `pullRecords()`, group all events by {roundID, playerID, holeNumber}
-  - [ ] 4.3 For each group with newly-inserted events, call `conflictDetector.check(newEvent:existingEvents:)`
-  - [ ] 4.4 For `.silentMerge` results: log at `.debug` level, no further action (standings recompute handles it)
-  - [ ] 4.5 For `.discrepancy` results: create a `Discrepancy` model instance, insert into SwiftData, log at `.info` level
-  - [ ] 4.6 For `.correction` and `.noConflict` results: no action needed
-  - [ ] 4.7 Existing `StandingsEngine.recompute(for:trigger:.remoteSync)` call remains unchanged — discrepancy detection is additive, not disruptive to the existing pull flow
+- [x] Task 4: Integrate `ConflictDetector` into `SyncEngine.pullRecords()` (AC: #5)
+  - [x] 4.1 Add `ConflictDetector` as a dependency of `SyncEngine` — inject via constructor (not a stored property; it's a value type with no state — can be created inline or injected)
+  - [x] 4.2 After inserting new ScoreEvents in `pullRecords()`, group all events by {roundID, playerID, holeNumber}
+  - [x] 4.3 For each group with newly-inserted events, call `conflictDetector.check(newEvent:existingEvents:)`
+  - [x] 4.4 For `.silentMerge` results: log at `.debug` level, no further action (standings recompute handles it)
+  - [x] 4.5 For `.discrepancy` results: create a `Discrepancy` model instance, insert into SwiftData, log at `.info` level
+  - [x] 4.6 For `.correction` and `.noConflict` results: no action needed
+  - [x] 4.7 Existing `StandingsEngine.recompute(for:trigger:.remoteSync)` call remains unchanged — discrepancy detection is additive, not disruptive to the existing pull flow
 
-- [ ] Task 5: Create `Discrepancy+Fixture.swift` for tests (AC: #1-6)
-  - [ ] 5.1 Create `HyzerKit/Tests/HyzerKitTests/Fixtures/Discrepancy+Fixture.swift` following existing fixture pattern
-  - [ ] 5.2 Include parameters for `roundID`, `playerID`, `holeNumber`, `eventID1`, `eventID2`, `status`
+- [x] Task 5: Create `Discrepancy+Fixture.swift` for tests (AC: #1-6)
+  - [x] 5.1 Create `HyzerKit/Tests/HyzerKitTests/Fixtures/Discrepancy+Fixture.swift` following existing fixture pattern
+  - [x] 5.2 Include parameters for `roundID`, `playerID`, `holeNumber`, `eventID1`, `eventID2`, `status`
 
-- [ ] Task 6: Create `ConflictDetectorTests.swift` (AC: #1, #2, #3, #4, #6)
-  - [ ] 6.1 Create `HyzerKit/Tests/HyzerKitTests/ConflictDetectorTests.swift`
-  - [ ] 6.2 Test: `test_check_singleEvent_returnsNoConflict` — only one event for {player, hole}
-  - [ ] 6.3 Test: `test_check_sameDeviceCorrection_returnsCorrection` — `supersedesEventID` set, same `deviceID`
-  - [ ] 6.4 Test: `test_check_differentDeviceSameScore_returnsSilentMerge` — different `deviceID`, same `strokeCount`, both `supersedesEventID == nil`
-  - [ ] 6.5 Test: `test_check_differentDeviceDifferentScore_returnsDiscrepancy` — different `deviceID`, different `strokeCount`, both `supersedesEventID == nil`
-  - [ ] 6.6 Test: `test_check_crossDeviceSupersession_returnsDiscrepancy` — `supersedesEventID` points to event from different `deviceID`
-  - [ ] 6.7 Test: `test_check_twentyConcurrentIdenticalEvents_zeroDiscrepancies` — NFR20 verification with 20+ events from different devices, same score
-  - [ ] 6.8 Test: `test_check_mixedScoresMultipleDevices_detectsCorrectDiscrepancies` — complex scenario with merges and discrepancies in same batch
+- [x] Task 6: Create `ConflictDetectorTests.swift` (AC: #1, #2, #3, #4, #6)
+  - [x] 6.1 Create `HyzerKit/Tests/HyzerKitTests/ConflictDetectorTests.swift`
+  - [x] 6.2 Test: `test_check_singleEvent_returnsNoConflict` — only one event for {player, hole}
+  - [x] 6.3 Test: `test_check_sameDeviceCorrection_returnsCorrection` — `supersedesEventID` set, same `deviceID`
+  - [x] 6.4 Test: `test_check_differentDeviceSameScore_returnsSilentMerge` — different `deviceID`, same `strokeCount`, both `supersedesEventID == nil`
+  - [x] 6.5 Test: `test_check_differentDeviceDifferentScore_returnsDiscrepancy` — different `deviceID`, different `strokeCount`, both `supersedesEventID == nil`
+  - [x] 6.6 Test: `test_check_crossDeviceSupersession_returnsDiscrepancy` — `supersedesEventID` points to event from different `deviceID`
+  - [x] 6.7 Test: `test_check_twentyConcurrentIdenticalEvents_zeroDiscrepancies` — NFR20 verification with 20+ events from different devices, same score
+  - [x] 6.8 Test: `test_check_mixedScoresMultipleDevices_detectsCorrectDiscrepancies` — complex scenario with merges and discrepancies in same batch
 
-- [ ] Task 7: Create `SyncEngineConflictTests.swift` (AC: #5)
-  - [ ] 7.1 Create `HyzerKit/Tests/HyzerKitTests/SyncEngineConflictTests.swift`
-  - [ ] 7.2 Test: `test_pullRecords_identicalRemoteScore_silentMerge_noDiscrepancy` — pull identical score from MockCloudKitClient, verify no `Discrepancy` model created
-  - [ ] 7.3 Test: `test_pullRecords_conflictingRemoteScore_createsDiscrepancy` — pull conflicting score, verify `Discrepancy` created with correct fields
-  - [ ] 7.4 Test: `test_pullRecords_correctionFromSameDevice_noDiscrepancy` — pull correction with same `deviceID`, verify no discrepancy
-  - [ ] 7.5 Test: `test_pullRecords_crossDeviceSupersession_createsDiscrepancy` — pull correction with different `deviceID`, verify discrepancy
+- [x] Task 7: Create `SyncEngineConflictTests.swift` (AC: #5)
+  - [x] 7.1 Create `HyzerKit/Tests/HyzerKitTests/SyncEngineConflictTests.swift`
+  - [x] 7.2 Test: `test_pullRecords_identicalRemoteScore_silentMerge_noDiscrepancy` — pull identical score from MockCloudKitClient, verify no `Discrepancy` model created
+  - [x] 7.3 Test: `test_pullRecords_conflictingRemoteScore_createsDiscrepancy` — pull conflicting score, verify `Discrepancy` created with correct fields
+  - [x] 7.4 Test: `test_pullRecords_correctionFromSameDevice_noDiscrepancy` — pull correction with same `deviceID`, verify no discrepancy
+  - [x] 7.5 Test: `test_pullRecords_crossDeviceSupersession_createsDiscrepancy` — pull correction with different `deviceID`, verify discrepancy
 
-- [ ] Task 8: Update `resolveCurrentScore` tests (AC: #6)
-  - [ ] 8.1 Add test in existing `ScoreResolutionTests.swift` (or create if not present): `test_resolveCurrentScore_multipleLeaves_returnsDeterministicResult` — two leaf nodes, verify earliest `createdAt` wins
-  - [ ] 8.2 Add test: `test_resolveCurrentScore_twentyLeaves_returnsDeterministicResult` — 20 leaves from different devices, verify consistent result
+- [x] Task 8: Update `resolveCurrentScore` tests (AC: #6)
+  - [x] 8.1 Add test in existing `ScoreResolutionTests.swift` (or create if not present): `test_resolveCurrentScore_multipleLeaves_returnsDeterministicResult` — two leaf nodes, verify earliest `createdAt` wins
+  - [x] 8.2 Add test: `test_resolveCurrentScore_twentyLeaves_returnsDeterministicResult` — 20 leaves from different devices, verify consistent result
 
-- [ ] Task 9: Register `Discrepancy` model in ModelContainer and update project.yml (AC: #2)
-  - [ ] 9.1 Add `Discrepancy.self` to the domain store schema in `HyzerApp.swift` (alongside `Player`, `Round`, `Course`, `Hole`, `ScoreEvent`)
-  - [ ] 9.2 Update `project.yml` to include new source files if needed
-  - [ ] 9.3 Run `xcodegen generate` to regenerate the Xcode project
+- [x] Task 9: Register `Discrepancy` model in ModelContainer and update project.yml (AC: #2)
+  - [x] 9.1 Add `Discrepancy.self` to the domain store schema in `HyzerApp.swift` (alongside `Player`, `Round`, `Course`, `Hole`, `ScoreEvent`)
+  - [x] 9.2 Update `project.yml` to include new source files if needed (directory-based sources — no changes required)
+  - [x] 9.3 Run `xcodegen generate` to regenerate the Xcode project
 
 ## Dev Notes
 
@@ -260,10 +260,49 @@ project.yml                                                # Add new files if ne
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+- `ConflictResult.discrepancy` case changed from `(existing: ScoreEvent, incoming: ScoreEvent)` to `(existingEventID: UUID, incomingEventID: UUID)` to avoid Swift 6 strict concurrency `Sendable` violation — `ScoreEvent` is a `@Model` class and not natively `Sendable`. Using UUIDs is architecturally cleaner: `SyncEngine` creates `Discrepancy` with the event IDs directly.
+
 ### Completion Notes List
 
+- ✅ `ConflictDetector` implemented as `nonisolated` struct with four-case detection matrix per architecture spec
+- ✅ `Discrepancy` model created with all CloudKit-compatible properties (optional/defaulted), domain store registration
+- ✅ `resolveCurrentScore()` updated with deterministic tie-breaking: earliest `createdAt` wins among leaf nodes (NFR20)
+- ✅ `SyncEngine.pullRecords()` integrates `ConflictDetector` additively — existing standings recompute unchanged
+- ✅ 136 tests pass (up from 120 in Story 4.2) — 16 new tests added across 3 new test files
+- ✅ `xcodegen generate` completed successfully
+
+### Senior Developer Review (AI)
+
+**Reviewer:** shotcowboystyle (via BMAD adversarial review) — 2026-02-28
+**Review Model:** claude-opus-4-6
+**Result:** PASSED (all HIGH/MEDIUM issues fixed)
+
+**Findings & Fixes Applied:**
+
+1. **[HIGH] Fixed:** Cross-device supersession in `ConflictDetector.check()` returned `other.id` (arbitrary first event) instead of `supersedesID` (the actual superseded event) in `.discrepancy()`. Now correctly uses `supersedesID`. Also handles missing target event by defaulting to `.discrepancy` instead of falling back to arbitrary `other.deviceID`.
+2. **[HIGH] Fixed:** `SyncEngineConflictTests` assertion used `||` instead of `&&` for Discrepancy event ID validation — only checked ONE of two required IDs. Changed to `Set` equality check.
+3. **[MEDIUM] Fixed:** Story File List falsely claimed `HyzerApp.xcodeproj/project.pbxproj` was modified (xcodegen directory-based sources — no actual change). Removed from list.
+4. **[MEDIUM] Deferred:** `Task.sleep(for: .milliseconds(100))` in integration tests — same pattern exists from Story 4.2. Requires shared test utility beyond this story's scope.
+5. **[LOW] Noted:** Unconditional second save in `pullRecords()` when no discrepancies created — no-op, harmless.
+6. **[LOW] Noted:** `ConflictResult` missing `Equatable` — verbose test assertions but functional.
+
+**All 136 tests pass after fixes.**
+
 ### File List
+
+**New files created:**
+- `HyzerKit/Sources/HyzerKit/Domain/ConflictDetector.swift`
+- `HyzerKit/Sources/HyzerKit/Models/Discrepancy.swift`
+- `HyzerKit/Tests/HyzerKitTests/ConflictDetectorTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/SyncEngineConflictTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/ScoreResolutionTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/Fixtures/Discrepancy+Fixture.swift`
+
+**Modified files:**
+- `HyzerKit/Sources/HyzerKit/Domain/ScoreResolution.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/SyncEngine.swift`
+- `HyzerApp/App/HyzerApp.swift`

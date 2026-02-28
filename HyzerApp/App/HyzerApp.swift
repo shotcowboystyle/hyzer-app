@@ -60,7 +60,7 @@ struct HyzerApp: App {
     private static func makeModelContainer() -> ModelContainer {
         let domainConfig = ModelConfiguration(
             "DomainStore",
-            schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self])
+            schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self])
         )
         let operationalConfig = ModelConfiguration(
             "OperationalStore",
@@ -70,7 +70,7 @@ struct HyzerApp: App {
         // Attempt 1: normal startup with both stores
         do {
             return try ModelContainer(
-                for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self,
+                for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self, SyncMetadata.self,
                 configurations: domainConfig, operationalConfig
             )
         } catch {
@@ -82,7 +82,7 @@ struct HyzerApp: App {
             )
             do {
                 return try ModelContainer(
-                    for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self,
+                    for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self, SyncMetadata.self,
                     configurations: domainConfig, freshOperational
                 )
             } catch {
@@ -92,7 +92,7 @@ struct HyzerApp: App {
                 deleteStore(named: "OperationalStore")
                 let freshDomain = ModelConfiguration(
                     "DomainStore",
-                    schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self])
+                    schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self])
                 )
                 let freshOp = ModelConfiguration(
                     "OperationalStore",
@@ -100,7 +100,7 @@ struct HyzerApp: App {
                 )
                 do {
                     return try ModelContainer(
-                        for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self,
+                        for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self, SyncMetadata.self,
                         configurations: freshDomain, freshOp
                     )
                 } catch {
