@@ -1,6 +1,6 @@
 # Story 3.6: Round Completion & Summary
 
-Status: review
+Status: done
 
 ## Story
 
