@@ -36,7 +36,7 @@ stories:
     epic: 3
   "3.4":
     title: "Live Leaderboard -- Floating Pill & Expanded View"
-    status: in-progress
+    status: review
     epic: 3
   "3.5":
     title: "Round Lifecycle & Player Immutability"
