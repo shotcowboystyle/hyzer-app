@@ -1,6 +1,6 @@
 # Story 3.5: Round Lifecycle & Player Immutability
 
-Status: review
+Status: done
 
 ## Story
 
