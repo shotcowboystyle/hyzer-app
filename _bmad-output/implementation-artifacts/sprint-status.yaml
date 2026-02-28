@@ -44,7 +44,7 @@ stories:
     epic: 3
   "3.6":
     title: "Round Completion & Summary"
-    status: in-progress
+    status: review
     epic: 3
   "4.1":
     title: "CloudKit Sync Engine & Architectural Spike"
