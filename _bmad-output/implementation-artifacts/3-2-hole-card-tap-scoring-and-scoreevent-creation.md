@@ -1,6 +1,6 @@
 # Story 3.2: Hole Card Tap Scoring & ScoreEvent Creation
 
-Status: review
+Status: done
 
 ## Story
 
