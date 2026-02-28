@@ -1,6 +1,6 @@
 # Story 3.4: Live Leaderboard -- Floating Pill & Expanded View
 
-Status: review
+Status: done
 
 ## Story
 
