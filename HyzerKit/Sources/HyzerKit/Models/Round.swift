@@ -1,6 +1,14 @@
 import Foundation
 import SwiftData
 
+/// String status values for `Round.status`. Stored as strings for CloudKit compatibility.
+public enum RoundStatus {
+    public static let setup = "setup"
+    public static let active = "active"
+    public static let awaitingFinalization = "awaitingFinalization"
+    public static let completed = "completed"
+}
+
 /// A disc golf round. Stored in the domain SwiftData store.
 ///
 /// CloudKit compatibility constraints:
@@ -31,6 +39,7 @@ public final class Round {
     public var guestNames: [String] = []
     /// Lifecycle: "setup" | "active" | "awaitingFinalization" | "completed".
     /// Stored as String for CloudKit compatibility (CloudKit doesn't support Swift enums).
+    /// Use `RoundStatus` constants for comparisons.
     public var status: String = "setup"
     /// Denormalized from Course at creation time for efficient scoring access.
     public var holeCount: Int = 18
@@ -39,13 +48,6 @@ public final class Round {
     public var startedAt: Date?
     /// Non-nil once `complete()` has been called.
     public var completedAt: Date?
-
-    // MARK: - Status constants
-
-    public static let statusSetup = "setup"
-    public static let statusActive = "active"
-    public static let statusAwaitingFinalization = "awaitingFinalization"
-    public static let statusCompleted = "completed"
 
     public init(
         courseID: UUID,
@@ -63,10 +65,10 @@ public final class Round {
 
     // MARK: - Status helpers
 
-    public var isSetup: Bool { status == Round.statusSetup }
-    public var isActive: Bool { status == Round.statusActive }
-    public var isAwaitingFinalization: Bool { status == Round.statusAwaitingFinalization }
-    public var isCompleted: Bool { status == Round.statusCompleted }
+    public var isSetup: Bool { status == RoundStatus.setup }
+    public var isActive: Bool { status == RoundStatus.active }
+    public var isAwaitingFinalization: Bool { status == RoundStatus.awaitingFinalization }
+    public var isCompleted: Bool { status == RoundStatus.completed }
     /// True when the round is in either `awaitingFinalization` or `completed` — no more scoring.
     public var isFinished: Bool { isAwaitingFinalization || isCompleted }
 
@@ -77,8 +79,8 @@ public final class Round {
     /// - Precondition: `status` must be "setup". Calling `start()` on an already-active
     ///   round is a programming error.
     public func start() {
-        precondition(status == Round.statusSetup, "Round.start() called on a non-setup round (status: \(status))")
-        status = Round.statusActive
+        precondition(status == RoundStatus.setup, "Round.start() called on a non-setup round (status: \(status))")
+        status = RoundStatus.active
         startedAt = Date()
     }
 
@@ -88,10 +90,10 @@ public final class Round {
     /// - Precondition: `status` must be "active".
     public func awaitFinalization() {
         precondition(
-            status == Round.statusActive,
+            status == RoundStatus.active,
             "Round.awaitFinalization() called on a non-active round (status: \(status))"
         )
-        status = Round.statusAwaitingFinalization
+        status = RoundStatus.awaitingFinalization
     }
 
     /// Transitions the round to "completed" and records the completion time.
@@ -101,10 +103,10 @@ public final class Round {
     /// - Precondition: `status` must be "active" or "awaitingFinalization".
     public func complete() {
         precondition(
-            status == Round.statusActive || status == Round.statusAwaitingFinalization,
+            status == RoundStatus.active || status == RoundStatus.awaitingFinalization,
             "Round.complete() called on round in unexpected status: \(status)"
         )
-        status = Round.statusCompleted
+        status = RoundStatus.completed
         completedAt = Date()
     }
 }
