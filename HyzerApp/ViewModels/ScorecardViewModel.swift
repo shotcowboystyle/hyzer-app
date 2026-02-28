@@ -1,21 +1,34 @@
 import Foundation
 import HyzerKit
+import os.log
 
 /// Handles the score entry and correction actions for an active round.
 ///
 /// Created in `ScorecardContainerView.onAppear` and owned by the view.
-/// Receives `ScoringService` via constructor injection (never `AppServices` container).
+/// Receives `ScoringService` and `RoundLifecycleManager` via constructor injection
+/// (never `AppServices` container).
 @MainActor
 @Observable
 final class ScorecardViewModel {
     private let scoringService: ScoringService
+    private let lifecycleManager: RoundLifecycleManager
+    private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "ScorecardViewModel")
+
     let roundID: UUID
     let reportedByPlayerID: UUID
 
     var saveError: Error?
+    /// True when all (player, hole) pairs are scored — prompts the finalization confirmation.
+    var isAwaitingFinalization: Bool = false
 
-    init(scoringService: ScoringService, roundID: UUID, reportedByPlayerID: UUID) {
+    init(
+        scoringService: ScoringService,
+        lifecycleManager: RoundLifecycleManager,
+        roundID: UUID,
+        reportedByPlayerID: UUID
+    ) {
         self.scoringService = scoringService
+        self.lifecycleManager = lifecycleManager
         self.roundID = roundID
         self.reportedByPlayerID = reportedByPlayerID
     }
@@ -34,12 +47,12 @@ final class ScorecardViewModel {
             strokeCount: strokeCount,
             reportedByPlayerID: reportedByPlayerID
         )
+        checkCompletionIfActive()
     }
 
     /// Corrects a previously entered score by creating a superseding ScoreEvent.
     ///
     /// The original event is never mutated or deleted (NFR19).
-    /// On failure, sets `saveError` for the alert binding.
     ///
     /// - Parameters:
     ///   - previousEventID: The UUID of the event being corrected.
@@ -55,5 +68,26 @@ final class ScorecardViewModel {
             strokeCount: strokeCount,
             reportedByPlayerID: reportedByPlayerID
         )
+        checkCompletionIfActive()
+    }
+
+    // MARK: - Private
+
+    /// Checks round completion after each score; sets `isAwaitingFinalization` if all holes are scored.
+    ///
+    /// Only runs if `isAwaitingFinalization` is not already set (avoids redundant checks after
+    /// the round has transitioned state). Completion check errors are logged and ignored —
+    /// the scoring flow is non-critical relative to completion detection.
+    private func checkCompletionIfActive() {
+        guard !isAwaitingFinalization else { return }
+        do {
+            let result = try lifecycleManager.checkCompletion(roundID: roundID)
+            if case .nowAwaitingFinalization = result {
+                isAwaitingFinalization = true
+            }
+        } catch {
+            // Safe to continue: completion check is advisory; scoring flow is unaffected
+            logger.error("RoundLifecycleManager.checkCompletion failed: \(error)")
+        }
     }
 }

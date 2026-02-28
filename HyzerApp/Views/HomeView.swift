@@ -30,10 +30,11 @@ private struct ScoringTabView: View {
     let player: Player
 
     @Query(
-        filter: #Predicate<Round> { $0.status == "active" },
+        filter: #Predicate<Round> { $0.status == "active" || $0.status == "awaitingFinalization" },
         sort: \Round.startedAt
     ) private var activeRounds: [Round]
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isShowingRoundSetup = false
 
     var body: some View {
@@ -41,10 +42,13 @@ private struct ScoringTabView: View {
             Group {
                 if let activeRound = activeRounds.first {
                     ScorecardContainerView(round: activeRound)
+                        .transition(.opacity)
                 } else {
                     noRoundView
+                        .transition(.opacity)
                 }
             }
+            .animation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion), value: activeRounds.isEmpty)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.backgroundPrimary)
             .navigationTitle("Scoring")

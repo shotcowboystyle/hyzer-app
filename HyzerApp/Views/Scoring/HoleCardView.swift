@@ -21,6 +21,8 @@ struct HoleCardView: View {
     let courseName: String
     let players: [ScorecardPlayer]
     let scores: [ScoreEvent]
+    /// When `true`, score tap targets are disabled — the round is in awaitingFinalization or completed.
+    var isRoundFinished: Bool = false
     let onScore: (String, Int) -> Void
     /// Called when a correction is confirmed: (playerID, previousEventID, newStrokeCount).
     let onCorrection: (String, UUID, Int) -> Void
@@ -80,6 +82,7 @@ struct HoleCardView: View {
                         playerName: player.displayName,
                         par: par,
                         preSelectedScore: correctionPreviousEventID != nil ? currentScore?.strokeCount : nil,
+                        isRoundFinished: isRoundFinished,
                         onSelect: { strokeCount in
                             if let prevID = correctionPreviousEventID {
                                 onCorrection(player.id, prevID, strokeCount)
@@ -128,14 +131,16 @@ struct HoleCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
         .onTapGesture {
+            guard !isRoundFinished else { return }
             withAnimation(AnimationCoordinator.animation(AnimationTokens.springStiff, reduceMotion: reduceMotion)) {
                 expandedPlayerID = player.id
                 // Non-nil for scored rows (correction), nil for unscored (initial entry)
                 correctionPreviousEventID = score?.id
             }
         }
+        .opacity(isRoundFinished ? 0.6 : 1.0)
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
+        .accessibilityAddTraits(isRoundFinished ? [] : [.isButton])
     }
 
     // MARK: - Score Color

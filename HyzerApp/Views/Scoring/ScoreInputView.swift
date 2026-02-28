@@ -18,6 +18,8 @@ struct ScoreInputView: View {
     let par: Int
     /// When non-nil, this is a correction — anchors scroll here and shows a ring indicator.
     var preSelectedScore: Int? = nil
+    /// When `true`, all score buttons are disabled — the round is finished.
+    var isRoundFinished: Bool = false
     let onSelect: (Int) -> Void
     let onCancel: () -> Void
 
@@ -81,6 +83,7 @@ struct ScoreInputView: View {
                 .padding(.horizontal, SpacingTokens.sm)
             }
             .defaultScrollAnchor(scrollAnchor)
+            .disabled(isRoundFinished)
         }
         .padding(.vertical, SpacingTokens.sm)
         .background(Color.backgroundElevated)
