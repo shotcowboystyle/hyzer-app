@@ -48,7 +48,7 @@ stories:
     epic: 3
   "4.1":
     title: "CloudKit Sync Engine & Architectural Spike"
-    status: review
+    status: done
     epic: 4
   "4.2":
     title: "Offline Queue & Sync Recovery"

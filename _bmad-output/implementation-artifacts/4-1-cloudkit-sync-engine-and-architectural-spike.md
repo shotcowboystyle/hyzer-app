@@ -1,6 +1,6 @@
 # Story 4.1: CloudKit Sync Engine & Architectural Spike
 
-Status: review
+Status: done
 
 ## Story
 
