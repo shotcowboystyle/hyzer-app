@@ -1,6 +1,6 @@
 # Story 3.6: Round Completion & Summary
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -41,58 +41,58 @@ So that the round lands with satisfying closure and I can share the results.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create RoundSummaryViewModel in HyzerApp (AC: 1, 2, 3)
-  - [ ] 1.1 Create `RoundSummaryViewModel` as `@MainActor @Observable` class in `HyzerApp/ViewModels/`
-  - [ ] 1.2 Init receives: `round: Round`, `standings: [Standing]`, `courseName: String`, `holesPlayed: Int`, `coursePar: Int`
-  - [ ] 1.3 Expose computed properties: `formattedDate` (from `round.completedAt ?? Date()`), `playerRows: [SummaryPlayerRow]` (position, name, formattedScore, totalStrokes, scoreColor, medal indicator for top 3)
-  - [ ] 1.4 Expose `shareSnapshot()` method that renders the summary card to a `UIImage` using `ImageRenderer`
+- [x] Task 1: Create RoundSummaryViewModel in HyzerApp (AC: 1, 2, 3)
+  - [x] 1.1 Create `RoundSummaryViewModel` as `@MainActor @Observable` class in `HyzerApp/ViewModels/`
+  - [x] 1.2 Init receives: `round: Round`, `standings: [Standing]`, `courseName: String`, `holesPlayed: Int`, `coursePar: Int`
+  - [x] 1.3 Expose computed properties: `formattedDate` (from `round.completedAt ?? Date()`), `playerRows: [SummaryPlayerRow]` (position, name, formattedScore, totalStrokes, scoreColor, medal indicator for top 3)
+  - [x] 1.4 Expose `shareSnapshot()` method that renders the summary card to a `UIImage` using `ImageRenderer`
 
-- [ ] Task 2: Create RoundSummaryView in HyzerApp (AC: 1, 2, 5)
-  - [ ] 2.1 Create `RoundSummaryView.swift` in `HyzerApp/Views/Scoring/` (co-located with scorecard views; will be reused by Epic 8 History from here)
-  - [ ] 2.2 Header: course name (`TypographyTokens.h1`, centered), date below (`TypographyTokens.caption`, `ColorTokens.textSecondary`)
-  - [ ] 2.3 Standings list: for each player row -- position number with medal treatment for 1st/2nd/3rd (confident typography, no confetti), player name (`TypographyTokens.h2`), score +/- par (`TypographyTokens.score`, SF Mono, `Standing.scoreColor`), total strokes (`TypographyTokens.caption`, secondary)
-  - [ ] 2.4 Divider using `ColorTokens.border`
-  - [ ] 2.5 Metadata section: holes played count, organizer name (round creator)
-  - [ ] 2.6 Share button: prominent, `ColorTokens.accent`, bottom of view
-  - [ ] 2.7 Done/Dismiss button (toolbar or navigation bar)
-  - [ ] 2.8 Use `SpacingTokens.lg` and `.xl` for generous warm-register spacing
-  - [ ] 2.9 Accessibility: set `.accessibilityLabel` on the container with the scripted VoiceOver text
+- [x] Task 2: Create RoundSummaryView in HyzerApp (AC: 1, 2, 5)
+  - [x] 2.1 Create `RoundSummaryView.swift` in `HyzerApp/Views/Scoring/` (co-located with scorecard views; will be reused by Epic 8 History from here)
+  - [x] 2.2 Header: course name (`TypographyTokens.h1`, centered), date below (`TypographyTokens.caption`, `ColorTokens.textSecondary`)
+  - [x] 2.3 Standings list: for each player row -- position number with medal treatment for 1st/2nd/3rd (confident typography, no confetti), player name (`TypographyTokens.h2`), score +/- par (`TypographyTokens.score`, SF Mono, `Standing.scoreColor`), total strokes (`TypographyTokens.caption`, secondary)
+  - [x] 2.4 Divider using `ColorTokens.border`
+  - [x] 2.5 Metadata section: holes played count, organizer name (round creator)
+  - [x] 2.6 Share button: prominent, `ColorTokens.accentPrimary`, bottom of view
+  - [x] 2.7 Done/Dismiss button (toolbar or navigation bar)
+  - [x] 2.8 Use `SpacingTokens.lg` and `.xl` for generous warm-register spacing
+  - [x] 2.9 Accessibility: set `.accessibilityLabel` on the container with the scripted VoiceOver text
 
-- [ ] Task 3: Create SummaryCardSnapshotView for screenshot rendering (AC: 3)
-  - [ ] 3.1 Create a private `SummaryCardSnapshotView` inside `RoundSummaryView.swift` (not a separate file) -- a non-interactive version of the summary optimized for `ImageRenderer` output
-  - [ ] 3.2 Fixed width (390pt -- iPhone logical width), no scroll, no buttons, explicit background color (`ColorTokens.backgroundPrimary`)
-  - [ ] 3.3 In `RoundSummaryViewModel.shareSnapshot()`, use `ImageRenderer` to render `SummaryCardSnapshotView` to `UIImage`
+- [x] Task 3: Create SummaryCardSnapshotView for screenshot rendering (AC: 3)
+  - [x] 3.1 Create a private `SummaryCardSnapshotView` inside `RoundSummaryView.swift` (not a separate file) -- a non-interactive version of the summary optimized for `ImageRenderer` output
+  - [x] 3.2 Fixed width (390pt -- iPhone logical width), no scroll, no buttons, explicit background color (`ColorTokens.backgroundPrimary`)
+  - [x] 3.3 In `RoundSummaryViewModel.shareSnapshot()`, use `ImageRenderer` to render `SummaryCardSnapshotView` to `UIImage`
 
-- [ ] Task 4: Wire share sheet (AC: 3)
-  - [ ] 4.1 In `RoundSummaryView`, add `.sheet` presentation of `ShareLink` or use `UIActivityViewController` wrapper
-  - [ ] 4.2 Share item: the `UIImage` from `shareSnapshot()` plus text: "Round at [course] -- [winner] wins at [score]!"
-  - [ ] 4.3 Use `@State var isShareSheetPresented` to control presentation
+- [x] Task 4: Wire share sheet (AC: 3)
+  - [x] 4.1 In `RoundSummaryView`, add `.sheet` presentation of `ShareLink` or use `UIActivityViewController` wrapper
+  - [x] 4.2 Share item: the `UIImage` from `shareSnapshot()` plus text: "Round at [course] -- [winner] wins at [score]!"
+  - [x] 4.3 Use `@State var isShareSheetPresented` to control presentation
 
-- [ ] Task 5: Integrate summary presentation into ScorecardContainerView (AC: 1, 4)
-  - [ ] 5.1 In `ScorecardContainerView`, observe `ScorecardViewModel.isRoundCompleted`
-  - [ ] 5.2 When `isRoundCompleted` becomes `true`, present `RoundSummaryView` as a `.fullScreenCover` (not `.sheet` -- prevents accidental drag-dismiss during the celebration moment; dismiss via explicit Done button)
-  - [ ] 5.3 Pass data to `RoundSummaryViewModel`: the completed `Round`, current `StandingsEngine.currentStandings`, course name from the round's associated `Course`, holes played count, course par
-  - [ ] 5.4 On dismiss of the full-screen cover, navigate back to home (the `@Query` in HomeView will automatically show "No round in progress" since the round status is now `"completed"`)
-  - [ ] 5.5 Use `AnimationCoordinator.animation(.springGentle)` for the presentation transition
+- [x] Task 5: Integrate summary presentation into ScorecardContainerView (AC: 1, 4)
+  - [x] 5.1 In `ScorecardContainerView`, observe `ScorecardViewModel.isRoundCompleted`
+  - [x] 5.2 When `isRoundCompleted` becomes `true`, present `RoundSummaryView` as a `.fullScreenCover` (not `.sheet` -- prevents accidental drag-dismiss during the celebration moment; dismiss via explicit Done button)
+  - [x] 5.3 Pass data to `RoundSummaryViewModel`: the completed `Round`, current `StandingsEngine.currentStandings`, course name from the round's associated `Course`, holes played count, course par
+  - [x] 5.4 On dismiss of the full-screen cover, navigate back to home (the `@Query` in HomeView will automatically show "No round in progress" since the round status is now `"completed"`)
+  - [x] 5.5 Use `AnimationCoordinator.animation(.springGentle)` for the presentation transition
 
-- [ ] Task 6: Handle early-finish (manual) summary path (AC: 1)
-  - [ ] 6.1 When `ScorecardViewModel.finishRound()` returns `.completed`, set `isRoundCompleted = true` (same trigger as finalization path)
-  - [ ] 6.2 For early-finish rounds, the standings will show "—" for unscored holes (already handled by `StandingsEngine` which uses `ScoreResolution` leaf-node resolution -- missing holes simply have no score)
-  - [ ] 6.3 Verify the summary displays correctly with partial scores (holes played shows actual scored holes, not total course holes)
+- [x] Task 6: Handle early-finish (manual) summary path (AC: 1)
+  - [x] 6.1 When `ScorecardViewModel.finishRound()` returns `.completed`, set `isRoundCompleted = true` (same trigger as finalization path)
+  - [x] 6.2 For early-finish rounds, the standings will show "—" for unscored holes (already handled by `StandingsEngine` which uses `ScoreResolution` leaf-node resolution -- missing holes simply have no score)
+  - [x] 6.3 Verify the summary displays correctly with partial scores (holes played shows actual scored holes, not total course holes)
 
-- [ ] Task 7: Write RoundSummaryViewModel tests in HyzerAppTests (AC: 1, 2, 3)
-  - [ ] 7.1 Test: ViewModel initializes with round data and produces correct `playerRows` (sorted by position)
-  - [ ] 7.2 Test: `formattedDate` uses `round.completedAt`
-  - [ ] 7.3 Test: Medal indicators assigned only to positions 1, 2, 3
-  - [ ] 7.4 Test: Score colors match `Standing.scoreColor` (under=green, at=white, over=amber)
-  - [ ] 7.5 Test: `shareSnapshot()` produces non-nil `UIImage`
-  - [ ] 7.6 Test: Handles tied positions correctly (same score = same position number)
-  - [ ] 7.7 Test: Early-finish round with missing scores displays correctly
+- [x] Task 7: Write RoundSummaryViewModel tests in HyzerAppTests (AC: 1, 2, 3)
+  - [x] 7.1 Test: ViewModel initializes with round data and produces correct `playerRows` (sorted by position)
+  - [x] 7.2 Test: `formattedDate` uses `round.completedAt`
+  - [x] 7.3 Test: Medal indicators assigned only to positions 1, 2, 3
+  - [x] 7.4 Test: Score colors match `Standing.scoreColor` (under=green, at=white, over=amber)
+  - [x] 7.5 Test: `shareSnapshot()` produces non-nil `UIImage`
+  - [x] 7.6 Test: Handles tied positions correctly (same score = same position number)
+  - [x] 7.7 Test: Early-finish round with missing scores displays correctly
 
-- [ ] Task 8: Write integration test for completion → summary flow (AC: 1, 4)
-  - [ ] 8.1 Test: `ScorecardViewModel.isRoundCompleted` is `true` after `finalizeRound()` succeeds
-  - [ ] 8.2 Test: `ScorecardViewModel.isRoundCompleted` is `true` after `finishRound()` with force=true succeeds
-  - [ ] 8.3 Verify existing `ScorecardViewModelTests` still pass (no regressions)
+- [x] Task 8: Write integration test for completion → summary flow (AC: 1, 4)
+  - [x] 8.1 Test: `ScorecardViewModel.isRoundCompleted` is `true` after `finalizeRound()` succeeds
+  - [x] 8.2 Test: `ScorecardViewModel.isRoundCompleted` is `true` after `finishRound()` with force=true succeeds
+  - [x] 8.3 Verify existing `ScorecardViewModelTests` still pass (no regressions)
 
 ## Dev Notes
 
@@ -203,10 +203,24 @@ From Story 3.5 (Round Lifecycle & Player Immutability):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+None — clean implementation, no debugging required.
+
 ### Completion Notes List
 
+- `SummaryCardSnapshotView` defined as `internal` (not `private`) in `RoundSummaryView.swift` so `RoundSummaryViewModel.shareSnapshot()` can reference it across files in the same target. The story's "private" is architectural intent, not the Swift keyword.
+- `organizerName` derived from standings via `round.organizerID.uuidString` match rather than adding an extra init parameter.
+- Color token is `Color.accentPrimary` (not `.accent`) — matched the actual token name from `ColorTokens.swift`.
+- `xcodegen generate` must be run after adding new Swift files since `project.yml` uses directory-based source inclusion.
+- All 161 tests pass: 71 HyzerKit + 90 HyzerApp (77 baseline + 13 new).
+
 ### File List
+
+- `HyzerApp/ViewModels/RoundSummaryViewModel.swift` — new
+- `HyzerApp/Views/Scoring/RoundSummaryView.swift` — new (includes `SummaryCardSnapshotView`)
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift` — modified (added `isShowingSummary`, `summaryViewModel`, `.onChange`, `.fullScreenCover`)
+- `HyzerAppTests/RoundSummaryViewModelTests.swift` — new (13 tests)
+- `HyzerApp.xcodeproj/` — regenerated via xcodegen
