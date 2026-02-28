@@ -28,7 +28,7 @@ stories:
     epic: 3
   "3.2":
     title: "Hole Card Tap Scoring & ScoreEvent Creation"
-    status: ready-for-dev
+    status: in-progress
     epic: 3
   "3.3":
     title: "Score Corrections & Hole Navigation"
