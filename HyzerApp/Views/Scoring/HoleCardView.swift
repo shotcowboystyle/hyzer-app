@@ -9,10 +9,24 @@ struct ScorecardPlayer: Identifiable {
     let isGuest: Bool
 }
 
+/// Returns the current (leaf node) ScoreEvent for a player on a specific hole.
+///
+/// The current score is the ScoreEvent not superseded by any other event in the set
+/// (Amendment A7 leaf-node resolution). Works for chains of any length.
+///
+/// Used by both `HoleCardView` (display) and `ScorecardContainerView` (auto-advance detection).
+func resolveCurrentScore(for playerID: String, hole: Int, in events: [ScoreEvent]) -> ScoreEvent? {
+    let holeEvents = events.filter { $0.playerID == playerID && $0.holeNumber == hole }
+    let supersededIDs = Set(holeEvents.compactMap(\.supersedesEventID))
+    return holeEvents.first { !supersededIDs.contains($0.id) }
+}
+
 /// A single hole card showing hole info and all player score rows.
 ///
 /// Displayed inside a `TabView(.page)` in `ScorecardContainerView`.
-/// Tapping an unscored player row expands an inline `ScoreInputView`.
+/// Tapping any player row (scored or unscored) expands an inline `ScoreInputView`.
+/// - Unscored row: initial score entry, calls `onScore`
+/// - Scored row: correction flow, calls `onCorrection` with the previous event ID
 struct HoleCardView: View {
     let holeNumber: Int
     let par: Int
@@ -20,9 +34,13 @@ struct HoleCardView: View {
     let players: [ScorecardPlayer]
     let scores: [ScoreEvent]
     let onScore: (String, Int) -> Void
+    /// Called when a correction is confirmed: (playerID, previousEventID, newStrokeCount).
+    let onCorrection: (String, UUID, Int) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var expandedPlayerID: String?
+    /// Non-nil when the expanded picker is for a correction; holds the previous event's ID.
+    @State private var correctionPreviousEventID: UUID?
 
     var body: some View {
         ScrollView {
@@ -68,17 +86,24 @@ struct HoleCardView: View {
     private var playerRows: some View {
         VStack(spacing: SpacingTokens.xs) {
             ForEach(players) { player in
-                let currentScore = resolveCurrentScore(playerID: player.id)
+                let currentScore = resolveCurrentScore(for: player.id, hole: holeNumber, in: scores)
                 if expandedPlayerID == player.id {
                     ScoreInputView(
                         playerName: player.displayName,
                         par: par,
+                        preSelectedScore: correctionPreviousEventID != nil ? currentScore?.strokeCount : nil,
                         onSelect: { strokeCount in
-                            onScore(player.id, strokeCount)
+                            if let prevID = correctionPreviousEventID {
+                                onCorrection(player.id, prevID, strokeCount)
+                            } else {
+                                onScore(player.id, strokeCount)
+                            }
                             expandedPlayerID = nil
+                            correctionPreviousEventID = nil
                         },
                         onCancel: {
                             expandedPlayerID = nil
+                            correctionPreviousEventID = nil
                         }
                     )
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
@@ -115,25 +140,14 @@ struct HoleCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .contentShape(Rectangle())
         .onTapGesture {
-            guard score == nil else { return }
             withAnimation(AnimationCoordinator.animation(AnimationTokens.springStiff, reduceMotion: reduceMotion)) {
                 expandedPlayerID = player.id
+                // Non-nil for scored rows (correction), nil for unscored (initial entry)
+                correctionPreviousEventID = score?.id
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
-    }
-
-    // MARK: - Score Resolution (Amendment A7)
-
-    /// Returns the current (leaf node) ScoreEvent for a player on this hole.
-    ///
-    /// The current score is the ScoreEvent that no other ScoreEvent supersedes.
-    /// For Story 3.2, all events have `supersedesEventID = nil`, so every event is a leaf.
-    private func resolveCurrentScore(playerID: String) -> ScoreEvent? {
-        let playerScores = scores.filter { $0.playerID == playerID }
-        let supersededIDs = Set(playerScores.compactMap(\.supersedesEventID))
-        return playerScores.first { !supersededIDs.contains($0.id) }
     }
 
     // MARK: - Score Color

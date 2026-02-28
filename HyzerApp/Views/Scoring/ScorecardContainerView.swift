@@ -14,6 +14,7 @@ struct ScorecardContainerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(AppServices.self) private var appServices
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Query private var allScoreEvents: [ScoreEvent]
     @Query(sort: \Hole.number) private var allHoles: [Hole]
@@ -22,6 +23,7 @@ struct ScorecardContainerView: View {
 
     @State private var currentHole: Int = 1
     @State private var viewModel: ScorecardViewModel?
+    @State private var autoAdvanceTask: Task<Void, Never>?
 
     // MARK: - Client-side filters
 
@@ -58,6 +60,14 @@ struct ScorecardContainerView: View {
                     scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
                     onScore: { playerID, strokeCount in
                         enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+                    },
+                    onCorrection: { playerID, previousEventID, strokeCount in
+                        correctScore(
+                            playerID: playerID,
+                            previousEventID: previousEventID,
+                            holeNumber: holeNumber,
+                            strokeCount: strokeCount
+                        )
                     }
                 )
                 .tag(holeNumber)
@@ -71,6 +81,10 @@ struct ScorecardContainerView: View {
             Text(viewModel?.saveError?.localizedDescription ?? "")
         }
         .onAppear { initializeViewModel() }
+        .onChange(of: currentHole) {
+            // Cancel any pending auto-advance when the user swipes manually
+            autoAdvanceTask?.cancel()
+        }
     }
 
     // MARK: - Private
@@ -97,8 +111,50 @@ struct ScorecardContainerView: View {
         guard let vm = viewModel else { return }
         do {
             try vm.enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+            handleScoreEntered(isCorrection: false)
         } catch {
             vm.saveError = error
+        }
+    }
+
+    private func correctScore(playerID: String, previousEventID: UUID, holeNumber: Int, strokeCount: Int) {
+        guard let vm = viewModel else { return }
+        do {
+            try vm.correctScore(
+                previousEventID: previousEventID,
+                playerID: playerID,
+                holeNumber: holeNumber,
+                strokeCount: strokeCount
+            )
+            handleScoreEntered(isCorrection: true)
+        } catch {
+            vm.saveError = error
+        }
+    }
+
+    /// Triggers auto-advance if all players are scored on the current hole after a new score entry.
+    ///
+    /// Auto-advance only fires for initial scores (not corrections) and only when not on the last hole.
+    private func handleScoreEntered(isCorrection: Bool) {
+        guard !isCorrection else { return }
+        guard allPlayersScored(for: currentHole) else { return }
+        guard currentHole < round.holeCount else { return }
+
+        autoAdvanceTask?.cancel()
+        autoAdvanceTask = Task { @MainActor in
+            // Safe to ignore: CancellationError is expected when user swipes manually; handled by isCancelled check below
+            try? await Task.sleep(for: .milliseconds(750))
+            guard !Task.isCancelled else { return }
+            withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
+                currentHole += 1
+            }
+        }
+    }
+
+    /// Returns true if every player in the round has a resolved (leaf node) score for the given hole.
+    private func allPlayersScored(for holeNumber: Int) -> Bool {
+        scorecardPlayers.allSatisfy { player in
+            resolveCurrentScore(for: player.id, hole: holeNumber, in: roundScoreEvents) != nil
         }
     }
 
