@@ -68,7 +68,7 @@ stories:
     epic: 5
   "5.3":
     title: "Partial & Failed Recognition Handling"
-    status: ready-for-dev
+    status: in-progress
     epic: 5
   "6.1":
     title: "Discrepancy Alert & Resolution Flow"
