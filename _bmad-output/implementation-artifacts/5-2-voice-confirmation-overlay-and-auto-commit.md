@@ -351,9 +351,18 @@ claude-sonnet-4-6
 - `VoiceOverlayView` uses `.ultraThinMaterial`, dotted leader rows (56pt height), a `GeometryReader`-based linear progress bar, listening waveform state, inline `ScoreInputView` correction, and an explicit "Commit Scores" button for VoiceOver. Reduce-motion respects `AnimationCoordinator`.
 - `ScorecardContainerView` now has a mic toolbar button (trailing, alongside the menu), `voiceOverlayContent` `@ViewBuilder` for the overlay, and `handleVoiceOverlayTerminated` method to avoid Swift type-checker complexity. Extracted `trailingToolbarContent` for the same reason.
 - `AppServices` gets `voiceRecognitionService: VoiceRecognitionService` property and init line.
-- 9 new `VoiceOverlayViewModelTests` written and passing; `MockVoiceRecognitionService` added in `HyzerAppTests/Mocks/`.
+- 8 `VoiceOverlayViewModelTests` written and passing (includes auto-commit timer test); `MockVoiceRecognitionService` added in `HyzerAppTests/Mocks/`.
 - Fixed pre-existing test failure in `ICloudIdentityResolutionTests` (missing `cloudKitClient`/`networkMonitor` args) with local stub conformances.
-- All 97 HyzerApp tests pass; 166 HyzerKit tests continue passing; SwiftLint clean.
+- All 98 HyzerApp tests pass; 166 HyzerKit tests continue passing; SwiftLint clean.
+
+### Code Review Fixes (BMAD Adversarial Review)
+
+- **H1 (VoiceOver timer-pause):** Replaced broken `@AccessibilityFocusState` container tracking with `UIAccessibility.isVoiceOverRunning` check on appear — VoiceOver users now have the timer permanently paused, using the explicit "Commit Scores" button instead.
+- **H2 (Progress bar reset):** Added `timerResetCount` observable property to ViewModel; View now observes it via `.onChange` to reset progress bar animation when timer restarts after corrections. Rewrote `startProgress()` to properly reset animation via two-frame update.
+- **H3 (VoiceOver announcement):** Added `announceScores()` helper that posts all parsed scores via `AccessibilityNotification.Announcement` on overlay appear when VoiceOver is active.
+- **M1 (Misleading error):** Improved comment in `commitScores()` catch block to document the compromise — ScoringService persistence errors mapped to `.recognitionUnavailable` because `VoiceParseError` (HyzerKit) has no persistence case.
+- **M2 (Missing timer test):** Added `test_autoCommitTimer_firesAfterDelay_commitsScores` — verifies 1.5s auto-commit timer fires and commits ScoreEvents.
+- **M3 (Audio engine cleanup):** Added `deinit` to `VoiceOverlayViewModel` with `nonisolated(unsafe)` properties for Swift 6 compatibility — cancels timer and schedules `stopListening()` via `@MainActor` Task hop.
 
 ### File List
 

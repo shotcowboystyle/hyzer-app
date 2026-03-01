@@ -34,9 +34,16 @@ final class VoiceOverlayViewModel {
     /// Equatable for SwiftUI `onChange` — use this to drive overlay dismissal.
     private(set) var isTerminated: Bool = false
 
+    /// Incremented each time `startAutoCommitTimer()` is called.
+    /// The view observes this to reset the progress bar animation on timer restarts.
+    private(set) var timerResetCount: Int = 0
+
     // MARK: - Dependencies
 
-    private let voiceRecognitionService: any VoiceRecognitionServiceProtocol
+    // nonisolated(unsafe): deinit is nonisolated in Swift 6; we need to capture the service
+    // to call stopListening() inside a @MainActor Task hop during cleanup.
+    // All actual usage of these properties happens on @MainActor.
+    nonisolated(unsafe) private let voiceRecognitionService: any VoiceRecognitionServiceProtocol
     private let scoringService: ScoringService
     private let parser: VoiceParser
     private let roundID: UUID
@@ -46,7 +53,9 @@ final class VoiceOverlayViewModel {
 
     // MARK: - Timer
 
-    private var timerTask: Task<Void, Never>?
+    // nonisolated(unsafe): allows deinit to call cancel() without a main-actor hop.
+    // All writes happen on @MainActor; deinit only calls cancel().
+    nonisolated(unsafe) private var timerTask: Task<Void, Never>?
 
     /// When `true` (VoiceOver focus on overlay), the auto-commit timer is paused.
     var isVoiceOverFocused: Bool = false {
@@ -154,7 +163,9 @@ final class VoiceOverlayViewModel {
             isCommitted = true
             isTerminated = true
         } catch {
-            // Safe to surface as error: commit failure means no ScoreEvents were written for this candidate
+            // Persistence error from ScoringService — mapped to .recognitionUnavailable
+            // because VoiceParseError (HyzerKit) has no persistence case.
+            // The overlay shows a generic error; user can retry voice entry.
             state = .error(.recognitionUnavailable)
             isTerminated = true
         }
@@ -173,10 +184,20 @@ final class VoiceOverlayViewModel {
 
     private func startAutoCommitTimer() {
         timerTask?.cancel()
+        timerResetCount += 1
         timerTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(1.5))
             guard !Task.isCancelled else { return }
             self?.commitScores()
+        }
+    }
+
+    deinit {
+        let service = voiceRecognitionService
+        let timer = timerTask
+        timer?.cancel()
+        Task { @MainActor in
+            service.stopListening()
         }
     }
 }

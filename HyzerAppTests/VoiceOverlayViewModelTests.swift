@@ -217,6 +217,36 @@ struct VoiceOverlayViewModelTests {
         #expect(fetched.isEmpty)
     }
 
+    // MARK: - Auto-commit timer fires after 1.5s
+
+    @Test("autoCommitTimer_firesAfterDelay_commitsScores")
+    func test_autoCommitTimer_firesAfterDelay_commitsScores() async throws {
+        // Given
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Mike 3 Jake 4"
+        let (_, context) = try makeContext()
+        let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .confirming = vm.state else {
+            Issue.record("Setup: expected .confirming state")
+            return
+        }
+
+        // When — wait for auto-commit timer (1.5s) plus buffer
+        try await Task.sleep(for: .seconds(2))
+
+        // Then — timer should have fired and committed scores
+        if case .committed = vm.state { } else {
+            Issue.record("Expected .committed state after auto-commit timer, got \(vm.state)")
+        }
+        #expect(vm.isCommitted == true)
+        #expect(vm.isTerminated == true)
+        let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
+        #expect(fetched.count == 2)
+    }
+
     // MARK: - 6.9: recognition error → .error state
 
     @Test("startListening_recognitionError_setsErrorState")

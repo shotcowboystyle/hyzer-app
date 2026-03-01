@@ -1,5 +1,6 @@
-import SwiftUI
 import HyzerKit
+import SwiftUI
+import UIKit
 
 /// Translucent overlay shown after voice recognition completes.
 ///
@@ -11,7 +12,6 @@ struct VoiceOverlayView: View {
     let par: Int
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @AccessibilityFocusState private var overlayFocused: Bool
 
     @State private var progress: Double = 0
     @State private var progressAnimation: Animation? = nil
@@ -100,13 +100,17 @@ struct VoiceOverlayView: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal, SpacingTokens.md)
-        .onAppear { startProgress() }
+        .onAppear {
+            if UIAccessibility.isVoiceOverRunning {
+                viewModel.isVoiceOverFocused = true
+                announceScores(candidates)
+            }
+        }
+        .onChange(of: viewModel.timerResetCount) { _, _ in
+            startProgress()
+        }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
-        .accessibilityFocused($overlayFocused)
-        .onChange(of: overlayFocused) { _, focused in
-            viewModel.isVoiceOverFocused = focused
-        }
     }
 
     // MARK: - Player row
@@ -154,17 +158,30 @@ struct VoiceOverlayView: View {
         .frame(height: 4)
         .padding(.horizontal, SpacingTokens.md)
         .accessibilityHidden(true)
+        .onAppear { startProgress() }
     }
 
     // MARK: - Helpers
 
     private func startProgress() {
+        progressAnimation = nil
         progress = 0
-        if reduceMotion {
-            progress = 1
-        } else {
-            progressAnimation = .linear(duration: 1.5)
-            progress = 1
+        Task { @MainActor in
+            if reduceMotion {
+                progress = 1
+            } else {
+                progressAnimation = .linear(duration: 1.5)
+                progress = 1
+            }
+        }
+    }
+
+    private func announceScores(_ candidates: [ScoreCandidate]) {
+        let descriptions = candidates.map { "\($0.displayName), \($0.strokeCount)" }.joined(separator: ". ")
+        let announcement = "Voice scores confirmed. \(descriptions). Tap any score to correct."
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            AccessibilityNotification.Announcement(announcement).post()
         }
     }
 
