@@ -12,7 +12,7 @@ struct HomeView: View {
                 ScoringTabView(player: player)
             }
             Tab("History", systemImage: "clock.arrow.circlepath") {
-                HistoryTabView()
+                HistoryTabView(player: player)
             }
             Tab("Courses", systemImage: "map") {
                 NavigationStack {
@@ -73,21 +73,12 @@ private struct ScoringTabView: View {
 
 }
 
-// MARK: - History Tab (placeholder for Epic 8)
+// MARK: - History Tab
 
 private struct HistoryTabView: View {
+    let player: Player
+
     var body: some View {
-        NavigationStack {
-            VStack(spacing: SpacingTokens.lg) {
-                Text("Your round history will appear here after your first completed round.")
-                    .font(TypographyTokens.body)
-                    .foregroundStyle(Color.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, SpacingTokens.xl)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.backgroundPrimary)
-            .navigationTitle("History")
-        }
+        HistoryListView(currentPlayerID: player.id.uuidString)
     }
 }
