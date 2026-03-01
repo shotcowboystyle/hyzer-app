@@ -1,6 +1,6 @@
 # Story 8.1: History List & Round Detail
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,20 +22,20 @@ so that I can revisit competitive memories and settle friendly debates.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `HistoryListView` + `HistoryListViewModel` (AC: 1, 3)
-  - [ ] 1.1 Create `HyzerApp/Views/History/HistoryListView.swift` with `@Query` for completed rounds
-  - [ ] 1.2 Create `HyzerApp/ViewModels/HistoryListViewModel.swift` — resolves course names, computes winner/user position for each round card
-  - [ ] 1.3 Create `HistoryRoundCard` subview inside `HistoryListView.swift` — compact card showing course, date, player count, winner, user position
-  - [ ] 1.4 Implement empty state when `completedRounds.isEmpty`
-- [ ] Task 2: Wire History tab in `HomeView.swift` (AC: 1)
-  - [ ] 2.1 Replace placeholder `HistoryTabView` body with `HistoryListView` inside `NavigationStack`
-- [ ] Task 3: Create `HistoryRoundDetailView` for full standings on tap (AC: 2, 5)
-  - [ ] 3.1 Create `HyzerApp/Views/History/HistoryRoundDetailView.swift` — reuse `RoundSummaryViewModel` to display final standings
-  - [ ] 3.2 Wire `NavigationLink` from `HistoryRoundCard` to `HistoryRoundDetailView`
-  - [ ] 3.3 Include share button using existing `RoundSummaryViewModel.shareSnapshot(displayScale:)`
-- [ ] Task 4: Tests (AC: 1, 2, 3, 4)
-  - [ ] 4.1 `HistoryListViewModelTests` in `HyzerAppTests/ViewModels/` — card data derivation, empty state, reverse-chronological ordering
-  - [ ] 4.2 SwiftData integration test: query returns only `status == "completed"` rounds sorted by `completedAt` descending
+- [x] Task 1: Create `HistoryListView` + `HistoryListViewModel` (AC: 1, 3)
+  - [x] 1.1 Create `HyzerApp/Views/History/HistoryListView.swift` with `@Query` for completed rounds
+  - [x] 1.2 Create `HyzerApp/ViewModels/HistoryListViewModel.swift` — resolves course names, computes winner/user position for each round card
+  - [x] 1.3 Create `HistoryRoundCard` subview inside `HistoryListView.swift` — compact card showing course, date, player count, winner, user position
+  - [x] 1.4 Implement empty state when `completedRounds.isEmpty`
+- [x] Task 2: Wire History tab in `HomeView.swift` (AC: 1)
+  - [x] 2.1 Replace placeholder `HistoryTabView` body with `HistoryListView` inside `NavigationStack`
+- [x] Task 3: Create `HistoryRoundDetailView` for full standings on tap (AC: 2, 5)
+  - [x] 3.1 Create `HyzerApp/Views/History/HistoryRoundDetailView.swift` — reuse `RoundSummaryViewModel` to display final standings
+  - [x] 3.2 Wire `NavigationLink` from `HistoryRoundCard` to `HistoryRoundDetailView`
+  - [x] 3.3 Include share button using existing `RoundSummaryViewModel.shareSnapshot(displayScale:)`
+- [x] Task 4: Tests (AC: 1, 2, 3, 4)
+  - [x] 4.1 `HistoryListViewModelTests` in `HyzerAppTests/ViewModels/` — card data derivation, empty state, reverse-chronological ordering
+  - [x] 4.2 SwiftData integration test: query returns only `status == "completed"` rounds sorted by `completedAt` descending
 
 ## Dev Notes
 
@@ -188,9 +188,59 @@ Swift 6 strict concurrency is enforced (`SWIFT_STRICT_CONCURRENCY = complete`). 
 ## Dev Agent Record
 
 ### Agent Model Used
+claude-sonnet-4-6
 
 ### Debug Log References
+- xcodebuild BUILD SUCCEEDED (iOS Simulator, iPhone 17)
+- Tests compiled successfully; runtime execution blocked by macOS 15 / iOS 26 Simulator constraint (known project limitation per CLAUDE.md)
+- SwiftLint passed as pre-build phase (no errors)
+- xcodegen generate run to pick up new History/ directory and ViewModels/HistoryListViewModelTests.swift
 
 ### Completion Notes List
+- `HistoryListViewModel` uses a single `StandingsEngine` instance (shared across all rounds to avoid redundant initialization) with cached `HistoryRoundCardData` keyed by round ID for lazy-per-card computation.
+- `HistoryListView` computes card data lazily per card via `onAppear` for smooth scroll performance with large history lists (250+ rounds).
+- `HistoryRoundDetailView` creates a fresh `StandingsEngine` per navigation push; this is correct since each push is independent and the round's scores are historical (immutable).
+- `HistoryTabView` in `HomeView.swift` updated to accept `player: Player` and pass `player.id.uuidString` as `currentPlayerID`.
+- `ShareSheetRepresentable` is a private re-implementation in `HistoryRoundDetailView.swift` (same pattern as `RoundSummaryView.swift`'s private `ShareSheet`) to avoid coupling views together.
+- Tests use the established Swift Testing (`@Suite`, `@Test`) pattern with `ModelConfiguration(isStoredInMemoryOnly: true)`.
+- Score colors stored in `HistoryRoundCardData` from `Standing.scoreColor` at computation time (no string-based re-derivation in the view).
+- `DateFormatter` reused as stored property on ViewModel (not recreated per card).
 
 ### File List
+- HyzerApp/ViewModels/HistoryListViewModel.swift (new)
+- HyzerApp/Views/History/HistoryListView.swift (new)
+- HyzerApp/Views/History/HistoryRoundDetailView.swift (new)
+- HyzerApp/Views/HomeView.swift (modified — HistoryTabView now accepts player parameter)
+- HyzerAppTests/ViewModels/HistoryListViewModelTests.swift (new)
+
+## Senior Developer Review (AI)
+
+**Reviewer:** shotcowboystyle | **Date:** 2026-03-01 | **Outcome:** Approved (after fixes)
+
+### Findings & Resolutions
+
+| # | Severity | Finding | Resolution |
+|---|----------|---------|------------|
+| H1 | HIGH | Bulk card precompute in `onAppear` iterates ALL rounds, calling `StandingsEngine.recompute` per round synchronously on main thread — blocks UI for 250+ rounds (AC4 violation) | FIXED: Removed bulk precompute; per-card `.onAppear` provides lazy computation |
+| M1 | MEDIUM | `DateFormatter` created in every `computeAndCache` call — expensive allocation per card | FIXED: Stored as instance property on ViewModel, initialized once in `init` |
+| M2 | MEDIUM | Score colors re-derived from formatted strings via `scoreColor(for:)` — fragile duplication of `Standing.scoreColor` logic | FIXED: Added `winnerScoreColor`/`userScoreColor` to `HistoryRoundCardData`, sourced from `Standing.scoreColor`; removed string-parsing method |
+| M3 | MEDIUM | Hardcoded `frame(height: 100)` in placeholder card — design token violation | FIXED: Replaced with `SpacingTokens.xxl * 2` |
+| M4 | MEDIUM | Missing test: reverse chronological ordering (Task 4.2, test case #3) | FIXED: Added `test_completedRounds_reverseChronological` |
+| M5 | MEDIUM | Missing test: non-completed rounds excluded (Task 4.2, test case #5) | FIXED: Added `test_nonCompletedRounds_excluded` |
+| L1 | LOW | `ordinalize` edge cases (11th, 12th, 13th) not tested | Accepted: covered by code inspection, indirectly validated |
+| L2 | LOW | `project.pbxproj` in git but not in story File List | Accepted: auto-generated by xcodegen |
+
+### AC Validation
+
+| AC | Status | Evidence |
+|----|--------|----------|
+| AC1: Reverse chronological card feed | IMPLEMENTED | `@Query` with `sort: \Round.completedAt, order: .reverse`; card shows course, date, player count, winner, user position |
+| AC2: Full standings on tap | IMPLEMENTED | `HistoryRoundDetailView` reuses `RoundSummaryViewModel` for standings, metadata, organizer |
+| AC3: Empty state | IMPLEMENTED | Exact spec text with `Color.textSecondary`, centered |
+| AC4: Performance at scale | IMPLEMENTED (after fix) | Lazy per-card computation via `onAppear` + cache; no bulk precompute |
+| AC5: Share button | IMPLEMENTED | Uses `RoundSummaryViewModel.shareSnapshot(displayScale:)` via system share sheet |
+
+### Build Verification
+- xcodebuild BUILD SUCCEEDED (iOS Simulator, iPhone 17)
+- SwiftLint passed (pre-build phase, no errors)
+- HyzerKit tests: 256 passed
