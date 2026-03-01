@@ -76,7 +76,21 @@ struct HistoryRoundDetailView: View {
     private func standingsSection(vm: RoundSummaryViewModel) -> some View {
         VStack(spacing: SpacingTokens.md) {
             ForEach(vm.playerRows) { row in
-                HistoryPlayerRow(row: row)
+                NavigationLink {
+                    PlayerHoleBreakdownView(
+                        roundID: round.id,
+                        playerID: row.id,
+                        playerName: row.playerName
+                    )
+                } label: {
+                    HStack {
+                        HistoryPlayerRow(row: row)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                }
+                .buttonStyle(.plain)
             }
         }
     }
