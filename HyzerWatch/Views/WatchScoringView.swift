@@ -9,17 +9,25 @@ import HyzerKit
 /// increments/decrements by 1 per detent (system haptic per detent via
 /// `isHapticFeedbackEnabled: true`). Confirm button sends the score to the phone
 /// via `transferUserInfo` for guaranteed delivery.
+///
+/// Story 7.3 addition: Microphone button below the confirm button allows voice
+/// scoring via the paired phone's microphone.
 struct WatchScoringView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var viewModel: WatchScoringViewModel
+    var connectivityService: WatchConnectivityService
+    var snapshot: StandingsSnapshot
 
     /// Double backing store for smooth Crown tracking; rounded to Int for display.
     @State private var crownValue: Double
+    @State private var showingVoiceOverlay = false
 
-    init(viewModel: WatchScoringViewModel) {
+    init(viewModel: WatchScoringViewModel, connectivityService: WatchConnectivityService, snapshot: StandingsSnapshot) {
         self.viewModel = viewModel
+        self.connectivityService = connectivityService
+        self.snapshot = snapshot
         self._crownValue = State(initialValue: Double(viewModel.parValue))
     }
 
@@ -29,6 +37,7 @@ struct WatchScoringView: View {
             scoreDisplay
             holeInfoLabel
             confirmButton
+            micButton
         }
         .padding(.horizontal, SpacingTokens.sm)
         .digitalCrownRotation(
@@ -45,6 +54,19 @@ struct WatchScoringView: View {
         }
         .onChange(of: viewModel.isConfirmed) { _, confirmed in
             if confirmed { dismiss() }
+        }
+        .sheet(isPresented: $showingVoiceOverlay) {
+            WatchVoiceOverlayView(
+                viewModel: WatchVoiceViewModel(
+                    roundID: snapshot.roundID,
+                    holeNumber: snapshot.currentHole,
+                    playerEntries: snapshot.standings.map {
+                        VoicePlayerEntry(playerID: $0.playerID, displayName: $0.playerName, aliases: [])
+                    },
+                    connectivityClient: connectivityService
+                ),
+                connectivityService: connectivityService
+            )
         }
     }
 
@@ -89,6 +111,20 @@ struct WatchScoringView: View {
         .buttonStyle(.borderedProminent)
         .tint(Color.accentPrimary)
         .frame(minHeight: SpacingTokens.scoringTouchTarget)
+    }
+
+    private var micButton: some View {
+        Button {
+            showingVoiceOverlay = true
+        } label: {
+            Label("Voice", systemImage: "mic.fill")
+                .font(TypographyTokens.caption)
+                .foregroundStyle(connectivityService.isReachable ? Color.accentPrimary : Color.textSecondary)
+        }
+        .disabled(!connectivityService.isReachable)
+        .frame(minHeight: SpacingTokens.minimumTouchTarget)
+        .accessibilityLabel(connectivityService.isReachable ? "Voice score entry" : "Voice unavailable: Phone not connected")
+        .accessibilityHint(connectivityService.isReachable ? "Double tap to start voice scoring" : "")
     }
 
     // MARK: - Accessibility helpers

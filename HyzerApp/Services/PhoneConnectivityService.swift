@@ -41,6 +41,12 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     /// The local phone player's UUID, used as `reportedByPlayerID` for Watch-sourced scores.
     var localPlayerID: UUID?
 
+    /// Injected by `AppServices` to handle Watch-initiated voice recognition requests.
+    var voiceRecognitionService: (any VoiceRecognitionServiceProtocol)?
+
+    /// Parser for voice transcripts — stateless value type, no DI needed.
+    private let voiceParser = VoiceParser()
+
     /// Retained so score events can trigger a standings recompute after insertion.
     private var standingsEngine: StandingsEngine?
 
@@ -149,6 +155,40 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             break // Phone never receives standings updates from Watch
         case .scoreEvent(let payload):
             handleWatchScoreEvent(payload)
+        case .voiceRequest(let request):
+            Task { @MainActor [weak self] in
+                await self?.handleWatchVoiceRequest(request)
+            }
+        case .voiceResult:
+            break // Phone never receives voice results — it sends them
+        }
+    }
+
+    private func handleWatchVoiceRequest(_ request: WatchVoiceRequest) async {
+        let resultPayload: WatchVoiceResult
+        do {
+            guard let voiceRecognitionService else {
+                logger.warning("voiceRequest received but voiceRecognitionService not wired — sending failed result")
+                let failed = WatchVoiceResult(result: .failed(transcript: ""), holeNumber: request.holeNumber, roundID: request.roundID)
+                try? sendMessage(.voiceResult(failed))
+                return
+            }
+            let transcript = try await voiceRecognitionService.recognize()
+            let parseResult = voiceParser.parse(transcript: transcript, players: request.playerEntries)
+            resultPayload = WatchVoiceResult(result: parseResult, holeNumber: request.holeNumber, roundID: request.roundID)
+        } catch {
+            let description = (error as? VoiceParseError).map { "\($0)" } ?? error.localizedDescription
+            logger.error("Watch voice recognition failed: \(description)")
+            resultPayload = WatchVoiceResult(
+                result: .failed(transcript: description),
+                holeNumber: request.holeNumber,
+                roundID: request.roundID
+            )
+        }
+        do {
+            try sendMessage(.voiceResult(resultPayload))
+        } catch {
+            logger.error("Failed to send voiceResult to Watch: \(error)")
         }
     }
 
