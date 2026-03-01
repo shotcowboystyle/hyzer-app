@@ -22,30 +22,30 @@ so that I can still score efficiently without starting over.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `UnresolvedCandidate` type to HyzerKit and update `VoiceParseResult.partial` (AC: 1, 5)
-  - [ ] 1.1: Add `public struct UnresolvedCandidate: Sendable` to `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — fields: `spokenName: String`, `strokeCount: Int`
-  - [ ] 1.2: Update `VoiceParseResult.partial` associated value: `case partial(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])`
-  - [ ] 1.3: Update `VoiceParser.parse()` — in the unresolved branch, append `UnresolvedCandidate(spokenName: nameToken, strokeCount: strokeCount)` instead of `unresolved.append(nameToken)`
-  - [ ] 1.4: Update `VoiceParserTests.swift` — update the `test_parse_unknownName_returnsPartial` test to use `unresolved[0].spokenName == "Zork"` instead of `unresolved.contains("Zork")`, and add a test asserting `unresolved[0].strokeCount == 5`
+- [x] Task 1: Add `UnresolvedCandidate` type to HyzerKit and update `VoiceParseResult.partial` (AC: 1, 5)
+  - [x] 1.1: Add `public struct UnresolvedCandidate: Sendable` to `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — fields: `spokenName: String`, `strokeCount: Int`
+  - [x] 1.2: Update `VoiceParseResult.partial` associated value: `case partial(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])`
+  - [x] 1.3: Update `VoiceParser.parse()` — in the unresolved branch, append `UnresolvedCandidate(spokenName: nameToken, strokeCount: strokeCount)` instead of `unresolved.append(nameToken)`
+  - [x] 1.4: Update `VoiceParserTests.swift` — update the `test_parse_unknownName_returnsPartial` test to use `unresolved[0].spokenName == "Zork"` instead of `unresolved.contains("Zork")`, and add a test asserting `unresolved[0].strokeCount == 5`
 
-- [ ] Task 2: Extend `VoiceOverlayViewModel` state machine (AC: 1, 2, 3, 4)
-  - [ ] 2.1: Add `.partial(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])` case to `VoiceOverlayViewModel.State` enum
-  - [ ] 2.2: Add `.failed(transcript: String)` case to `VoiceOverlayViewModel.State` enum
-  - [ ] 2.3: Update `startListening()` `.partial` branch — set `state = .partial(recognized: recognized, unresolved: unresolved)` (remove the old placeholder that dropped unresolved entries and started the timer)
-  - [ ] 2.4: Update `startListening()` `.failed` branch — set `state = .failed(transcript: transcript)` WITHOUT setting `isTerminated = true` (removes the old `state = .error(.noSpeechDetected)` + `isTerminated = true`)
-  - [ ] 2.5: Expose round players for the picker — add `let availablePlayers: [VoicePlayerEntry]` as a private-set stored property, set from `players` in init: `self.availablePlayers = players`
-  - [ ] 2.6: Add `func resolveUnresolved(at index: Int, player: VoicePlayerEntry)` — guard `case .partial(var recognized, var unresolved) = state`, guard `unresolved.indices.contains(index)`, create `ScoreCandidate(playerID: player.playerID, displayName: player.displayName, strokeCount: unresolved[index].strokeCount)`, append to `recognized`, remove from `unresolved`. If `unresolved.isEmpty` → `state = .confirming(recognized)` and start auto-commit timer (if not VoiceOver focused). Otherwise → `state = .partial(recognized: recognized, unresolved: unresolved)`.
-  - [ ] 2.7: Add `func retry()` — cancels `timerTask`, calls `startListening()` (which resets state to `.listening` and begins new recognition)
+- [x] Task 2: Extend `VoiceOverlayViewModel` state machine (AC: 1, 2, 3, 4)
+  - [x] 2.1: Add `.partial(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])` case to `VoiceOverlayViewModel.State` enum
+  - [x] 2.2: Add `.failed(transcript: String)` case to `VoiceOverlayViewModel.State` enum
+  - [x] 2.3: Update `startListening()` `.partial` branch — set `state = .partial(recognized: recognized, unresolved: unresolved)` (remove the old placeholder that dropped unresolved entries and started the timer)
+  - [x] 2.4: Update `startListening()` `.failed` branch — set `state = .failed(transcript: transcript)` WITHOUT setting `isTerminated = true` (removes the old `state = .error(.noSpeechDetected)` + `isTerminated = true`)
+  - [x] 2.5: Expose round players for the picker — add `let availablePlayers: [VoicePlayerEntry]` as a private-set stored property, set from `players` in init: `self.availablePlayers = players`
+  - [x] 2.6: Add `func resolveUnresolved(at index: Int, player: VoicePlayerEntry)` — guard `case .partial(var recognized, var unresolved) = state`, guard `unresolved.indices.contains(index)`, create `ScoreCandidate(playerID: player.playerID, displayName: player.displayName, strokeCount: unresolved[index].strokeCount)`, append to `recognized`, remove from `unresolved`. If `unresolved.isEmpty` → `state = .confirming(recognized)` and start auto-commit timer (if not VoiceOver focused). Otherwise → `state = .partial(recognized: recognized, unresolved: unresolved)`.
+  - [x] 2.7: Add `func retry()` — cancels `timerTask`, calls `startListening()` (which resets state to `.listening` and begins new recognition)
 
-- [ ] Task 3: Update `VoiceOverlayView` for new states (AC: 1, 2, 3)
-  - [ ] 3.1: Add `.partial` case to the `switch viewModel.state` in `VoiceOverlayView.body` → call `partialView(recognized:unresolved:)`
-  - [ ] 3.2: Add `.failed` case to the `switch viewModel.state` → call `failedView`
-  - [ ] 3.3: Implement `partialView(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])` — renders resolved rows identically to `confirmingView` player rows (same `playerScoreRow`), then renders unresolved rows with `unresolvedRow(entry:index:)`. No progress bar (timer not running). Footer: "Tap unresolved names to correct" (caption, textSecondary). Add "Cancel" button (plain style, textSecondary).
-  - [ ] 3.4: Implement `unresolvedRow(entry: UnresolvedCandidate, index: Int)` — same row layout as `playerScoreRow` but: spoken name in `textSecondary` (dimmed), score shows "?" in `Color.textSecondary`, row has a yellow/warning tint border or background, tap opens `playerPickerSheet` for that index
-  - [ ] 3.5: Implement player picker as a SwiftUI `.sheet` or `.confirmationDialog` — presents `viewModel.availablePlayers` as a list; selecting a player calls `viewModel.resolveUnresolved(at: unresolvedIndex!, player: player)` and dismisses the sheet. Use `@State private var unresolvedIndex: Int?` to track which row is tapped.
-  - [ ] 3.6: Implement `failedView` — `.ultraThinMaterial` overlay card with: title "Couldn't understand" (`TypographyTokens.h3`, `textPrimary`), subtitle "Try again?" (`TypographyTokens.body`, `textSecondary`), "Try Again" button (accentPrimary, filled style) calling `viewModel.retry()`, "Cancel" button (plain style, textSecondary) calling `viewModel.cancel()`. Minimum touch targets: `SpacingTokens.minimumTouchTarget` (44pt).
-  - [ ] 3.7: VoiceOver for partial state — on appear announce "Partial recognition. [count] scores confirmed, [count] unresolved. Tap the highlighted names to select the correct player." Unresolved rows: `accessibilityLabel("\(entry.spokenName), unresolved, score \(entry.strokeCount)")`, `accessibilityHint("Double-tap to pick the correct player")`.
-  - [ ] 3.8: VoiceOver for failed state — on appear announce "Couldn't understand. Double-tap Try Again to retry, or Cancel to return to scoring."
+- [x] Task 3: Update `VoiceOverlayView` for new states (AC: 1, 2, 3)
+  - [x] 3.1: Add `.partial` case to the `switch viewModel.state` in `VoiceOverlayView.body` → call `partialView(recognized:unresolved:)`
+  - [x] 3.2: Add `.failed` case to the `switch viewModel.state` → call `failedView`
+  - [x] 3.3: Implement `partialView(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])` — renders resolved rows identically to `confirmingView` player rows (same `playerScoreRow`), then renders unresolved rows with `unresolvedRow(entry:index:)`. No progress bar (timer not running). Footer: "Tap unresolved names to correct" (caption, textSecondary). Add "Cancel" button (plain style, textSecondary).
+  - [x] 3.4: Implement `unresolvedRow(entry: UnresolvedCandidate, index: Int)` — same row layout as `playerScoreRow` but: spoken name in `textSecondary` (dimmed), score shows "?" in `Color.textSecondary`, row has a yellow/warning tint border or background, tap opens `playerPickerSheet` for that index
+  - [x] 3.5: Implement player picker as a SwiftUI `.sheet` or `.confirmationDialog` — presents `viewModel.availablePlayers` as a list; selecting a player calls `viewModel.resolveUnresolved(at: unresolvedIndex!, player: player)` and dismisses the sheet. Use `@State private var unresolvedIndex: Int?` to track which row is tapped.
+  - [x] 3.6: Implement `failedView` — `.ultraThinMaterial` overlay card with: title "Couldn't understand" (`TypographyTokens.h3`, `textPrimary`), subtitle "Try again?" (`TypographyTokens.body`, `textSecondary`), "Try Again" button (accentPrimary, filled style) calling `viewModel.retry()`, "Cancel" button (plain style, textSecondary) calling `viewModel.cancel()`. Minimum touch targets: `SpacingTokens.minimumTouchTarget` (44pt).
+  - [x] 3.7: VoiceOver for partial state — on appear announce "Partial recognition. [count] scores confirmed, [count] unresolved. Tap the highlighted names to select the correct player." Unresolved rows: `accessibilityLabel("\(entry.spokenName), unresolved, score \(entry.strokeCount)")`, `accessibilityHint("Double-tap to pick the correct player")`.
+  - [x] 3.8: VoiceOver for failed state — on appear announce "Couldn't understand. Double-tap Try Again to retry, or Cancel to return to scoring."
 
 - [ ] Task 4: Write `VoiceOverlayViewModelTests` additions (AC: 1, 2, 3, 4)
   - [ ] 4.1: Test: `startListening_partialTranscript_setsPartialState` — mock returns "Zork 5 Jake 4" (Zork unknown, Jake known); after listen, state is `.partial` with 1 recognized (Jake 4) and 1 unresolved (spokenName: "Zork", strokeCount: 5)
