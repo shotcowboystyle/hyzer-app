@@ -203,4 +203,16 @@ struct StandingsSnapshotStalenessTests {
         )
         #expect(snapshot.staleDurationText(from: reference) == "2m ago")
     }
+
+    @Test("staleDurationText shows hours for elapsed >= 3600s")
+    func test_staleDurationText_hours() {
+        let reference = Date().addingTimeInterval(10000)
+        let snapshot = StandingsSnapshot(
+            standings: [],
+            roundID: UUID(),
+            currentHole: 1,
+            lastUpdatedAt: reference.addingTimeInterval(-7200)
+        )
+        #expect(snapshot.staleDurationText(from: reference) == "2h ago")
+    }
 }

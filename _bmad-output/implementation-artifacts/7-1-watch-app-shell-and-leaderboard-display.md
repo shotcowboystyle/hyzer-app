@@ -245,7 +245,7 @@ claude-sonnet-4-6
 - `Standing` received `Codable` conformance (additive, no behaviour change) to enable `StandingsSnapshot` serialisation.
 - `StandingsSnapshot.isStale(from:)` and `staleDurationText(from:)` extracted as pure helpers for deterministic unit testing with injectable reference dates.
 - `PhoneConnectivityService.startObservingStandings(_:)` uses recursive `withObservationTracking` — the idiomatic Swift 6 pattern for observing `@Observable` objects without importing Combine.
-- 199 HyzerKit tests pass (up from 183); 16 new tests added across 4 new suites.
+- 200 HyzerKit tests pass (up from 183); 17 new tests added across 4 new suites.
 
 ### File List
 

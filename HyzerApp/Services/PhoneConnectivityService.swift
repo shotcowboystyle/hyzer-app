@@ -92,7 +92,10 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     /// Builds a `StandingsSnapshot` from `engine` and sends it to Watch.
     /// Always writes to `WatchCacheManager`; uses `sendMessage` for instant delivery when reachable.
     func sendStandings(engine: StandingsEngine) {
-        guard let roundID = activeRoundID else { return }
+        guard let roundID = activeRoundID else {
+            logger.debug("sendStandings skipped: activeRoundID not set")
+            return
+        }
         let snapshot = StandingsSnapshot(
             standings: engine.currentStandings,
             roundID: roundID,
@@ -104,7 +107,11 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             logger.error("WatchCacheManager save failed: \(error)")
         }
         let message = WatchMessage.standingsUpdate(snapshot)
-        try? sendMessage(message)
+        do {
+            try sendMessage(message)
+        } catch {
+            logger.debug("sendMessage skipped (watch unreachable): \(error)")
+        }
     }
 
     /// Starts observing `engine.latestChange` and auto-pushes standings on every update.

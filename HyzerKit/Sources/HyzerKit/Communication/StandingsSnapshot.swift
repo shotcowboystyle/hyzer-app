@@ -33,10 +33,11 @@ public struct StandingsSnapshot: Sendable, Codable, Equatable {
         reference.timeIntervalSince(lastUpdatedAt) > StandingsSnapshot.staleThreshold
     }
 
-    /// Human-readable relative time: "30s ago", "2m ago", etc.
+    /// Human-readable relative time: "30s ago", "2m ago", "4h ago", etc.
     public func staleDurationText(from reference: Date = Date()) -> String {
         let elapsed = Int(reference.timeIntervalSince(lastUpdatedAt))
         if elapsed < 60 { return "\(elapsed)s ago" }
-        return "\(elapsed / 60)m ago"
+        if elapsed < 3600 { return "\(elapsed / 60)m ago" }
+        return "\(elapsed / 3600)h ago"
     }
 }

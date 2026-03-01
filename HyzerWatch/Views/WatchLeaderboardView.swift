@@ -25,9 +25,11 @@ struct WatchLeaderboardView: View {
             .navigationTitle("Leaderboard")
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
-                if viewModel.isStale {
-                    WatchStaleIndicatorView(durationText: viewModel.staleDurationText)
-                        .padding(.bottom, SpacingTokens.xs)
+                TimelineView(.periodic(from: .now, by: 5)) { _ in
+                    if viewModel.isStale {
+                        WatchStaleIndicatorView(durationText: viewModel.staleDurationText)
+                            .padding(.bottom, SpacingTokens.xs)
+                    }
                 }
             }
         }

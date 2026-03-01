@@ -31,6 +31,8 @@ public final class WatchCacheManager {
     /// Serialises `snapshot` to the shared app group JSON cache.
     /// - Throws: `EncodingError` or file-system errors on write failure.
     public func save(_ snapshot: StandingsSnapshot) throws {
+        // Safe to continue: nil URL only occurs in unit tests using the test initialiser.
+        // Production builds always resolve a valid app group container URL.
         guard let url = cacheURL else { return }
         let data = try JSONEncoder().encode(snapshot)
         try data.write(to: url, options: .atomic)

@@ -45,7 +45,7 @@ final class WatchConnectivityService: WatchConnectivityClient, WatchStandingsObs
         self.delegate = delegate
 
         // Load offline fallback immediately (before WCSession activates)
-        currentSnapshot = WatchCacheManager().loadLatest()
+        currentSnapshot = cacheManager.loadLatest()
 
         guard WCSession.isSupported() else { return }
         session.delegate = delegate
