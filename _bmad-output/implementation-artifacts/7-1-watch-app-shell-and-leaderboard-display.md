@@ -1,6 +1,6 @@
 # Story 7.1: Watch App Shell & Leaderboard Display
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,58 +20,58 @@ so that I can track the competition without pulling out my phone.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `WatchConnectivityClient` protocol in HyzerKit (AC: 2, 4)
-  - [ ] 1.1 Define `WatchConnectivityClient` protocol in `HyzerKit/Sources/HyzerKit/Communication/WatchConnectivityClient.swift`
-  - [ ] 1.2 Define `WatchMessage` enum (Sendable, Codable) with `.standingsUpdate(StandingsSnapshot)` and `.scoreEvent(WatchScorePayload)` cases in `HyzerKit/Sources/HyzerKit/Communication/WatchMessage.swift`
-  - [ ] 1.3 Define `StandingsSnapshot` struct (Sendable, Codable, Equatable) containing `[Standing]` data + `roundID` + `currentHole` + `lastUpdatedAt: Date` in `HyzerKit/Sources/HyzerKit/Communication/StandingsSnapshot.swift`
-  - [ ] 1.4 Write unit tests for `WatchMessage` encoding/decoding roundtrip and `StandingsSnapshot` serialization
+- [x] Task 1: Create `WatchConnectivityClient` protocol in HyzerKit (AC: 2, 4)
+  - [x] 1.1 Define `WatchConnectivityClient` protocol in `HyzerKit/Sources/HyzerKit/Communication/WatchConnectivityClient.swift`
+  - [x] 1.2 Define `WatchMessage` enum (Sendable, Codable) with `.standingsUpdate(StandingsSnapshot)` and `.scoreEvent(WatchScorePayload)` cases in `HyzerKit/Sources/HyzerKit/Communication/WatchMessage.swift`
+  - [x] 1.3 Define `StandingsSnapshot` struct (Sendable, Codable, Equatable) containing `[Standing]` data + `roundID` + `currentHole` + `lastUpdatedAt: Date` in `HyzerKit/Sources/HyzerKit/Communication/StandingsSnapshot.swift`
+  - [x] 1.4 Write unit tests for `WatchMessage` encoding/decoding roundtrip and `StandingsSnapshot` serialization
 
-- [ ] Task 2: Create `WatchCacheManager` for app group JSON persistence (AC: 3, 4)
-  - [ ] 2.1 Implement `WatchCacheManager` in `HyzerKit/Sources/HyzerKit/Communication/WatchCacheManager.swift` with `save(_ snapshot: StandingsSnapshot)` and `loadLatest() -> StandingsSnapshot?`
-  - [ ] 2.2 Use `FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.shotcowboystyle.hyzerapp")` for storage path
-  - [ ] 2.3 Write unit tests for save/load roundtrip, missing file returns nil, corrupted file returns nil
+- [x] Task 2: Create `WatchCacheManager` for app group JSON persistence (AC: 3, 4)
+  - [x] 2.1 Implement `WatchCacheManager` in `HyzerKit/Sources/HyzerKit/Communication/WatchCacheManager.swift` with `save(_ snapshot: StandingsSnapshot)` and `loadLatest() -> StandingsSnapshot?`
+  - [x] 2.2 Use `FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.shotcowboystyle.hyzerapp")` for storage path
+  - [x] 2.3 Write unit tests for save/load roundtrip, missing file returns nil, corrupted file returns nil
 
-- [ ] Task 3: Implement `PhoneConnectivityService` on iOS side (AC: 2, 4)
-  - [ ] 3.1 Create `PhoneConnectivityService` in `HyzerApp/Services/PhoneConnectivityService.swift` conforming to `WCSessionDelegate`
-  - [ ] 3.2 Implement `sendStandings(_ snapshot: StandingsSnapshot)` — use `sendMessage` when reachable, write to `WatchCacheManager` always
-  - [ ] 3.3 Handle incoming `WatchMessage` from Watch (score events — wire to `ScoringService` in story 7.2)
-  - [ ] 3.4 Expose `isWatchReachable: Bool` as observable state
-  - [ ] 3.5 Wire `StandingsEngine` observation to auto-push standings on every `StandingsChange`
-  - [ ] 3.6 Register `PhoneConnectivityService` in `AppServices.swift`
+- [x] Task 3: Implement `PhoneConnectivityService` on iOS side (AC: 2, 4)
+  - [x] 3.1 Create `PhoneConnectivityService` in `HyzerApp/Services/PhoneConnectivityService.swift` conforming to `WCSessionDelegate`
+  - [x] 3.2 Implement `sendStandings(_ snapshot: StandingsSnapshot)` — use `sendMessage` when reachable, write to `WatchCacheManager` always
+  - [x] 3.3 Handle incoming `WatchMessage` from Watch (score events — wire to `ScoringService` in story 7.2)
+  - [x] 3.4 Expose `isWatchReachable: Bool` as observable state
+  - [x] 3.5 Wire `StandingsEngine` observation to auto-push standings on every `StandingsChange`
+  - [x] 3.6 Register `PhoneConnectivityService` in `AppServices.swift`
 
-- [ ] Task 4: Implement `WatchConnectivityService` on watchOS side (AC: 1, 2, 3)
-  - [ ] 4.1 Create `WatchConnectivityService` in `HyzerWatch/Services/WatchConnectivityService.swift` conforming to `WCSessionDelegate`
-  - [ ] 4.2 Implement received message handler: decode `WatchMessage`, update `currentSnapshot: StandingsSnapshot?`
-  - [ ] 4.3 On receive, also persist to `WatchCacheManager` for offline fallback
-  - [ ] 4.4 On launch, load last snapshot from `WatchCacheManager` if no live data
-  - [ ] 4.5 Expose `isPhoneReachable: Bool` and `lastUpdatedAt: Date?` as observable state
+- [x] Task 4: Implement `WatchConnectivityService` on watchOS side (AC: 1, 2, 3)
+  - [x] 4.1 Create `WatchConnectivityService` in `HyzerWatch/Services/WatchConnectivityService.swift` conforming to `WCSessionDelegate`
+  - [x] 4.2 Implement received message handler: decode `WatchMessage`, update `currentSnapshot: StandingsSnapshot?`
+  - [x] 4.3 On receive, also persist to `WatchCacheManager` for offline fallback
+  - [x] 4.4 On launch, load last snapshot from `WatchCacheManager` if no live data
+  - [x] 4.5 Expose `isPhoneReachable: Bool` and `lastUpdatedAt: Date?` as observable state
 
-- [ ] Task 5: Build `WatchLeaderboardView` and `WatchLeaderboardViewModel` (AC: 1, 2, 3)
-  - [ ] 5.1 Create `WatchLeaderboardViewModel` in `HyzerWatch/ViewModels/WatchLeaderboardViewModel.swift` — `@MainActor @Observable final class`, receives `WatchConnectivityService`
-  - [ ] 5.2 Expose `standings: [Standing]`, `isStale: Bool`, `staleDurationText: String`, `isConnected: Bool`
-  - [ ] 5.3 Compute `isStale` when `lastUpdatedAt` exceeds 30 seconds from now
-  - [ ] 5.4 Create `WatchLeaderboardView` in `HyzerWatch/Views/WatchLeaderboardView.swift` — `List`-based layout with full-width rows
-  - [ ] 5.5 Each row: position number + player name + score relative to par (color-coded: green under, amber over, white at par)
-  - [ ] 5.6 Use design tokens: `ColorTokens` for score colors, `TypographyTokens` for text hierarchy, `SpacingTokens` for padding
-  - [ ] 5.7 Animate standings reshuffles with `AnimationTokens.leaderboardReshuffleDuration` via `AnimationCoordinator`
+- [x] Task 5: Build `WatchLeaderboardView` and `WatchLeaderboardViewModel` (AC: 1, 2, 3)
+  - [x] 5.1 Create `WatchLeaderboardViewModel` in `HyzerKit/Sources/HyzerKit/Communication/WatchLeaderboardViewModel.swift` — `@MainActor @Observable final class`, takes `WatchStandingsObservable` protocol
+  - [x] 5.2 Expose `standings: [Standing]`, `isStale: Bool`, `staleDurationText: String`, `isConnected: Bool`
+  - [x] 5.3 Compute `isStale` when `lastUpdatedAt` exceeds 30 seconds from now
+  - [x] 5.4 Create `WatchLeaderboardView` in `HyzerWatch/Views/WatchLeaderboardView.swift` — `List`-based layout with full-width rows
+  - [x] 5.5 Each row: position number + player name + score relative to par (color-coded: green under, amber over, white at par)
+  - [x] 5.6 Use design tokens: `ColorTokens` for score colors, `TypographyTokens` for text hierarchy, `SpacingTokens` for padding
+  - [x] 5.7 Animate standings reshuffles with `AnimationTokens.leaderboardReshuffleDuration` via `AnimationCoordinator`
 
-- [ ] Task 6: Build `WatchStaleIndicatorView` (AC: 3)
-  - [ ] 6.1 Create `WatchStaleIndicatorView` in `HyzerWatch/Views/WatchStaleIndicatorView.swift`
-  - [ ] 6.2 Show relative time ("30s ago", "2m ago", "5m ago") when snapshot is stale
-  - [ ] 6.3 Use `ColorTokens.warning` for stale indicator color
-  - [ ] 6.4 Use `TypographyTokens.caption` for indicator text size
+- [x] Task 6: Build `WatchStaleIndicatorView` (AC: 3)
+  - [x] 6.1 Create `WatchStaleIndicatorView` in `HyzerWatch/Views/WatchStaleIndicatorView.swift`
+  - [x] 6.2 Show relative time ("30s ago", "2m ago", "5m ago") when snapshot is stale
+  - [x] 6.3 Use `ColorTokens.warning` for stale indicator color
+  - [x] 6.4 Use `TypographyTokens.caption` for indicator text size
 
-- [ ] Task 7: Wire Watch app entry point (AC: 1)
-  - [ ] 7.1 Update `HyzerWatchApp.swift` to create `WatchConnectivityService` and inject into views
-  - [ ] 7.2 Replace placeholder `WatchRootView` with `WatchLeaderboardView`
-  - [ ] 7.3 Activate `WCSession` on app launch
+- [x] Task 7: Wire Watch app entry point (AC: 1)
+  - [x] 7.1 Update `HyzerWatchApp.swift` to create `WatchConnectivityService` and inject into views
+  - [x] 7.2 Replace placeholder `WatchRootView` with `WatchLeaderboardView`
+  - [x] 7.3 Activate `WCSession` on app launch
 
-- [ ] Task 8: Write tests (AC: 1, 2, 3, 4)
-  - [ ] 8.1 `WatchMessage` encode/decode tests in HyzerKitTests
-  - [ ] 8.2 `StandingsSnapshot` serialization tests in HyzerKitTests
-  - [ ] 8.3 `WatchCacheManager` save/load/missing/corrupt tests in HyzerKitTests
-  - [ ] 8.4 `WatchLeaderboardViewModel` tests — standings mapping, stale detection, stale text formatting
-  - [ ] 8.5 `WatchLeaderboardViewModel` tests — snapshot update triggers view state change
+- [x] Task 8: Write tests (AC: 1, 2, 3, 4)
+  - [x] 8.1 `WatchMessage` encode/decode tests in HyzerKitTests
+  - [x] 8.2 `StandingsSnapshot` serialization tests in HyzerKitTests
+  - [x] 8.3 `WatchCacheManager` save/load/missing/corrupt tests in HyzerKitTests
+  - [x] 8.4 `WatchLeaderboardViewModel` tests — standings mapping, stale detection, stale text formatting
+  - [x] 8.5 `WatchLeaderboardViewModel` tests — snapshot update triggers view state change
 
 ## Dev Notes
 
@@ -230,8 +230,45 @@ The `WCSessionDelegate` requires implementing:
 
 ### Agent Model Used
 
+claude-sonnet-4-6
+
 ### Debug Log References
+
+- Build verified with `swift build --package-path HyzerKit` (0 errors, 0 warnings)
+- Full Xcode build verified: `xcodebuild -scheme HyzerApp ... BUILD SUCCEEDED`
+- SwiftLint: 0 errors, 0 warnings
 
 ### Completion Notes List
 
+- `WatchLeaderboardViewModel` placed in HyzerKit (not HyzerWatch) to enable macOS-hosted unit tests without importing WatchConnectivity — `WatchStandingsObservable` protocol decouples VM from concrete service.
+- `WatchConnectivityClient` protocol and concrete services use separate NSObject `SessionDelegate` adapter classes because `@Observable` macro does not support NSObject subclasses.
+- `Standing` received `Codable` conformance (additive, no behaviour change) to enable `StandingsSnapshot` serialisation.
+- `StandingsSnapshot.isStale(from:)` and `staleDurationText(from:)` extracted as pure helpers for deterministic unit testing with injectable reference dates.
+- `PhoneConnectivityService.startObservingStandings(_:)` uses recursive `withObservationTracking` — the idiomatic Swift 6 pattern for observing `@Observable` objects without importing Combine.
+- 199 HyzerKit tests pass (up from 183); 16 new tests added across 4 new suites.
+
 ### File List
+
+**New files:**
+- `HyzerKit/Sources/HyzerKit/Communication/WatchConnectivityClient.swift`
+- `HyzerKit/Sources/HyzerKit/Communication/WatchMessage.swift`
+- `HyzerKit/Sources/HyzerKit/Communication/StandingsSnapshot.swift`
+- `HyzerKit/Sources/HyzerKit/Communication/WatchCacheManager.swift`
+- `HyzerKit/Sources/HyzerKit/Communication/WatchStandingsObservable.swift`
+- `HyzerKit/Sources/HyzerKit/Communication/WatchLeaderboardViewModel.swift`
+- `HyzerKit/Tests/HyzerKitTests/Communication/WatchMessageTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/Communication/WatchCacheManagerTests.swift`
+- `HyzerKit/Tests/HyzerKitTests/Communication/WatchLeaderboardViewModelTests.swift`
+- `HyzerApp/Services/PhoneConnectivityService.swift`
+- `HyzerWatch/Services/WatchConnectivityService.swift`
+- `HyzerWatch/Views/WatchLeaderboardView.swift`
+- `HyzerWatch/Views/WatchStaleIndicatorView.swift`
+
+**Modified files:**
+- `HyzerKit/Sources/HyzerKit/Domain/Standing.swift` — added `Codable` conformance
+- `HyzerApp/App/AppServices.swift` — registered `PhoneConnectivityService`, wired observation in `startSync()`
+- `HyzerWatch/App/HyzerWatchApp.swift` — replaced placeholder with `WatchLeaderboardView`
+- `HyzerApp.xcodeproj` — regenerated via XcodeGen to pick up new files
+
+**Deleted files:**
+- `HyzerWatch/Views/WatchRootView.swift` — replaced by `WatchLeaderboardView`
