@@ -69,7 +69,9 @@ final class AppServices {
     /// Fetches the local player's UUID from SwiftData for use as `reportedByPlayerID`.
     /// Returns `nil` on first launch before onboarding creates a Player record.
     private static func resolveLocalPlayerID(from context: ModelContext) -> UUID? {
-        let players = try? context.fetch(FetchDescriptor<Player>())
+        var descriptor = FetchDescriptor<Player>()
+        descriptor.fetchLimit = 1
+        let players = try? context.fetch(descriptor)
         return players?.first?.id
     }
 

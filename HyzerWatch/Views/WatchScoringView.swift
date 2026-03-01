@@ -1,4 +1,5 @@
 import SwiftUI
+import WatchKit
 import HyzerKit
 
 /// Crown-driven score entry screen for watchOS.
@@ -33,7 +34,7 @@ struct WatchScoringView: View {
         .digitalCrownRotation(
             $crownValue,
             from: 1.0,
-            through: 15.0,
+            through: 10.0,
             by: 1.0,
             sensitivity: .medium,
             isContinuous: false,
@@ -78,6 +79,7 @@ struct WatchScoringView: View {
 
     private var confirmButton: some View {
         Button {
+            WKInterfaceDevice.current().play(.success)
             viewModel.confirmScore()
         } label: {
             Text("Confirm")

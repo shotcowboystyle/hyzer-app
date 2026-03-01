@@ -18,10 +18,10 @@ public final class WatchScoringViewModel {
     public let holeNumber: Int
     public let parValue: Int
 
-    /// The currently selected stroke count. Clamped to 1...15 on set.
+    /// The currently selected stroke count. Clamped to 1...10 on set.
     public var currentScore: Int {
         get { _rawScore }
-        set { _rawScore = min(15, max(1, newValue)) }
+        set { _rawScore = min(10, max(1, newValue)) }
     }
 
     /// True after `confirmScore()` is called — triggers view dismissal.

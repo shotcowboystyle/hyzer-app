@@ -117,11 +117,11 @@ struct WatchScoringViewModelTests {
         #expect(vm.currentScore == 1)
     }
 
-    @Test("score clamped to maximum 15")
+    @Test("score clamped to maximum 10")
     func test_scoreClamped_maximum() {
         let (vm, _) = makeVM(parValue: 3)
-        vm.currentScore = 16
-        #expect(vm.currentScore == 15)
+        vm.currentScore = 11
+        #expect(vm.currentScore == 10)
     }
 
     @Test("score within range is not clamped")

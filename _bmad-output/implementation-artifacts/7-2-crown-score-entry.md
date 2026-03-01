@@ -35,7 +35,7 @@ so that I can score from my wrist without touching the screen.
   - [x] 2.4 Expose computed `scoreColor: Color` using `Standing.scoreColorForRelative(currentScore - parValue)` or inline logic matching `Standing+Formatting` pattern
   - [x] 2.5 Expose computed `formattedScoreRelativeToPar: String` (e.g., "-1", "E", "+2")
   - [x] 2.6 Implement `confirmScore()` — builds `WatchScorePayload` and calls `connectivityClient.transferUserInfo(.scoreEvent(payload))`, sets `isConfirmed = true`
-  - [x] 2.7 Score bounds: clamp `currentScore` to 1...15 range (1 = ace, 15 = extreme high)
+  - [x] 2.7 Score bounds: clamp `currentScore` to 1...10 range (1 = ace, 10 = max per `ScoringService` domain constraint)
 
 - [x] Task 3: Create `WatchScoringView` on watchOS (AC: 1, 2, 3, 4)
   - [x] 3.1 Create `WatchScoringView` in `HyzerWatch/Views/WatchScoringView.swift`

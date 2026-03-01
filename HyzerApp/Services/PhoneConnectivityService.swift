@@ -93,6 +93,8 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             let data = try JSONEncoder().encode(message)
             session.transferUserInfo(["payload": data])
         } catch {
+            // Safe to continue: WatchMessage is a known Codable enum — encoding only fails
+            // if Foundation's JSONEncoder has a runtime bug. Protocol is non-throwing by design.
             logger.error("transferUserInfo encoding failed: \(error)")
         }
     }
@@ -135,8 +137,11 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     // MARK: - Incoming message handling
 
     private func handleIncomingData(_ data: Data) {
-        guard let message = try? JSONDecoder().decode(WatchMessage.self, from: data) else {
-            logger.error("Failed to decode incoming WatchMessage")
+        let message: WatchMessage
+        do {
+            message = try JSONDecoder().decode(WatchMessage.self, from: data)
+        } catch {
+            logger.error("Failed to decode incoming WatchMessage: \(error)")
             return
         }
         switch message {
