@@ -47,15 +47,15 @@ so that I can still score efficiently without starting over.
   - [x] 3.7: VoiceOver for partial state — on appear announce "Partial recognition. [count] scores confirmed, [count] unresolved. Tap the highlighted names to select the correct player." Unresolved rows: `accessibilityLabel("\(entry.spokenName), unresolved, score \(entry.strokeCount)")`, `accessibilityHint("Double-tap to pick the correct player")`.
   - [x] 3.8: VoiceOver for failed state — on appear announce "Couldn't understand. Double-tap Try Again to retry, or Cancel to return to scoring."
 
-- [ ] Task 4: Write `VoiceOverlayViewModelTests` additions (AC: 1, 2, 3, 4)
-  - [ ] 4.1: Test: `startListening_partialTranscript_setsPartialState` — mock returns "Zork 5 Jake 4" (Zork unknown, Jake known); after listen, state is `.partial` with 1 recognized (Jake 4) and 1 unresolved (spokenName: "Zork", strokeCount: 5)
-  - [ ] 4.2: Test: `resolveUnresolved_lastEntry_transitionsToConfirming` — from `.partial` with 1 unresolved, call `resolveUnresolved(at: 0, player: sarahEntry)`; state becomes `.confirming` with combined candidates; `timerResetCount` incremented
-  - [ ] 4.3: Test: `resolveUnresolved_notLast_remainsPartial` — from `.partial` with 2 unresolved, resolve index 0; state stays `.partial` with 1 remaining unresolved
-  - [ ] 4.4: Test: `resolveUnresolved_retainsStrokeCountFromParser` — resolved `ScoreCandidate.strokeCount` equals the `UnresolvedCandidate.strokeCount` (not 0 or par)
-  - [ ] 4.5: Test: `startListening_failedTranscript_setsFailedState` — mock returns "blah blah blah" (no players match); state is `.failed(transcript:)` and `isTerminated == false`
-  - [ ] 4.6: Test: `retry_fromFailedState_resetsToListeningAndRecognizes` — after `.failed`, call `retry()`; `mock.recognizeCallCount == 2`; state eventually `.confirming` on second attempt
-  - [ ] 4.7: Test: `cancel_fromPartialState_createsNoScoreEvents` — from `.partial` state, call `cancel()`; state is `.dismissed`, no ScoreEvents in context, `isTerminated == true`
-  - [ ] 4.8: Test: `cancel_fromFailedState_createsNoScoreEvents` — from `.failed` state, call `cancel()`; state is `.dismissed`, no ScoreEvents
+- [x] Task 4: Write `VoiceOverlayViewModelTests` additions (AC: 1, 2, 3, 4)
+  - [x] 4.1: Test: `startListening_partialTranscript_setsPartialState` — mock returns "Zork 5 Jake 4" (Zork unknown, Jake known); after listen, state is `.partial` with 1 recognized (Jake 4) and 1 unresolved (spokenName: "Zork", strokeCount: 5)
+  - [x] 4.2: Test: `resolveUnresolved_lastEntry_transitionsToConfirming` — from `.partial` with 1 unresolved, call `resolveUnresolved(at: 0, player: sarahEntry)`; state becomes `.confirming` with combined candidates; `timerResetCount` incremented
+  - [x] 4.3: Test: `resolveUnresolved_notLast_remainsPartial` — from `.partial` with 2 unresolved, resolve index 0; state stays `.partial` with 1 remaining unresolved
+  - [x] 4.4: Test: `resolveUnresolved_retainsStrokeCountFromParser` — resolved `ScoreCandidate.strokeCount` equals the `UnresolvedCandidate.strokeCount` (not 0 or par)
+  - [x] 4.5: Test: `startListening_failedTranscript_setsFailedState` — mock returns "blah blah blah" (no players match); state is `.failed(transcript:)` and `isTerminated == false`
+  - [x] 4.6: Test: `retry_fromFailedState_resetsToListeningAndRecognizes` — after `.failed`, call `retry()`; `mock.recognizeCallCount == 2`; state eventually `.confirming` on second attempt
+  - [x] 4.7: Test: `cancel_fromPartialState_createsNoScoreEvents` — from `.partial` state, call `cancel()`; state is `.dismissed`, no ScoreEvents in context, `isTerminated == true`
+  - [x] 4.8: Test: `cancel_fromFailedState_createsNoScoreEvents` — from `.failed` state, call `cancel()`; state is `.dismissed`, no ScoreEvents
 
 ## Dev Notes
 

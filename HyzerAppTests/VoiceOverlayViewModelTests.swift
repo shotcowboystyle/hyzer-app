@@ -247,6 +247,249 @@ struct VoiceOverlayViewModelTests {
         #expect(fetched.count == 2)
     }
 
+    // MARK: - 5.3: partial transcript sets .partial state
+
+    @Test("startListening_partialTranscript_setsPartialState")
+    func test_startListening_partialTranscript_setsPartialState() async throws {
+        // Given: "Zork" is unknown, "Jake" is known
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Zork 5 Jake 4"
+        let (_, context) = try makeContext()
+        let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
+
+        // When
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Then
+        if case .partial(let recognized, let unresolved) = vm.state {
+            #expect(recognized.count == 1)
+            #expect(recognized[0].displayName == "Jake")
+            #expect(recognized[0].strokeCount == 4)
+            #expect(unresolved.count == 1)
+            #expect(unresolved[0].spokenName == "Zork")
+            #expect(unresolved[0].strokeCount == 5)
+        } else {
+            Issue.record("Expected .partial state, got \(vm.state)")
+        }
+        #expect(vm.isTerminated == false)
+    }
+
+    // MARK: - 5.3: resolveUnresolved last entry transitions to .confirming
+
+    @Test("resolveUnresolved_lastEntry_transitionsToConfirming")
+    func test_resolveUnresolved_lastEntry_transitionsToConfirming() async throws {
+        // Given: partial state with 1 unresolved
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Zork 5 Jake 4"
+        let (_, context) = try makeContext()
+        let players = samplePlayers()
+        let (vm, _) = makeVM(mock: mock, context: context, players: players)
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .partial = vm.state else {
+            Issue.record("Setup: expected .partial state")
+            return
+        }
+
+        let sarahEntry = players.first { $0.displayName == "Sarah" }!
+        let timerCountBefore = vm.timerResetCount
+
+        // When
+        vm.resolveUnresolved(at: 0, player: sarahEntry)
+
+        // Then
+        if case .confirming(let candidates) = vm.state {
+            #expect(candidates.count == 2)
+            let byName = Dictionary(uniqueKeysWithValues: candidates.map { ($0.displayName, $0) })
+            #expect(byName["Jake"]?.strokeCount == 4)
+            #expect(byName["Sarah"]?.strokeCount == 5)
+        } else {
+            Issue.record("Expected .confirming state after resolving last unresolved, got \(vm.state)")
+        }
+        #expect(vm.timerResetCount > timerCountBefore)
+    }
+
+    // MARK: - 5.3: resolveUnresolved non-last entry stays .partial
+
+    @Test("resolveUnresolved_notLast_remainsPartial")
+    func test_resolveUnresolved_notLast_remainsPartial() async throws {
+        // Given: partial state with 2 unresolved (Zork + Ghost, Jake known)
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Zork 5 Ghost 3 Jake 4"
+        let (_, context) = try makeContext()
+        let players = samplePlayers()
+        let (vm, _) = makeVM(mock: mock, context: context, players: players)
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .partial(_, let unresolved) = vm.state, unresolved.count == 2 else {
+            Issue.record("Setup: expected .partial state with 2 unresolved")
+            return
+        }
+
+        let sarahEntry = players.first { $0.displayName == "Sarah" }!
+
+        // When: resolve only index 0 (still 1 unresolved remaining)
+        vm.resolveUnresolved(at: 0, player: sarahEntry)
+
+        // Then: stays .partial with 1 remaining
+        if case .partial(let recognized, let remaining) = vm.state {
+            #expect(remaining.count == 1)
+            _ = recognized // recognized count increases
+        } else {
+            Issue.record("Expected .partial state with 1 remaining, got \(vm.state)")
+        }
+    }
+
+    // MARK: - 5.3: resolveUnresolved retains stroke count from parser
+
+    @Test("resolveUnresolved_retainsStrokeCountFromParser")
+    func test_resolveUnresolved_retainsStrokeCountFromParser() async throws {
+        // Given: "Zork 7 Jake 4" — Zork unresolved with stroke count 7, Jake recognized
+        // The stroke count 7 must be retained when resolving Zork to a known player.
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Zork 7 Jake 4"
+        let (_, context) = try makeContext()
+        let players = samplePlayers()
+        let (vm, _) = makeVM(mock: mock, context: context, players: players)
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .partial(_, let unresolved) = vm.state, !unresolved.isEmpty else {
+            Issue.record("Setup: expected .partial state with unresolved entries, got \(vm.state)")
+            return
+        }
+        #expect(unresolved[0].strokeCount == 7)
+
+        let mikeEntry = players.first { $0.displayName == "Mike" }!
+
+        // When
+        vm.resolveUnresolved(at: 0, player: mikeEntry)
+
+        // Then: the resolved ScoreCandidate must keep stroke count 7 (not 0 or par)
+        if case .confirming(let candidates) = vm.state {
+            let mike = candidates.first { $0.displayName == "Mike" }
+            #expect(mike?.strokeCount == 7)
+        } else {
+            Issue.record("Expected .confirming state after resolution, got \(vm.state)")
+        }
+    }
+
+    // MARK: - 5.3: failed transcript sets .failed state, isTerminated stays false
+
+    @Test("startListening_failedTranscript_setsFailedState")
+    func test_startListening_failedTranscript_setsFailedState() async throws {
+        // Given: "blah blah blah" matches no players
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "blah blah blah"
+        let (_, context) = try makeContext()
+        let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
+
+        // When
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Then: .failed state and NOT terminated (retry must be available)
+        if case .failed = vm.state { } else {
+            Issue.record("Expected .failed state, got \(vm.state)")
+        }
+        #expect(vm.isTerminated == false)
+    }
+
+    // MARK: - 5.3: retry from failed state resets and recognizes again
+
+    @Test("retry_fromFailedState_resetsToListeningAndRecognizes")
+    func test_retry_fromFailedState_resetsToListeningAndRecognizes() async throws {
+        // Given: first attempt fails, second succeeds
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "blah blah blah"
+        let (_, context) = try makeContext()
+        let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .failed = vm.state else {
+            Issue.record("Setup: expected .failed state")
+            return
+        }
+
+        // Reconfigure mock so second attempt succeeds
+        mock.transcriptToReturn = "Jake 4"
+
+        // When
+        vm.retry()
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Then: recognizeCallCount is 2 and state is .confirming
+        #expect(mock.recognizeCallCount == 2)
+        if case .confirming(let candidates) = vm.state {
+            #expect(candidates.count == 1)
+            #expect(candidates[0].displayName == "Jake")
+        } else {
+            Issue.record("Expected .confirming state after retry, got \(vm.state)")
+        }
+    }
+
+    // MARK: - 5.3: cancel from .partial creates no ScoreEvents
+
+    @Test("cancel_fromPartialState_createsNoScoreEvents")
+    func test_cancel_fromPartialState_createsNoScoreEvents() async throws {
+        // Given
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Zork 5 Jake 4"
+        let (_, context) = try makeContext()
+        let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .partial = vm.state else {
+            Issue.record("Setup: expected .partial state")
+            return
+        }
+
+        // When
+        vm.cancel()
+
+        // Then
+        if case .dismissed = vm.state { } else {
+            Issue.record("Expected .dismissed state, got \(vm.state)")
+        }
+        #expect(vm.isTerminated == true)
+        let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
+        #expect(fetched.isEmpty)
+    }
+
+    // MARK: - 5.3: cancel from .failed creates no ScoreEvents
+
+    @Test("cancel_fromFailedState_createsNoScoreEvents")
+    func test_cancel_fromFailedState_createsNoScoreEvents() async throws {
+        // Given
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "blah blah blah"
+        let (_, context) = try makeContext()
+        let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .failed = vm.state else {
+            Issue.record("Setup: expected .failed state")
+            return
+        }
+
+        // When
+        vm.cancel()
+
+        // Then
+        if case .dismissed = vm.state { } else {
+            Issue.record("Expected .dismissed state, got \(vm.state)")
+        }
+        #expect(vm.isTerminated == true)
+        let fetched = try context.fetch(FetchDescriptor<ScoreEvent>())
+        #expect(fetched.isEmpty)
+    }
+
     // MARK: - 6.9: recognition error → .error state
 
     @Test("startListening_recognitionError_setsErrorState")
