@@ -1,6 +1,6 @@
 # Story 6.1: Discrepancy Alert & Resolution Flow
 
-Status: review
+Status: done
 
 ## Story
 
