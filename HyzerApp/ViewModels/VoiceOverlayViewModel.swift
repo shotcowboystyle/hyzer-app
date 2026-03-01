@@ -56,6 +56,14 @@ final class VoiceOverlayViewModel {
     /// All players in the round, exposed for the unresolved-entry picker.
     private(set) var availablePlayers: [VoicePlayerEntry]
 
+    /// Players eligible for the unresolved-entry picker — excludes players already
+    /// in the recognized list to prevent duplicate ScoreEvent creation.
+    var pickablePlayers: [VoicePlayerEntry] {
+        guard case .partial(let recognized, _) = state else { return availablePlayers }
+        let resolvedIDs = Set(recognized.map(\.playerID))
+        return availablePlayers.filter { !resolvedIDs.contains($0.playerID) }
+    }
+
     // MARK: - Timer
 
     // nonisolated(unsafe): allows deinit to call cancel() without a main-actor hop.

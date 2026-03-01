@@ -16,7 +16,7 @@ public struct ScoreCandidate: Sendable, Equatable {
 /// A player name that was heard but could not be matched to a known player.
 /// Carries the stroke count paired with the spoken name so the user only needs
 /// to resolve the identity — the stroke count is retained on resolution.
-public struct UnresolvedCandidate: Sendable {
+public struct UnresolvedCandidate: Sendable, Equatable {
     public let spokenName: String
     public let strokeCount: Int
 

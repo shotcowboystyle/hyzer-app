@@ -269,12 +269,39 @@ claude-sonnet-4-6
 - Task 2: Extended `VoiceOverlayViewModel.State` with `.partial` and `.failed` cases. Updated `startListening()` to route `.partial` → `.partial` state (no timer) and `.failed` → `.failed` state (isTerminated stays false). Added `availablePlayers` stored property. Added `resolveUnresolved(at:player:)` which transitions to `.confirming` + starts timer when last entry resolved. Added `retry()` which cancels timer and restarts listening.
 - Task 3: Updated `VoiceOverlayView.body` switch with `.partial` and `.failed` cases. Implemented `partialView` (resolved rows + unresolved rows with "?" and amber tint, no progress bar, Cancel button). Implemented `unresolvedRow` (dimmed name, "?" score, amber background, sheet trigger). Implemented player picker via `sheet(item:)` with `IdentifiableIndex` wrapper and `PlayerPickerSheet` inner view. Implemented `failedView` ("Couldn't understand" / "Try again?" / Try Again + Cancel buttons with 44pt min touch targets). Added VoiceOver announcements for both states.
 - Task 4: Added 8 new tests to `VoiceOverlayViewModelTests.swift` covering partial state detection, resolution flows (last/not-last), stroke count retention, failed state detection, retry flow, and cancel from both states. Fixed test `resolveUnresolved_retainsStrokeCountFromParser` to use "Zork 7 Jake 4" (needs ≥1 recognized player for .partial). Pre-existing flaky test `autoCommitTimer_firesAfterDelay_commitsScores` (from Story 5.2) is timing-sensitive — confirmed pre-existing, not introduced by this story.
+- Code Review Fixes: (1) Added `Equatable` to `UnresolvedCandidate`. (2) Made recognized player rows non-interactive in partial view (added `interactive` param to `playerScoreRow`). (3) Added `pickablePlayers` computed property to filter already-recognized players from picker. (4) Added "Partial recognition" header to `partialView`. (5) Added `pickablePlayers_excludesAlreadyRecognizedPlayers` test. All 166 HyzerKit + 107 HyzerApp tests pass.
 
 ### File List
 
-- `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — added `UnresolvedCandidate` struct, updated `.partial` associated value
+- `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — added `UnresolvedCandidate` struct (Sendable + Equatable), updated `.partial` associated value
 - `HyzerKit/Sources/HyzerKit/Voice/VoiceParser.swift` — updated `parse()` unresolved branch to use `UnresolvedCandidate`
 - `HyzerKit/Tests/HyzerKitTests/Voice/VoiceParserTests.swift` — updated `.partial` pattern match assertions
-- `HyzerApp/ViewModels/VoiceOverlayViewModel.swift` — added `.partial`/`.failed` state cases, `availablePlayers` property, `resolveUnresolved(at:player:)`, `retry()`
-- `HyzerApp/Views/Scoring/VoiceOverlayView.swift` — added `.partial`/`.failed` cases to body switch, `partialView`, `unresolvedRow`, `failedView`, `PlayerPickerSheet`, `IdentifiableIndex`, VoiceOver announce helpers
-- `HyzerAppTests/VoiceOverlayViewModelTests.swift` — added 8 new tests (AC 1–4 coverage)
+- `HyzerApp/ViewModels/VoiceOverlayViewModel.swift` — added `.partial`/`.failed` state cases, `availablePlayers` property, `pickablePlayers` computed property, `resolveUnresolved(at:player:)`, `retry()`
+- `HyzerApp/Views/Scoring/VoiceOverlayView.swift` — added `.partial`/`.failed` cases to body switch, `partialView` (with header, non-interactive recognized rows, pickablePlayers filter), `unresolvedRow`, `failedView`, `PlayerPickerSheet`, `IdentifiableIndex`, VoiceOver announce helpers
+- `HyzerAppTests/VoiceOverlayViewModelTests.swift` — added 9 new tests (AC 1–4 coverage + pickablePlayers filter)
+
+## Code Review Record
+
+### Reviewer
+
+claude-opus-4-6 (adversarial review via BMAD workflow)
+
+### Date
+
+2026-02-28
+
+### Findings and Fixes
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| 1 | HIGH | `playerScoreRow` tap in `.partial` view sets stale `correctionIndex`; `correctScore()` silently no-ops in `.partial` state | Added `interactive` parameter to `playerScoreRow`; partial view passes `interactive: false` |
+| 2 | HIGH | `UnresolvedCandidate` missing `Equatable` conformance (asymmetry with `ScoreCandidate`) | Added `Equatable` conformance |
+| 3 | MEDIUM | Player picker shows all players including already-recognized ones, allowing duplicate ScoreEvent creation | Added `pickablePlayers` computed property filtering recognized IDs; sheet uses it |
+| 4 | MEDIUM | No test for duplicate-player filtering | Added `pickablePlayers_excludesAlreadyRecognizedPlayers` test |
+| 5 | MEDIUM | `partialView` missing header label (inconsistent with `confirmingView`) | Added "Partial recognition" caption header |
+
+### Deferred (LOW, not fixed)
+
+- `VoicePlayerEntry` missing `Equatable` (consistency improvement, no functional impact)
+- `PlayerPickerSheet` missing toolbar dismiss button (swipe-to-dismiss works, VoiceOver improvement)
+- `retry()` missing `.failed` state guard (only called from `failedView`, no current misuse risk)

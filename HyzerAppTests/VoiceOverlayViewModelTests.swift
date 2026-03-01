@@ -490,6 +490,31 @@ struct VoiceOverlayViewModelTests {
         #expect(fetched.isEmpty)
     }
 
+    // MARK: - 5.3: pickablePlayers excludes already-recognized players
+
+    @Test("pickablePlayers_excludesAlreadyRecognizedPlayers")
+    func test_pickablePlayers_excludesAlreadyRecognizedPlayers() async throws {
+        // Given: "Zork 5 Jake 4" — Jake is recognized, Zork is unresolved
+        let mock = MockVoiceRecognitionService()
+        mock.transcriptToReturn = "Zork 5 Jake 4"
+        let (_, context) = try makeContext()
+        let players = samplePlayers()
+        let (vm, _) = makeVM(mock: mock, context: context, players: players)
+
+        vm.startListening()
+        try await Task.sleep(for: .milliseconds(100))
+        guard case .partial = vm.state else {
+            Issue.record("Setup: expected .partial state")
+            return
+        }
+
+        // Then: pickablePlayers should not include Jake (already recognized)
+        let pickableIDs = vm.pickablePlayers.map(\.playerID)
+        #expect(!pickableIDs.contains("player-jake"))
+        #expect(pickableIDs.contains("player-mike"))
+        #expect(pickableIDs.contains("player-sarah"))
+    }
+
     // MARK: - 6.9: recognition error → .error state
 
     @Test("startListening_recognitionError_setsErrorState")

@@ -120,30 +120,35 @@ struct VoiceOverlayView: View {
 
     // MARK: - Player row
 
-    private func playerScoreRow(candidate: ScoreCandidate, index: Int, par: Int) -> some View {
-        Button(action: { correctionIndex = index }) {
-            HStack(alignment: .center, spacing: SpacingTokens.xs) {
-                Text(candidate.displayName)
-                    .font(TypographyTokens.h2)
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(1)
+    private func playerScoreRow(candidate: ScoreCandidate, index: Int, par: Int, interactive: Bool = true) -> some View {
+        let rowContent = HStack(alignment: .center, spacing: SpacingTokens.xs) {
+            Text(candidate.displayName)
+                .font(TypographyTokens.h2)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
 
-                // Dotted leader
-                DottedLeader()
-                    .accessibilityHidden(true)
+            DottedLeader()
+                .accessibilityHidden(true)
 
-                Text("\(candidate.strokeCount)")
-                    .font(TypographyTokens.scoreLarge)
-                    .foregroundStyle(scoreColor(strokes: candidate.strokeCount, par: par))
-                    .monospacedDigit()
-            }
-            .frame(minHeight: 56)
-            .padding(.horizontal, SpacingTokens.md)
+            Text("\(candidate.strokeCount)")
+                .font(TypographyTokens.scoreLarge)
+                .foregroundStyle(scoreColor(strokes: candidate.strokeCount, par: par))
+                .monospacedDigit()
         }
-        .buttonStyle(.plain)
+        .frame(minHeight: 56)
+        .padding(.horizontal, SpacingTokens.md)
+
+        return Group {
+            if interactive {
+                Button(action: { correctionIndex = index }) { rowContent }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Double-tap to correct")
+            } else {
+                rowContent
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel(for: candidate, par: par))
-        .accessibilityHint("Double-tap to correct")
     }
 
     // MARK: - Progress bar
@@ -170,8 +175,13 @@ struct VoiceOverlayView: View {
 
     private func partialView(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate]) -> some View {
         VStack(alignment: .leading, spacing: SpacingTokens.sm) {
+            Text("Partial recognition")
+                .font(TypographyTokens.caption)
+                .foregroundStyle(Color.textSecondary)
+                .padding(.horizontal, SpacingTokens.md)
+
             ForEach(Array(recognized.enumerated()), id: \.offset) { index, candidate in
-                playerScoreRow(candidate: candidate, index: index, par: par)
+                playerScoreRow(candidate: candidate, index: index, par: par, interactive: false)
             }
 
             ForEach(Array(unresolved.enumerated()), id: \.offset) { index, entry in
@@ -203,7 +213,7 @@ struct VoiceOverlayView: View {
             set: { unresolvedIndex = $0?.value }
         )) { item in
             PlayerPickerSheet(
-                players: viewModel.availablePlayers,
+                players: viewModel.pickablePlayers,
                 onSelect: { player in
                     viewModel.resolveUnresolved(at: item.value, player: player)
                     unresolvedIndex = nil
