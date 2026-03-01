@@ -16,6 +16,7 @@ struct VoiceOverlayView: View {
     @State private var progress: Double = 0
     @State private var progressAnimation: Animation? = nil
     @State private var correctionIndex: Int? = nil
+    @State private var unresolvedIndex: Int? = nil
 
     var body: some View {
         Group {
@@ -24,6 +25,10 @@ struct VoiceOverlayView: View {
                 listeningView
             case .confirming(let candidates):
                 confirmingView(candidates: candidates)
+            case .partial(let recognized, let unresolved):
+                partialView(recognized: recognized, unresolved: unresolved)
+            case .failed:
+                failedView
             default:
                 EmptyView()
             }
@@ -115,30 +120,35 @@ struct VoiceOverlayView: View {
 
     // MARK: - Player row
 
-    private func playerScoreRow(candidate: ScoreCandidate, index: Int, par: Int) -> some View {
-        Button(action: { correctionIndex = index }) {
-            HStack(alignment: .center, spacing: SpacingTokens.xs) {
-                Text(candidate.displayName)
-                    .font(TypographyTokens.h2)
-                    .foregroundStyle(Color.textPrimary)
-                    .lineLimit(1)
+    private func playerScoreRow(candidate: ScoreCandidate, index: Int, par: Int, interactive: Bool = true) -> some View {
+        let rowContent = HStack(alignment: .center, spacing: SpacingTokens.xs) {
+            Text(candidate.displayName)
+                .font(TypographyTokens.h2)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
 
-                // Dotted leader
-                DottedLeader()
-                    .accessibilityHidden(true)
+            DottedLeader()
+                .accessibilityHidden(true)
 
-                Text("\(candidate.strokeCount)")
-                    .font(TypographyTokens.scoreLarge)
-                    .foregroundStyle(scoreColor(strokes: candidate.strokeCount, par: par))
-                    .monospacedDigit()
-            }
-            .frame(minHeight: 56)
-            .padding(.horizontal, SpacingTokens.md)
+            Text("\(candidate.strokeCount)")
+                .font(TypographyTokens.scoreLarge)
+                .foregroundStyle(scoreColor(strokes: candidate.strokeCount, par: par))
+                .monospacedDigit()
         }
-        .buttonStyle(.plain)
+        .frame(minHeight: 56)
+        .padding(.horizontal, SpacingTokens.md)
+
+        return Group {
+            if interactive {
+                Button(action: { correctionIndex = index }) { rowContent }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Double-tap to correct")
+            } else {
+                rowContent
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel(for: candidate, par: par))
-        .accessibilityHint("Double-tap to correct")
     }
 
     // MARK: - Progress bar
@@ -161,6 +171,137 @@ struct VoiceOverlayView: View {
         .onAppear { startProgress() }
     }
 
+    // MARK: - Partial state
+
+    private func partialView(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate]) -> some View {
+        VStack(alignment: .leading, spacing: SpacingTokens.sm) {
+            Text("Partial recognition")
+                .font(TypographyTokens.caption)
+                .foregroundStyle(Color.textSecondary)
+                .padding(.horizontal, SpacingTokens.md)
+
+            ForEach(Array(recognized.enumerated()), id: \.offset) { index, candidate in
+                playerScoreRow(candidate: candidate, index: index, par: par, interactive: false)
+            }
+
+            ForEach(Array(unresolved.enumerated()), id: \.offset) { index, entry in
+                unresolvedRow(entry: entry, index: index)
+            }
+
+            Text("Tap unresolved names to correct")
+                .font(TypographyTokens.caption)
+                .foregroundStyle(Color.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .accessibilityHidden(true)
+
+            Button(action: { viewModel.cancel() }) {
+                Text("Cancel")
+                    .font(TypographyTokens.caption)
+                    .foregroundStyle(Color.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, SpacingTokens.xs)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, SpacingTokens.md)
+        }
+        .padding(.vertical, SpacingTokens.md)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal, SpacingTokens.md)
+        .sheet(item: Binding(
+            get: { unresolvedIndex.map { IdentifiableIndex(value: $0) } },
+            set: { unresolvedIndex = $0?.value }
+        )) { item in
+            PlayerPickerSheet(
+                players: viewModel.pickablePlayers,
+                onSelect: { player in
+                    viewModel.resolveUnresolved(at: item.value, player: player)
+                    unresolvedIndex = nil
+                }
+            )
+        }
+        .onAppear {
+            if UIAccessibility.isVoiceOverRunning {
+                announcePartial(recognizedCount: recognized.count, unresolvedCount: unresolved.count)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isModal)
+    }
+
+    private func unresolvedRow(entry: UnresolvedCandidate, index: Int) -> some View {
+        Button(action: { unresolvedIndex = index }) {
+            HStack(alignment: .center, spacing: SpacingTokens.xs) {
+                Text(entry.spokenName)
+                    .font(TypographyTokens.h2)
+                    .foregroundStyle(Color.textSecondary)
+                    .lineLimit(1)
+
+                DottedLeader()
+                    .accessibilityHidden(true)
+
+                Text("?")
+                    .font(TypographyTokens.scoreLarge)
+                    .foregroundStyle(Color.textSecondary)
+                    .monospacedDigit()
+            }
+            .frame(minHeight: 56)
+            .padding(.horizontal, SpacingTokens.md)
+            .background(Color.scoreOverPar.opacity(0.1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.spokenName), unresolved, score \(entry.strokeCount)")
+        .accessibilityHint("Double-tap to pick the correct player")
+    }
+
+    // MARK: - Failed state
+
+    private var failedView: some View {
+        VStack(spacing: SpacingTokens.md) {
+            Text("Couldn't understand")
+                .font(TypographyTokens.h3)
+                .foregroundStyle(Color.textPrimary)
+
+            Text("Try again?")
+                .font(TypographyTokens.body)
+                .foregroundStyle(Color.textSecondary)
+
+            Button(action: { viewModel.retry() }) {
+                Text("Try Again")
+                    .font(TypographyTokens.body)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: SpacingTokens.minimumTouchTarget)
+                    .background(Color.accentPrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, SpacingTokens.md)
+
+            Button(action: { viewModel.cancel() }) {
+                Text("Cancel")
+                    .font(TypographyTokens.body)
+                    .foregroundStyle(Color.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: SpacingTokens.minimumTouchTarget)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, SpacingTokens.md)
+        }
+        .padding(SpacingTokens.lg)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal, SpacingTokens.md)
+        .onAppear {
+            if UIAccessibility.isVoiceOverRunning {
+                announceFailure()
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isModal)
+    }
+
     // MARK: - Helpers
 
     private func startProgress() {
@@ -179,6 +320,22 @@ struct VoiceOverlayView: View {
     private func announceScores(_ candidates: [ScoreCandidate]) {
         let descriptions = candidates.map { "\($0.displayName), \($0.strokeCount)" }.joined(separator: ". ")
         let announcement = "Voice scores confirmed. \(descriptions). Tap any score to correct."
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+    }
+
+    private func announcePartial(recognizedCount: Int, unresolvedCount: Int) {
+        let announcement = "Partial recognition. \(recognizedCount) scores confirmed, \(unresolvedCount) unresolved. Tap the highlighted names to select the correct player."
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+    }
+
+    private func announceFailure() {
+        let announcement = "Couldn't understand. Double-tap Try Again to retry, or Cancel to return to scoring."
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
@@ -206,6 +363,39 @@ struct VoiceOverlayView: View {
         default:      parDescription = "\(delta) over par"
         }
         return "\(candidate.displayName), \(candidate.strokeCount), \(parDescription)"
+    }
+}
+
+// MARK: - IdentifiableIndex
+
+/// Wraps an `Int` index to make it `Identifiable` for use with `sheet(item:)`.
+private struct IdentifiableIndex: Identifiable {
+    let value: Int
+    var id: Int { value }
+}
+
+// MARK: - PlayerPickerSheet
+
+/// Sheet that presents all round players so the user can resolve an unrecognised name.
+private struct PlayerPickerSheet: View {
+    let players: [VoicePlayerEntry]
+    let onSelect: (VoicePlayerEntry) -> Void
+
+    var body: some View {
+        NavigationStack {
+            List(players, id: \.playerID) { player in
+                Button(action: { onSelect(player) }) {
+                    Text(player.displayName)
+                        .font(TypographyTokens.body)
+                        .foregroundStyle(Color.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(minHeight: SpacingTokens.minimumTouchTarget)
+                }
+                .buttonStyle(.plain)
+            }
+            .navigationTitle("Select Player")
+            .navigationBarTitleDisplayMode(.inline)
+        }
     }
 }
 

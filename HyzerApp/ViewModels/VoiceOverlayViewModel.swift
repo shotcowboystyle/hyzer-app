@@ -20,6 +20,8 @@ final class VoiceOverlayViewModel {
         case idle
         case listening
         case confirming([ScoreCandidate])
+        case partial(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate])
+        case failed(transcript: String)
         case committed
         case dismissed
         case error(VoiceParseError)
@@ -50,6 +52,17 @@ final class VoiceOverlayViewModel {
     private let holeNumber: Int
     private let reportedByPlayerID: UUID
     private let players: [VoicePlayerEntry]
+
+    /// All players in the round, exposed for the unresolved-entry picker.
+    private(set) var availablePlayers: [VoicePlayerEntry]
+
+    /// Players eligible for the unresolved-entry picker — excludes players already
+    /// in the recognized list to prevent duplicate ScoreEvent creation.
+    var pickablePlayers: [VoicePlayerEntry] {
+        guard case .partial(let recognized, _) = state else { return availablePlayers }
+        let resolvedIDs = Set(recognized.map(\.playerID))
+        return availablePlayers.filter { !resolvedIDs.contains($0.playerID) }
+    }
 
     // MARK: - Timer
 
@@ -87,6 +100,7 @@ final class VoiceOverlayViewModel {
         self.holeNumber = holeNumber
         self.reportedByPlayerID = reportedByPlayerID
         self.players = players
+        self.availablePlayers = players
     }
 
     // MARK: - Public Interface
@@ -109,15 +123,12 @@ final class VoiceOverlayViewModel {
                     if !isVoiceOverFocused {
                         startAutoCommitTimer()
                     }
-                case .partial(let recognized, _):
-                    // Story 5.3 will handle partial UX; for now, confirm what was recognised
-                    state = .confirming(recognized)
-                    if !isVoiceOverFocused {
-                        startAutoCommitTimer()
-                    }
-                case .failed:
-                    state = .error(.noSpeechDetected)
-                    isTerminated = true
+                case .partial(let recognized, let unresolved):
+                    state = .partial(recognized: recognized, unresolved: unresolved)
+                    // No timer — user must resolve all unresolved entries first
+                case .failed(let transcript):
+                    state = .failed(transcript: transcript)
+                    // isTerminated stays false — retry is available
                 }
             } catch let error as VoiceParseError {
                 state = .error(error)
@@ -178,6 +189,40 @@ final class VoiceOverlayViewModel {
         voiceRecognitionService.stopListening()
         state = .dismissed
         isTerminated = true
+    }
+
+    /// Resolves an unresolved entry by assigning it to the selected player.
+    ///
+    /// The resolved `ScoreCandidate` retains the parser's stroke count — the user corrects
+    /// only if the stroke count is wrong, not reset to par or zero.
+    /// When the last unresolved entry is resolved, transitions to `.confirming` and
+    /// starts the auto-commit timer (unless VoiceOver is focused).
+    func resolveUnresolved(at index: Int, player: VoicePlayerEntry) {
+        guard case .partial(var recognized, var unresolved) = state else { return }
+        guard unresolved.indices.contains(index) else { return }
+        let resolved = ScoreCandidate(
+            playerID: player.playerID,
+            displayName: player.displayName,
+            strokeCount: unresolved[index].strokeCount
+        )
+        recognized.append(resolved)
+        unresolved.remove(at: index)
+        if unresolved.isEmpty {
+            state = .confirming(recognized)
+            if !isVoiceOverFocused {
+                startAutoCommitTimer()
+            }
+        } else {
+            state = .partial(recognized: recognized, unresolved: unresolved)
+        }
+    }
+
+    /// Retries voice recognition from `.failed` state. Cancels any pending timer and
+    /// calls `startListening()` to begin a new recognition session.
+    func retry() {
+        timerTask?.cancel()
+        timerTask = nil
+        startListening()
     }
 
     // MARK: - Private
