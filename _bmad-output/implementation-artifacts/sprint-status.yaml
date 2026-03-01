@@ -92,5 +92,5 @@ stories:
     epic: 8
   "8.2":
     title: "Player Hole-by-Hole Breakdown"
-    status: not-started
+    status: ready-for-dev
     epic: 8
