@@ -97,6 +97,134 @@ struct WatchMessageTests {
             try decoder.decode(WatchMessage.self, from: json)
         }
     }
+
+    // MARK: - voiceRequest roundtrip
+
+    @Test("voiceRequest roundtrip preserves all fields")
+    func test_voiceRequest_roundtrip() throws {
+        let roundID = UUID()
+        let players = [
+            VoicePlayerEntry(playerID: "p1", displayName: "Alice", aliases: ["Al"]),
+            VoicePlayerEntry(playerID: "p2", displayName: "Bob", aliases: [])
+        ]
+        let request = WatchVoiceRequest(roundID: roundID, holeNumber: 9, playerEntries: players)
+        let original = WatchMessage.voiceRequest(request)
+
+        let data = try encoder.encode(original)
+        let decoded = try decoder.decode(WatchMessage.self, from: data)
+
+        guard case .voiceRequest(let decodedRequest) = decoded else {
+            Issue.record("Expected voiceRequest case")
+            return
+        }
+        #expect(decodedRequest.roundID == roundID)
+        #expect(decodedRequest.holeNumber == 9)
+        #expect(decodedRequest.playerEntries.count == 2)
+        #expect(decodedRequest.playerEntries[0].playerID == "p1")
+        #expect(decodedRequest.playerEntries[0].displayName == "Alice")
+        #expect(decodedRequest.playerEntries[0].aliases == ["Al"])
+        #expect(decodedRequest.playerEntries[1].playerID == "p2")
+    }
+
+    @Test("voiceRequest encodes correct type discriminator")
+    func test_voiceRequest_typeField() throws {
+        let request = WatchVoiceRequest(roundID: UUID(), holeNumber: 1, playerEntries: [])
+        let message = WatchMessage.voiceRequest(request)
+        let data = try encoder.encode(message)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["type"] as? String == "voiceRequest")
+    }
+
+    // MARK: - voiceResult roundtrip
+
+    @Test("voiceResult with success roundtrip preserves all fields")
+    func test_voiceResult_success_roundtrip() throws {
+        let roundID = UUID()
+        let candidates = [
+            ScoreCandidate(playerID: "p1", displayName: "Alice", strokeCount: 3),
+            ScoreCandidate(playerID: "p2", displayName: "Bob", strokeCount: 5)
+        ]
+        let result = WatchVoiceResult(result: .success(candidates), holeNumber: 7, roundID: roundID)
+        let original = WatchMessage.voiceResult(result)
+
+        let data = try encoder.encode(original)
+        let decoded = try decoder.decode(WatchMessage.self, from: data)
+
+        guard case .voiceResult(let decodedResult) = decoded else {
+            Issue.record("Expected voiceResult case")
+            return
+        }
+        #expect(decodedResult.holeNumber == 7)
+        #expect(decodedResult.roundID == roundID)
+        guard case .success(let decodedCandidates) = decodedResult.result else {
+            Issue.record("Expected .success parse result")
+            return
+        }
+        #expect(decodedCandidates.count == 2)
+        #expect(decodedCandidates[0].playerID == "p1")
+        #expect(decodedCandidates[0].strokeCount == 3)
+    }
+
+    @Test("voiceResult with partial roundtrip preserves all fields")
+    func test_voiceResult_partial_roundtrip() throws {
+        let roundID = UUID()
+        let recognized = [ScoreCandidate(playerID: "p1", displayName: "Alice", strokeCount: 4)]
+        let unresolved = [UnresolvedCandidate(spokenName: "Charlie", strokeCount: 6)]
+        let result = WatchVoiceResult(
+            result: .partial(recognized: recognized, unresolved: unresolved),
+            holeNumber: 3,
+            roundID: roundID
+        )
+        let original = WatchMessage.voiceResult(result)
+
+        let data = try encoder.encode(original)
+        let decoded = try decoder.decode(WatchMessage.self, from: data)
+
+        guard case .voiceResult(let decodedResult) = decoded else {
+            Issue.record("Expected voiceResult case")
+            return
+        }
+        guard case .partial(let r, let u) = decodedResult.result else {
+            Issue.record("Expected .partial parse result")
+            return
+        }
+        #expect(r.count == 1)
+        #expect(u.count == 1)
+        #expect(u[0].spokenName == "Charlie")
+        #expect(u[0].strokeCount == 6)
+    }
+
+    @Test("voiceResult with failed roundtrip preserves transcript")
+    func test_voiceResult_failed_roundtrip() throws {
+        let result = WatchVoiceResult(
+            result: .failed(transcript: "could not understand"),
+            holeNumber: 1,
+            roundID: UUID()
+        )
+        let original = WatchMessage.voiceResult(result)
+
+        let data = try encoder.encode(original)
+        let decoded = try decoder.decode(WatchMessage.self, from: data)
+
+        guard case .voiceResult(let decodedResult) = decoded else {
+            Issue.record("Expected voiceResult case")
+            return
+        }
+        guard case .failed(let transcript) = decodedResult.result else {
+            Issue.record("Expected .failed parse result")
+            return
+        }
+        #expect(transcript == "could not understand")
+    }
+
+    @Test("voiceResult encodes correct type discriminator")
+    func test_voiceResult_typeField() throws {
+        let result = WatchVoiceResult(result: .failed(transcript: ""), holeNumber: 1, roundID: UUID())
+        let message = WatchMessage.voiceResult(result)
+        let data = try encoder.encode(message)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["type"] as? String == "voiceResult")
+    }
 }
 
 // MARK: - StandingsSnapshot serialisation tests
