@@ -1,6 +1,6 @@
 # Story 7.1: Watch App Shell & Leaderboard Display
 
-Status: review
+Status: done
 
 ## Story
 
