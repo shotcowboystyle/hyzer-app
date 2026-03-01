@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Produced by `StandingsEngine.recompute(for:trigger:)` and consumed by leaderboard views.
 /// Immutable value type — never persisted; always derived from `ScoreEvent` data.
-public struct Standing: Identifiable, Sendable, Equatable, Codable {
+public struct Standing: Identifiable, Sendable, Equatable, Hashable, Codable {
     /// Player.id.uuidString for registered players; "guest:{name}" for guests.
     public let playerID: String
     public let playerName: String
