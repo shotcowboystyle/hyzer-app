@@ -1,6 +1,6 @@
 # Story 8.1: History List & Round Detail
 
-Status: review
+Status: done
 
 ## Story
 
