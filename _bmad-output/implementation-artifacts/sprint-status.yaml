@@ -88,7 +88,7 @@ stories:
     epic: 7
   "8.1":
     title: "History List & Round Detail"
-    status: not-started
+    status: ready-for-dev
     epic: 8
   "8.2":
     title: "Player Hole-by-Hole Breakdown"
