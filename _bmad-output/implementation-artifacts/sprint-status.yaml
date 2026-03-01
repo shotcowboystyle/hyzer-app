@@ -88,7 +88,7 @@ stories:
     epic: 7
   "8.1":
     title: "History List & Round Detail"
-    status: in-progress
+    status: review
     epic: 8
   "8.2":
     title: "Player Hole-by-Hole Breakdown"
