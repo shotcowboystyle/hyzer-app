@@ -1,6 +1,6 @@
 # Story 8.2: Player Hole-by-Hole Breakdown
 
-Status: review
+Status: done
 
 ## Story
 

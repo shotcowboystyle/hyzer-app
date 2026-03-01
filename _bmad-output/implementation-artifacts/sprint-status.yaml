@@ -92,5 +92,5 @@ stories:
     epic: 8
   "8.2":
     title: "Player Hole-by-Hole Breakdown"
-    status: review
+    status: done
     epic: 8
