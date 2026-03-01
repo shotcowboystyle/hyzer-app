@@ -70,7 +70,8 @@ struct VoiceParserTests {
         if case .partial(let recognized, let unresolved) = result {
             #expect(recognized.count == 1)
             #expect(recognized[0].playerID == "p2")
-            #expect(unresolved.contains("Zork"))
+            #expect(unresolved[0].spokenName == "Zork")
+            #expect(unresolved[0].strokeCount == 5)
         } else {
             Issue.record("Expected .partial for unknown name Zork, got \(result)")
         }

@@ -46,14 +46,14 @@ public struct VoiceParser: Sendable {
         guard !pairs.isEmpty else { return .failed(transcript: transcript) }
 
         var recognized: [ScoreCandidate] = []
-        var unresolved: [String] = []
+        var unresolved: [UnresolvedCandidate] = []
 
         for (nameToken, strokeCount) in pairs {
             switch matcher.match(token: nameToken) {
             case .matched(let playerID, let displayName):
                 recognized.append(ScoreCandidate(playerID: playerID, displayName: displayName, strokeCount: strokeCount))
             case .ambiguous, .unmatched:
-                unresolved.append(nameToken)
+                unresolved.append(UnresolvedCandidate(spokenName: nameToken, strokeCount: strokeCount))
             }
         }
 
