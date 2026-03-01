@@ -1,6 +1,6 @@
 # Story 7.3: Watch Voice Scoring & Bidirectional Communication
 
-Status: review
+Status: done
 
 ## Story
 
