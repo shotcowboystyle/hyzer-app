@@ -1,7 +1,25 @@
 import Testing
 import SwiftData
+import CloudKit
 @testable import HyzerKit
 @testable import HyzerApp
+
+// MARK: - Test Stubs
+
+/// Minimal no-op stub for AppServices construction in iCloud identity tests.
+private struct StubCloudKitClient: CloudKitClient, @unchecked Sendable {
+    func save(_ records: [CKRecord]) async throws -> [CKRecord] { [] }
+    func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
+    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
+    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
+    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
+}
+
+/// Minimal no-op stub for AppServices construction in iCloud identity tests.
+private struct StubNetworkMonitor: NetworkMonitor {
+    var isConnected: Bool { true }
+    var pathUpdates: AsyncStream<Bool> { AsyncStream { _ in } }
+}
 
 // MARK: - Test Mock
 
@@ -33,7 +51,9 @@ struct ICloudIdentityResolutionTests {
         let container = try ModelContainer(for: Player.self, configurations: config)
         let services = AppServices(
             modelContainer: container,
-            iCloudIdentityProvider: provider
+            iCloudIdentityProvider: provider,
+            cloudKitClient: StubCloudKitClient(),
+            networkMonitor: StubNetworkMonitor()
         )
         let context = ModelContext(container)
         return (services, context)

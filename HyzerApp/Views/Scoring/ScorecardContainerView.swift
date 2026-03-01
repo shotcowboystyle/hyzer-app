@@ -26,6 +26,7 @@ struct ScorecardContainerView: View {
     @State private var viewModel: ScorecardViewModel?
     @State private var leaderboardViewModel: LeaderboardViewModel?
     @State private var autoAdvanceTask: Task<Void, Never>?
+    @State private var voiceOverlayViewModel: VoiceOverlayViewModel?
 
     /// Shown when finishRound returns .hasMissingScores — confirms early termination.
     @State private var missingScoreCount: Int = 0
@@ -60,6 +61,14 @@ struct ScorecardContainerView: View {
             ScorecardPlayer(id: "guest:\(name)", displayName: name, isGuest: true)
         }
         return registered + guests
+    }
+
+    /// Registered (non-guest) players in the round, converted to the voice parser boundary type.
+    /// Guest players cannot be voice-scored — they have no aliases in the name-matching system.
+    private var voicePlayerEntries: [VoicePlayerEntry] {
+        allPlayers
+            .filter { round.playerIDs.contains($0.id.uuidString) }
+            .map { VoicePlayerEntry(playerID: $0.id.uuidString, displayName: $0.displayName, aliases: $0.aliases) }
     }
 
     // MARK: - Body
@@ -99,24 +108,15 @@ struct ScorecardContainerView: View {
                     .padding(.horizontal, SpacingTokens.md)
             }
         }
+        .overlay { voiceOverlayContent }
+        .onChange(of: voiceOverlayViewModel?.isTerminated, handleVoiceOverlayTerminated)
         .background(Color.backgroundPrimary)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 SyncIndicatorView()
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                if !round.isFinished {
-                    Menu {
-                        Button(role: .destructive) {
-                            finishRoundTapped()
-                        } label: {
-                            Label("Finish Round", systemImage: "checkmark.circle")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .foregroundStyle(Color.textPrimary)
-                    }
-                }
+                trailingToolbarContent
             }
         }
         // Finalization prompt: all scores recorded, user confirms
@@ -299,6 +299,77 @@ struct ScorecardContainerView: View {
         } catch {
             lifecycleError = error
         }
+    }
+
+    // MARK: - Voice overlay termination
+
+    private func handleVoiceOverlayTerminated(_: Bool?, _ isTerminal: Bool?) {
+        guard isTerminal == true else { return }
+        if voiceOverlayViewModel?.isCommitted == true {
+            leaderboardViewModel?.handleScoreEntered()
+        }
+        withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
+            voiceOverlayViewModel = nil
+        }
+    }
+
+    // MARK: - Toolbar
+
+    @ViewBuilder
+    private var trailingToolbarContent: some View {
+        if !round.isFinished {
+            HStack(spacing: SpacingTokens.sm) {
+                Button(action: startVoiceEntry) {
+                    Image(systemName: "mic.circle")
+                        .foregroundStyle(Color.accentPrimary)
+                }
+                .accessibilityLabel("Enter scores by voice")
+                .disabled(voiceOverlayViewModel != nil)
+                Menu {
+                    Button(role: .destructive, action: finishRoundTapped) {
+                        Label("Finish Round", systemImage: "checkmark.circle")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .foregroundStyle(Color.textPrimary)
+                }
+            }
+        }
+    }
+
+    // MARK: - Voice overlay
+
+    @ViewBuilder
+    private var voiceOverlayContent: some View {
+        if let voiceVM = voiceOverlayViewModel {
+            let transition: AnyTransition = reduceMotion
+                ? .opacity
+                : .move(edge: .bottom).combined(with: .opacity)
+            VStack {
+                Spacer()
+                VoiceOverlayView(viewModel: voiceVM, par: par(forHole: currentHole))
+                    .transition(transition)
+                    .padding(.bottom, SpacingTokens.lg)
+            }
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    private func startVoiceEntry() {
+        guard let vm = viewModel else { return }
+        let voiceVM = VoiceOverlayViewModel(
+            voiceRecognitionService: appServices.voiceRecognitionService,
+            scoringService: appServices.scoringService,
+            parser: VoiceParser(),
+            roundID: round.id,
+            holeNumber: currentHole,
+            reportedByPlayerID: vm.reportedByPlayerID,
+            players: voicePlayerEntries
+        )
+        withAnimation(AnimationCoordinator.animation(AnimationTokens.springStiff, reduceMotion: reduceMotion)) {
+            voiceOverlayViewModel = voiceVM
+        }
+        voiceVM.startListening()
     }
 
     // MARK: - Auto advance

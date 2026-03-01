@@ -64,7 +64,7 @@ stories:
     epic: 5
   "5.2":
     title: "Voice Confirmation Overlay & Auto-Commit"
-    status: in-progress
+    status: review
     epic: 5
   "5.3":
     title: "Partial & Failed Recognition Handling"
