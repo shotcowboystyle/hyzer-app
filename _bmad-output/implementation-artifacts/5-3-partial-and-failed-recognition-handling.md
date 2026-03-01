@@ -1,6 +1,6 @@
 # Story 5.3: Partial & Failed Recognition Handling
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -265,4 +265,16 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Task 1: Added `UnresolvedCandidate` struct to `VoiceParseResult.swift` alongside `ScoreCandidate`. Updated `VoiceParseResult.partial` associated value from `[String]` to `[UnresolvedCandidate]`. Updated `VoiceParser.parse()` to populate `UnresolvedCandidate(spokenName:strokeCount:)` in the unresolved branch. Updated `VoiceParserTests.swift` to use `unresolved[0].spokenName` and assert `strokeCount`. 166/166 HyzerKit tests pass.
+- Task 2: Extended `VoiceOverlayViewModel.State` with `.partial` and `.failed` cases. Updated `startListening()` to route `.partial` → `.partial` state (no timer) and `.failed` → `.failed` state (isTerminated stays false). Added `availablePlayers` stored property. Added `resolveUnresolved(at:player:)` which transitions to `.confirming` + starts timer when last entry resolved. Added `retry()` which cancels timer and restarts listening.
+- Task 3: Updated `VoiceOverlayView.body` switch with `.partial` and `.failed` cases. Implemented `partialView` (resolved rows + unresolved rows with "?" and amber tint, no progress bar, Cancel button). Implemented `unresolvedRow` (dimmed name, "?" score, amber background, sheet trigger). Implemented player picker via `sheet(item:)` with `IdentifiableIndex` wrapper and `PlayerPickerSheet` inner view. Implemented `failedView` ("Couldn't understand" / "Try again?" / Try Again + Cancel buttons with 44pt min touch targets). Added VoiceOver announcements for both states.
+- Task 4: Added 8 new tests to `VoiceOverlayViewModelTests.swift` covering partial state detection, resolution flows (last/not-last), stroke count retention, failed state detection, retry flow, and cancel from both states. Fixed test `resolveUnresolved_retainsStrokeCountFromParser` to use "Zork 7 Jake 4" (needs ≥1 recognized player for .partial). Pre-existing flaky test `autoCommitTimer_firesAfterDelay_commitsScores` (from Story 5.2) is timing-sensitive — confirmed pre-existing, not introduced by this story.
+
 ### File List
+
+- `HyzerKit/Sources/HyzerKit/Voice/VoiceParseResult.swift` — added `UnresolvedCandidate` struct, updated `.partial` associated value
+- `HyzerKit/Sources/HyzerKit/Voice/VoiceParser.swift` — updated `parse()` unresolved branch to use `UnresolvedCandidate`
+- `HyzerKit/Tests/HyzerKitTests/Voice/VoiceParserTests.swift` — updated `.partial` pattern match assertions
+- `HyzerApp/ViewModels/VoiceOverlayViewModel.swift` — added `.partial`/`.failed` state cases, `availablePlayers` property, `resolveUnresolved(at:player:)`, `retry()`
+- `HyzerApp/Views/Scoring/VoiceOverlayView.swift` — added `.partial`/`.failed` cases to body switch, `partialView`, `unresolvedRow`, `failedView`, `PlayerPickerSheet`, `IdentifiableIndex`, VoiceOver announce helpers
+- `HyzerAppTests/VoiceOverlayViewModelTests.swift` — added 8 new tests (AC 1–4 coverage)
