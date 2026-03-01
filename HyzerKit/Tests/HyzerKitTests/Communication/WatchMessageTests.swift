@@ -18,7 +18,7 @@ struct WatchMessageTests {
             Standing(playerID: "player-2", playerName: "Bob", position: 2, totalStrokes: 40, holesPlayed: 9, scoreRelativeToPar: 1)
         ]
         let date = Date(timeIntervalSince1970: 1_700_000_000)
-        let snapshot = StandingsSnapshot(standings: standings, roundID: roundID, currentHole: 5, lastUpdatedAt: date)
+        let snapshot = StandingsSnapshot(standings: standings, roundID: roundID, currentHole: 5, currentHolePar: 4, lastUpdatedAt: date)
         let original = WatchMessage.standingsUpdate(snapshot)
 
         let data = try encoder.encode(original)
@@ -30,6 +30,7 @@ struct WatchMessageTests {
         }
         #expect(decodedSnapshot.roundID == roundID)
         #expect(decodedSnapshot.currentHole == 5)
+        #expect(decodedSnapshot.currentHolePar == 4)
         #expect(decodedSnapshot.lastUpdatedAt == date)
         #expect(decodedSnapshot.standings.count == 2)
         #expect(decodedSnapshot.standings[0].playerID == "player-1")
@@ -113,13 +114,14 @@ struct StandingsSnapshotTests {
         let standings = [
             Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 30, holesPlayed: 9, scoreRelativeToPar: -3)
         ]
-        let snapshot = StandingsSnapshot(standings: standings, roundID: roundID, currentHole: 9, lastUpdatedAt: date)
+        let snapshot = StandingsSnapshot(standings: standings, roundID: roundID, currentHole: 9, currentHolePar: 5, lastUpdatedAt: date)
 
         let data = try encoder.encode(snapshot)
         let decoded = try decoder.decode(StandingsSnapshot.self, from: data)
 
         #expect(decoded.roundID == roundID)
         #expect(decoded.currentHole == 9)
+        #expect(decoded.currentHolePar == 5)
         #expect(decoded.lastUpdatedAt == date)
         #expect(decoded.standings.count == 1)
         #expect(decoded.standings[0].playerName == "Alice")
@@ -138,8 +140,23 @@ struct StandingsSnapshotTests {
     func test_equatable_sameData() {
         let roundID = UUID()
         let date = Date(timeIntervalSince1970: 1_700_000_000)
-        let s1 = StandingsSnapshot(standings: [], roundID: roundID, currentHole: 3, lastUpdatedAt: date)
-        let s2 = StandingsSnapshot(standings: [], roundID: roundID, currentHole: 3, lastUpdatedAt: date)
+        let s1 = StandingsSnapshot(standings: [], roundID: roundID, currentHole: 3, currentHolePar: 4, lastUpdatedAt: date)
+        let s2 = StandingsSnapshot(standings: [], roundID: roundID, currentHole: 3, currentHolePar: 4, lastUpdatedAt: date)
         #expect(s1 == s2)
+    }
+
+    @Test("decoding JSON without currentHolePar falls back to par 3")
+    func test_decode_missingCurrentHolePar_defaultsToThree() throws {
+        let json = """
+        {
+          "standings": [],
+          "roundID": "12345678-1234-1234-1234-123456789012",
+          "currentHole": 7,
+          "lastUpdatedAt": 1700000000.0
+        }
+        """.data(using: .utf8)!
+        let decoded = try decoder.decode(StandingsSnapshot.self, from: json)
+        #expect(decoded.currentHolePar == 3)
+        #expect(decoded.currentHole == 7)
     }
 }

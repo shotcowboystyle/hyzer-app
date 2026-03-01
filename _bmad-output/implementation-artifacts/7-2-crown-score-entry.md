@@ -1,6 +1,6 @@
 # Story 7.2: Crown Score Entry
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 

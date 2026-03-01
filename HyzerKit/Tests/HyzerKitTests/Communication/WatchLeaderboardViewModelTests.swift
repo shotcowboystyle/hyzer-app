@@ -34,9 +34,10 @@ struct WatchLeaderboardViewModelTests {
     private func makeSnapshot(
         standings: [Standing] = [],
         hole: Int = 1,
+        par: Int = 3,
         date: Date = Date()
     ) -> StandingsSnapshot {
-        StandingsSnapshot(standings: standings, roundID: UUID(), currentHole: hole, lastUpdatedAt: date)
+        StandingsSnapshot(standings: standings, roundID: UUID(), currentHole: hole, currentHolePar: par, lastUpdatedAt: date)
     }
 
     // MARK: - Task 8.4: standings mapping
