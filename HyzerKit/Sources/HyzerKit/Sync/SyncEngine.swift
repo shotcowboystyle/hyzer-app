@@ -268,6 +268,9 @@ public actor SyncEngine: ModelActor {
         }
 
         // Run conflict detection on newly inserted events (AC5)
+        // Pre-fetch existing Discrepancy records to deduplicate (Story 6.1: resolution event guard).
+        let existingDiscrepancies = (try? modelContext.fetch(FetchDescriptor<Discrepancy>())) ?? []
+
         let allEvents = existingEvents + newlyInsertedEvents
         let conflictDetector = ConflictDetector()
         for newEvent in newlyInsertedEvents {
@@ -283,6 +286,18 @@ public actor SyncEngine: ModelActor {
             case .silentMerge:
                 logger.debug("SyncEngine.pullRecords: silent merge for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
             case .discrepancy(let existingID, let incomingID):
+                // Deduplicate: skip if a Discrepancy already exists for {roundID, playerID, holeNumber}.
+                // This prevents the resolution ScoreEvent (supersedesEventID == nil) from creating a
+                // second Discrepancy when pulled by remote devices (Story 6.1 mitigation).
+                let alreadyExists = existingDiscrepancies.contains {
+                    $0.roundID == newEvent.roundID &&
+                    $0.playerID == newEvent.playerID &&
+                    $0.holeNumber == newEvent.holeNumber
+                }
+                guard !alreadyExists else {
+                    logger.debug("SyncEngine.pullRecords: discrepancy already exists for player \(newEvent.playerID) hole \(newEvent.holeNumber) — skipping duplicate")
+                    break
+                }
                 let discrepancy = Discrepancy(
                     roundID: newEvent.roundID,
                     playerID: newEvent.playerID,

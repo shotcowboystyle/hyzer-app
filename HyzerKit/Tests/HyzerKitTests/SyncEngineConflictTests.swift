@@ -165,6 +165,118 @@ struct SyncEngineConflictTests {
         #expect(discrepancies.isEmpty)
     }
 
+    // MARK: - Story 6.1 Task 8: Resolution event does not create a second Discrepancy
+
+    @Test("pullRecords with resolution ScoreEvent does not create a second Discrepancy")
+    @MainActor
+    func test_pullRecords_resolutionScoreEvent_doesNotCreateDuplicateDiscrepancy() async throws {
+        // Given: an existing Discrepancy for {roundID, playerID, holeNumber=5} that is already resolved
+        let container = try makeConflictTestContainer()
+        let context = container.mainContext
+
+        let roundID = UUID()
+        let playerID = UUID().uuidString
+        let organizerDeviceID = "organizer-device"
+
+        // Original conflicting events
+        let originalA = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 5, playerID: playerID, strokeCount: 3, deviceID: "device-A"
+        )
+        let originalB = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 5, playerID: playerID, strokeCount: 4, deviceID: "device-B"
+        )
+        context.insert(originalA)
+        context.insert(originalB)
+
+        // Discrepancy record already exists and is resolved
+        let existingDiscrepancy = Discrepancy(
+            roundID: roundID,
+            playerID: playerID,
+            holeNumber: 5,
+            eventID1: originalA.id,
+            eventID2: originalB.id
+        )
+        existingDiscrepancy.status = .resolved
+        context.insert(existingDiscrepancy)
+        try context.save()
+
+        // Resolution event: supersedesEventID == nil, from organizer device
+        let resolutionEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 5, playerID: playerID, strokeCount: 3, deviceID: organizerDeviceID
+        )
+        // supersedesEventID is nil — authoritative resolution, not a correction chain
+
+        let mockCK = MockCloudKitClient()
+        mockCK.seed([
+            ScoreEventRecord(from: originalA).toCKRecord(),
+            ScoreEventRecord(from: originalB).toCKRecord(),
+            ScoreEventRecord(from: resolutionEvent).toCKRecord()
+        ])
+
+        let engine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: context),
+            modelContainer: container
+        )
+
+        // When: pull records (simulates remote device receiving resolution event)
+        await engine.pullRecords()
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Then: still only 1 Discrepancy (the existing one) — no duplicate created
+        let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
+        #expect(discrepancies.count == 1)
+        #expect(discrepancies.first?.status == .resolved)
+    }
+
+    // MARK: - Story 6.1 Task 8.2: ConflictDetector does not flag resolution event as a new discrepancy via deduplication
+
+    @Test("pullRecords with resolution ScoreEvent updates leaderboard silently — no new unresolved Discrepancy")
+    @MainActor
+    func test_pullRecords_resolutionScoreEvent_updatesLeaderboardSilently() async throws {
+        // Given: an existing resolved Discrepancy and three events for the same {player, hole}
+        let container = try makeConflictTestContainer()
+        let context = container.mainContext
+
+        let roundID = UUID()
+        let playerID = UUID().uuidString
+
+        let eventA = ScoreEvent.fixture(roundID: roundID, holeNumber: 6, playerID: playerID, strokeCount: 3, deviceID: "device-A")
+        let eventB = ScoreEvent.fixture(roundID: roundID, holeNumber: 6, playerID: playerID, strokeCount: 4, deviceID: "device-B")
+        context.insert(eventA)
+        context.insert(eventB)
+
+        let discrepancy = Discrepancy(roundID: roundID, playerID: playerID, holeNumber: 6, eventID1: eventA.id, eventID2: eventB.id)
+        discrepancy.status = .resolved
+        context.insert(discrepancy)
+        try context.save()
+
+        // Resolution event from organizer device
+        let resolutionEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 6, playerID: playerID, strokeCount: 4, deviceID: "organizer-device"
+        )
+
+        let mockCK = MockCloudKitClient()
+        mockCK.seed([
+            ScoreEventRecord(from: eventA).toCKRecord(),
+            ScoreEventRecord(from: eventB).toCKRecord(),
+            ScoreEventRecord(from: resolutionEvent).toCKRecord()
+        ])
+
+        let standingsEngine = StandingsEngine(modelContext: context)
+        let engine = SyncEngine(cloudKitClient: mockCK, standingsEngine: standingsEngine, modelContainer: container)
+
+        // When
+        await engine.pullRecords()
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Then: no new unresolved discrepancy — deduplication guard prevents duplicate
+        let allDiscrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
+        let unresolved = allDiscrepancies.filter { $0.status == .unresolved }
+        #expect(unresolved.isEmpty)
+        #expect(allDiscrepancies.count == 1)
+    }
+
     // MARK: - AC4: Cross-device supersession creates Discrepancy
 
     @Test("pullRecords with cross-device supersession creates Discrepancy")
