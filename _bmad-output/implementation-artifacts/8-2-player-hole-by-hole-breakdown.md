@@ -1,6 +1,6 @@
 # Story 8.2: Player Hole-by-Hole Breakdown
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,31 +20,31 @@ so that I can review individual performance in detail.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `HoleScore` value type and per-hole formatting in HyzerKit (AC: 1, 2)
-  - [ ] 1.1 Create `HyzerKit/Sources/HyzerKit/Domain/HoleScore.swift` — `Sendable` struct with `holeNumber`, `par`, `strokeCount`, `relativeToPar`
-  - [ ] 1.2 Add `formattedRelativeToPar` computed property: "-1", "E", "+1", "+2" (same format as `Standing.formattedScore`)
-  - [ ] 1.3 Add `scoreColor` computed property using 4-tier per-hole logic: `scoreUnderPar` (<0), `scoreAtPar` (==0), `scoreOverPar` (+1), `scoreWayOver` (+2 or more)
+- [x] Task 1: Create `HoleScore` value type and per-hole formatting in HyzerKit (AC: 1, 2)
+  - [x] 1.1 Create `HyzerKit/Sources/HyzerKit/Domain/HoleScore.swift` — `Sendable` struct with `holeNumber`, `par`, `strokeCount`, `relativeToPar`
+  - [x] 1.2 Add `formattedRelativeToPar` computed property: "-1", "E", "+1", "+2" (same format as `Standing.formattedScore`)
+  - [x] 1.3 Add `scoreColor` computed property using 4-tier per-hole logic: `scoreUnderPar` (<0), `scoreAtPar` (==0), `scoreOverPar` (+1), `scoreWayOver` (+2 or more)
 
-- [ ] Task 2: Create `PlayerHoleBreakdownViewModel` (AC: 1, 3)
-  - [ ] 2.1 Create `HyzerApp/ViewModels/PlayerHoleBreakdownViewModel.swift` — `@MainActor @Observable final class`
-  - [ ] 2.2 Constructor receives `modelContext`, `roundID`, `playerID`, `playerName`
-  - [ ] 2.3 `computeBreakdown()` method: fetch all `ScoreEvent`s for the round, fetch `Hole`s for the course, use `resolveCurrentScore(for:hole:in:)` per hole, produce `[HoleScore]` sorted by hole number
-  - [ ] 2.4 Expose `holeScores: [HoleScore]`, `totalStrokes`, `totalPar`, `overallRelativeToPar`, `overallFormattedScore`, `overallScoreColor` for summary row
+- [x] Task 2: Create `PlayerHoleBreakdownViewModel` (AC: 1, 3)
+  - [x] 2.1 Create `HyzerApp/ViewModels/PlayerHoleBreakdownViewModel.swift` — `@MainActor @Observable final class`
+  - [x] 2.2 Constructor receives `modelContext`, `roundID`, `playerID`, `playerName`
+  - [x] 2.3 `computeBreakdown()` method: fetch all `ScoreEvent`s for the round, fetch `Hole`s for the course, use `resolveCurrentScore(for:hole:in:)` per hole, produce `[HoleScore]` sorted by hole number
+  - [x] 2.4 Expose `holeScores: [HoleScore]`, `totalStrokes`, `totalPar`, `overallRelativeToPar`, `overallFormattedScore`, `overallScoreColor` for summary row
 
-- [ ] Task 3: Create `PlayerHoleBreakdownView` (AC: 1, 2, 3, 4)
-  - [ ] 3.1 Create `HyzerApp/Views/History/PlayerHoleBreakdownView.swift` — scrollable list of hole rows
-  - [ ] 3.2 Each row: hole number (H3), par (caption), stroke count (score font, score color), +/- par text (body, score color)
-  - [ ] 3.3 Summary footer row: totals with overall score formatting
-  - [ ] 3.4 Navigation title shows player name
-  - [ ] 3.5 Accessibility: combine each row as single element with label "[Hole X], par [Y], scored [Z], [relative] par"
+- [x] Task 3: Create `PlayerHoleBreakdownView` (AC: 1, 2, 3, 4)
+  - [x] 3.1 Create `HyzerApp/Views/History/PlayerHoleBreakdownView.swift` — scrollable list of hole rows
+  - [x] 3.2 Each row: hole number (H3), par (caption), stroke count (score font, score color), +/- par text (body, score color)
+  - [x] 3.3 Summary footer row: totals with overall score formatting
+  - [x] 3.4 Navigation title shows player name
+  - [x] 3.5 Accessibility: combine each row as single element with label "[Hole X], par [Y], scored [Z], [relative] par"
 
-- [ ] Task 4: Wire navigation from `HistoryRoundDetailView` (AC: 4)
-  - [ ] 4.1 Wrap `HistoryPlayerRow` in `NavigationLink` pushing to `PlayerHoleBreakdownView`
-  - [ ] 4.2 Pass `round.id`, player ID, and player name from the `SummaryPlayerRow` data
+- [x] Task 4: Wire navigation from `HistoryRoundDetailView` (AC: 4)
+  - [x] 4.1 Wrap `HistoryPlayerRow` in `NavigationLink` pushing to `PlayerHoleBreakdownView`
+  - [x] 4.2 Pass `round.id`, player ID, and player name from the `SummaryPlayerRow` data
 
-- [ ] Task 5: Tests (AC: 1, 2, 3)
-  - [ ] 5.1 `HoleScoreTests` in `HyzerKitTests/Domain/` — formatting and color for all 4 score states (under, at, over, way over)
-  - [ ] 5.2 `PlayerHoleBreakdownViewModelTests` in `HyzerAppTests/ViewModels/` — breakdown computation, empty holes, summary totals, guest player support, superseded score resolution
+- [x] Task 5: Tests (AC: 1, 2, 3)
+  - [x] 5.1 `HoleScoreTests` in `HyzerKitTests/Domain/` — formatting and color for all 4 score states (under, at, over, way over)
+  - [x] 5.2 `PlayerHoleBreakdownViewModelTests` in `HyzerAppTests/ViewModels/` — breakdown computation, empty holes, summary totals, guest player support, superseded score resolution
 
 ## Dev Notes
 
@@ -268,10 +268,23 @@ Swift 6 strict concurrency is enforced (`SWIFT_STRICT_CONCURRENCY = complete`). 
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Task 1: Created `HoleScore` Sendable struct in HyzerKit with `formattedRelativeToPar` and 4-tier `scoreColor` extension. Analogous to `Standing` + `Standing+Formatting` pattern.
+- Task 2: Created `PlayerHoleBreakdownViewModel` as `@MainActor @Observable final class`. Uses `resolveCurrentScore(for:hole:in:)` (Amendment A7 leaf-node resolution) per hole. Synchronous `computeBreakdown()` called from `.onAppear`. Matches `HistoryListViewModel` pattern.
+- Task 3: Created `PlayerHoleBreakdownView` with scrollable hole rows and sticky summary footer. Each `HoleScoreRow` uses 4-tier color coding. Accessibility label combines all row info into single element.
+- Task 4: Modified `HistoryRoundDetailView.standingsSection` to wrap each `HistoryPlayerRow` in a `NavigationLink` pushing to `PlayerHoleBreakdownView`. Added chevron affordance. Used `.buttonStyle(.plain)` to keep existing row styling.
+- Task 5: 13 `HoleScoreTests` all pass (formatting + 4-tier color for all states). 8 `PlayerHoleBreakdownViewModelTests` cover: single player, totals, sum equivalence, superseded score resolution, guest players, sort order, overall color tiers, and individual 4-tier scoreWayOver. Full 269-test suite passes — no regressions.
+
 ### File List
+
+- `HyzerKit/Sources/HyzerKit/Domain/HoleScore.swift` (new)
+- `HyzerApp/ViewModels/PlayerHoleBreakdownViewModel.swift` (new)
+- `HyzerApp/Views/History/PlayerHoleBreakdownView.swift` (new)
+- `HyzerApp/Views/History/HistoryRoundDetailView.swift` (modified — added NavigationLink in standingsSection)
+- `HyzerKit/Tests/HyzerKitTests/Domain/HoleScoreTests.swift` (new)
+- `HyzerAppTests/ViewModels/PlayerHoleBreakdownViewModelTests.swift` (new)
