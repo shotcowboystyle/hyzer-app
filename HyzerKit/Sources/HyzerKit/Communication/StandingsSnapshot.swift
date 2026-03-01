@@ -22,4 +22,21 @@ public struct StandingsSnapshot: Sendable, Codable, Equatable {
         self.currentHole = currentHole
         self.lastUpdatedAt = lastUpdatedAt
     }
+
+    // MARK: - Staleness helpers
+
+    /// Threshold beyond which a snapshot is considered stale (30 seconds).
+    public static let staleThreshold: TimeInterval = 30
+
+    /// Returns `true` when `reference.timeIntervalSince(lastUpdatedAt) > 30`.
+    public func isStale(from reference: Date = Date()) -> Bool {
+        reference.timeIntervalSince(lastUpdatedAt) > StandingsSnapshot.staleThreshold
+    }
+
+    /// Human-readable relative time: "30s ago", "2m ago", etc.
+    public func staleDurationText(from reference: Date = Date()) -> String {
+        let elapsed = Int(reference.timeIntervalSince(lastUpdatedAt))
+        if elapsed < 60 { return "\(elapsed)s ago" }
+        return "\(elapsed / 60)m ago"
+    }
 }

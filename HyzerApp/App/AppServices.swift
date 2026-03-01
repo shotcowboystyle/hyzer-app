@@ -9,9 +9,10 @@ import HyzerKit
 /// Created once at app startup and injected into the SwiftUI environment.
 /// ViewModels receive individual services via constructor injection — never this container.
 ///
-/// Construction order (Story 4.2):
+/// Construction order:
 ///   ModelContainer → StandingsEngine → RoundLifecycleManager
 ///   → CloudKitClient → NetworkMonitor → SyncEngine → SyncScheduler → ScoringService
+///   → PhoneConnectivityService (Story 7.1)
 @MainActor
 @Observable
 final class AppServices {
@@ -22,6 +23,7 @@ final class AppServices {
     let syncEngine: SyncEngine
     let syncScheduler: SyncScheduler
     let voiceRecognitionService: VoiceRecognitionService
+    let phoneConnectivityService: PhoneConnectivityService
     private(set) var iCloudRecordName: String?
 
     /// Observable sync state, bridged from the `SyncEngine` actor via an async stream.
@@ -54,6 +56,7 @@ final class AppServices {
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.voiceRecognitionService = VoiceRecognitionService()
+        self.phoneConnectivityService = PhoneConnectivityService()
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }
 
@@ -64,6 +67,7 @@ final class AppServices {
     ///
     /// Must be called from a `.task` modifier so it runs in a cancellable async context.
     func startSync() async {
+        phoneConnectivityService.startObservingStandings(standingsEngine)
         await syncScheduler.start()
         await syncEngine.start()
 
