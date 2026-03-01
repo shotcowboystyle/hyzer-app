@@ -1,6 +1,6 @@
 # Story 5.3: Partial & Failed Recognition Handling
 
-Status: review
+Status: done
 
 ## Story
 
