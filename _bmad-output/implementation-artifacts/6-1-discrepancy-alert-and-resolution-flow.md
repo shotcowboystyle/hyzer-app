@@ -1,6 +1,6 @@
 # Story 6.1: Discrepancy Alert & Resolution Flow
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -62,70 +62,70 @@ so that score disputes are handled fairly without disrupting the round.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `DiscrepancyViewModel` (AC: #1, #2, #3, #5)
-  - [ ] 1.1 Create `HyzerApp/ViewModels/DiscrepancyViewModel.swift` as `@MainActor @Observable final class`
-  - [ ] 1.2 Constructor injection: `scoringService: ScoringService`, `standingsEngine: StandingsEngine`, `modelContext: ModelContext`, `roundID: UUID`, `organizerID: UUID`, `currentPlayerID: UUID`
-  - [ ] 1.3 Computed property `isOrganizer: Bool` — compares `currentPlayerID == organizerID`
-  - [ ] 1.4 Method `loadUnresolved()` — fetches `Discrepancy` records where `roundID` matches and `status == .unresolved`, stores in `unresolvedDiscrepancies: [Discrepancy]`
-  - [ ] 1.5 Method `loadConflictingEvents(for discrepancy: Discrepancy) -> (ScoreEvent, ScoreEvent)?` — fetches `ScoreEvent` by `eventID1` and `eventID2` from ModelContext
-  - [ ] 1.6 Method `resolve(discrepancy: Discrepancy, selectedStrokeCount: Int, playerID: String, holeNumber: Int) throws` — creates authoritative ScoreEvent via `scoringService`, updates Discrepancy status to `.resolved`, sets `resolvedByEventID`, calls `standingsEngine.recompute(for:trigger:.conflictResolution)`
-  - [ ] 1.7 Published state: `unresolvedDiscrepancies: [Discrepancy]`, `selectedDiscrepancy: Discrepancy?`, `resolveError: Error?`
-  - [ ] 1.8 Computed `badgeCount: Int` — count of `unresolvedDiscrepancies`
+- [x] Task 1: Create `DiscrepancyViewModel` (AC: #1, #2, #3, #5)
+  - [x] 1.1 Create `HyzerApp/ViewModels/DiscrepancyViewModel.swift` as `@MainActor @Observable final class`
+  - [x] 1.2 Constructor injection: `scoringService: ScoringService`, `standingsEngine: StandingsEngine`, `modelContext: ModelContext`, `roundID: UUID`, `organizerID: UUID`, `currentPlayerID: UUID`
+  - [x] 1.3 Computed property `isOrganizer: Bool` — compares `currentPlayerID == organizerID`
+  - [x] 1.4 Method `loadUnresolved()` — fetches `Discrepancy` records where `roundID` matches and `status == .unresolved`, stores in `unresolvedDiscrepancies: [Discrepancy]`
+  - [x] 1.5 Method `loadConflictingEvents(for discrepancy: Discrepancy) -> (ScoreEvent, ScoreEvent)?` — fetches `ScoreEvent` by `eventID1` and `eventID2` from ModelContext
+  - [x] 1.6 Method `resolve(discrepancy: Discrepancy, selectedStrokeCount: Int, playerID: String, holeNumber: Int) throws` — creates authoritative ScoreEvent via `scoringService`, updates Discrepancy status to `.resolved`, sets `resolvedByEventID`, calls `standingsEngine.recompute(for:trigger:.conflictResolution)`
+  - [x] 1.7 Published state: `unresolvedDiscrepancies: [Discrepancy]`, `selectedDiscrepancy: Discrepancy?`, `resolveError: Error?`
+  - [x] 1.8 Computed `badgeCount: Int` — count of `unresolvedDiscrepancies`
 
-- [ ] Task 2: Create `DiscrepancyResolutionView` (AC: #2, #3, #6)
-  - [ ] 2.1 Create `HyzerApp/Views/Discrepancy/DiscrepancyResolutionView.swift`
-  - [ ] 2.2 Header: "Score Discrepancy" (`TypographyTokens.h2`) + player name + "Hole [n]"
-  - [ ] 2.3 Two score options side-by-side: score value (`TypographyTokens.score`), "Recorded by [name]" (`TypographyTokens.caption`), timestamp (`TypographyTokens.caption`)
-  - [ ] 2.4 Each option is a tappable card with `SpacingTokens.scoringTouchTarget` minimum hit area
-  - [ ] 2.5 On tap: call `viewModel.resolve(discrepancy:selectedStrokeCount:playerID:holeNumber:)`, dismiss view
-  - [ ] 2.6 No confirmation dialog — "confidence through feedback, not confirmation" (UX principle)
-  - [ ] 2.7 Accessibility: `accessibilityLabel` describing both options for VoiceOver — "Score discrepancy for [player] on hole [n]. Option one: [score], recorded by [name]. Option two: [score], recorded by [name]. Tap to select correct score."
-  - [ ] 2.8 Present as `.sheet` with `.presentationDetents([.medium])`
+- [x] Task 2: Create `DiscrepancyResolutionView` (AC: #2, #3, #6)
+  - [x] 2.1 Create `HyzerApp/Views/Discrepancy/DiscrepancyResolutionView.swift`
+  - [x] 2.2 Header: "Score Discrepancy" (`TypographyTokens.h2`) + player name + "Hole [n]"
+  - [x] 2.3 Two score options side-by-side: score value (`TypographyTokens.score`), "Recorded by [name]" (`TypographyTokens.caption`), timestamp (`TypographyTokens.caption`)
+  - [x] 2.4 Each option is a tappable card with `SpacingTokens.scoringTouchTarget` minimum hit area
+  - [x] 2.5 On tap: call `viewModel.resolve(discrepancy:selectedStrokeCount:playerID:holeNumber:)`, dismiss view
+  - [x] 2.6 No confirmation dialog — "confidence through feedback, not confirmation" (UX principle)
+  - [x] 2.7 Accessibility: `accessibilityLabel` describing both options for VoiceOver — "Score discrepancy for [player] on hole [n]. Option one: [score], recorded by [name]. Option two: [score], recorded by [name]. Tap to select correct score."
+  - [x] 2.8 Present as `.sheet` with `.presentationDetents([.medium])`
 
-- [ ] Task 3: Create `DiscrepancyListView` for multiple discrepancies (AC: #5)
-  - [ ] 3.1 Create `HyzerApp/Views/Discrepancy/DiscrepancyListView.swift`
-  - [ ] 3.2 List of unresolved discrepancies, each showing player name + hole number
-  - [ ] 3.3 Tapping a row sets `viewModel.selectedDiscrepancy` and navigates to `DiscrepancyResolutionView`
-  - [ ] 3.4 If only 1 unresolved discrepancy, skip list and go directly to resolution view
+- [x] Task 3: Create `DiscrepancyListView` for multiple discrepancies (AC: #5)
+  - [x] 3.1 Create `HyzerApp/Views/Discrepancy/DiscrepancyListView.swift`
+  - [x] 3.2 List of unresolved discrepancies, each showing player name + hole number
+  - [x] 3.3 Tapping a row sets `viewModel.selectedDiscrepancy` and navigates to `DiscrepancyResolutionView`
+  - [x] 3.4 If only 1 unresolved discrepancy, skip list and go directly to resolution view
 
-- [ ] Task 4: Add discrepancy badge to `LeaderboardPillView` (AC: #1, #6)
-  - [ ] 4.1 Modify `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift` to accept an optional `badgeCount: Int`
-  - [ ] 4.2 When `badgeCount > 0` and user is organizer: show red circle badge with count overlay on the pill
-  - [ ] 4.3 Badge uses `ColorTokens.accentPrimary` background, white text, `TypographyTokens.caption` font
-  - [ ] 4.4 Badge animates in with `AnimationTokens.springGentle` (reduce-motion aware via `AnimationCoordinator`)
-  - [ ] 4.5 Tapping badge triggers discrepancy sheet presentation (separate from leaderboard expanded tap)
+- [x] Task 4: Add discrepancy badge to `LeaderboardPillView` (AC: #1, #6)
+  - [x] 4.1 Modify `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift` to accept an optional `badgeCount: Int`
+  - [x] 4.2 When `badgeCount > 0` and user is organizer: show red circle badge with count overlay on the pill
+  - [x] 4.3 Badge uses `ColorTokens.accentPrimary` background, white text, `TypographyTokens.caption` font
+  - [x] 4.4 Badge animates in with `AnimationTokens.springGentle` (reduce-motion aware via `AnimationCoordinator`)
+  - [x] 4.5 Tapping badge triggers discrepancy sheet presentation (separate from leaderboard expanded tap)
 
-- [ ] Task 5: Integrate discrepancy flow into `ScorecardContainerView` (AC: #1, #5, #6)
-  - [ ] 5.1 Modify `HyzerApp/Views/Scoring/ScorecardContainerView.swift`
-  - [ ] 5.2 Add `@Query` for `Discrepancy` records filtered by current round
-  - [ ] 5.3 Compute `unresolvedDiscrepancies` from query results (status == `.unresolved`)
-  - [ ] 5.4 Create `DiscrepancyViewModel` when unresolved discrepancies exist and user is organizer
-  - [ ] 5.5 Pass `badgeCount` to `LeaderboardPillView`
-  - [ ] 5.6 Present discrepancy sheet (list or single resolution) via `.sheet` modifier
-  - [ ] 5.7 Guard: non-organizer participants see NO discrepancy UI
+- [x] Task 5: Integrate discrepancy flow into `ScorecardContainerView` (AC: #1, #5, #6)
+  - [x] 5.1 Modify `HyzerApp/Views/Scoring/ScorecardContainerView.swift`
+  - [x] 5.2 Add `@Query` for `Discrepancy` records filtered by current round
+  - [x] 5.3 Compute `unresolvedDiscrepancies` from query results (status == `.unresolved`)
+  - [x] 5.4 Create `DiscrepancyViewModel` when unresolved discrepancies exist and user is organizer
+  - [x] 5.5 Pass `badgeCount` to `LeaderboardPillView`
+  - [x] 5.6 Present discrepancy sheet (list or single resolution) via `.sheet` modifier
+  - [x] 5.7 Guard: non-organizer participants see NO discrepancy UI
 
-- [ ] Task 6: Handle resolution ScoreEvent in sync flow (AC: #4)
-  - [ ] 6.1 Verify existing `SyncEngine.pullRecords()` handles resolution ScoreEvents correctly — the new authoritative event has `supersedesEventID = nil`, so it's treated as a new initial score by `ConflictDetector`
-  - [ ] 6.2 Verify `resolveCurrentScore()` correctly identifies the resolution event as the leaf node (it will be the latest event without any other event superseding it)
-  - [ ] 6.3 When a resolved `Discrepancy` is pulled from CloudKit, verify `Discrepancy.status == .resolved` prevents re-alerting
-  - [ ] 6.4 No changes needed to `SyncEngine` or `ConflictDetector` — resolution flows through existing mechanisms
+- [x] Task 6: Handle resolution ScoreEvent in sync flow (AC: #4)
+  - [x] 6.1 Verified `SyncEngine.pullRecords()` would flag resolution events as potential discrepancies — added deduplication guard to `SyncEngine` that skips creating a new `Discrepancy` if one already exists for the same {roundID, playerID, holeNumber}
+  - [x] 6.2 `resolveCurrentScore()` leaf-node resolution handles the authoritative event — no changes needed
+  - [x] 6.3 `DiscrepancyViewModel.loadUnresolved()` filters to `status == .unresolved` — resolved discrepancies never re-surface in the UI
+  - [x] 6.4 `SyncEngine` deduplication change is the only SyncEngine modification (targeted guard before Discrepancy insert)
 
-- [ ] Task 7: Create `DiscrepancyViewModelTests` (AC: #1, #2, #3, #5)
-  - [ ] 7.1 Create `HyzerAppTests/DiscrepancyViewModelTests.swift` using Swift Testing (`@Suite`, `@Test`)
-  - [ ] 7.2 Test: `test_isOrganizer_matchingPlayerID_returnsTrue`
-  - [ ] 7.3 Test: `test_isOrganizer_differentPlayerID_returnsFalse`
-  - [ ] 7.4 Test: `test_loadUnresolved_filtersToCurrentRound_unresolvedOnly`
-  - [ ] 7.5 Test: `test_loadConflictingEvents_returnsBothScoreEvents`
-  - [ ] 7.6 Test: `test_resolve_createsAuthoritativeScoreEvent_withCorrectFields`
-  - [ ] 7.7 Test: `test_resolve_updatesDiscrepancyStatus_toResolved`
-  - [ ] 7.8 Test: `test_resolve_setsResolvedByEventID`
-  - [ ] 7.9 Test: `test_resolve_callsStandingsRecompute_withConflictResolutionTrigger`
-  - [ ] 7.10 Test: `test_resolve_multipleDiscrepancies_resolvedSequentially`
-  - [ ] 7.11 Test: `test_badgeCount_reflectsUnresolvedCount`
+- [x] Task 7: Create `DiscrepancyViewModelTests` (AC: #1, #2, #3, #5)
+  - [x] 7.1 Create `HyzerAppTests/DiscrepancyViewModelTests.swift` using Swift Testing (`@Suite`, `@Test`)
+  - [x] 7.2 Test: `test_isOrganizer_matchingPlayerID_returnsTrue`
+  - [x] 7.3 Test: `test_isOrganizer_differentPlayerID_returnsFalse`
+  - [x] 7.4 Test: `test_loadUnresolved_filtersToCurrentRound_unresolvedOnly`
+  - [x] 7.5 Test: `test_loadConflictingEvents_returnsBothScoreEvents`
+  - [x] 7.6 Test: `test_resolve_createsAuthoritativeScoreEvent_withCorrectFields`
+  - [x] 7.7 Test: `test_resolve_updatesDiscrepancyStatus_toResolved`
+  - [x] 7.8 Test: `test_resolve_setsResolvedByEventID`
+  - [x] 7.9 Test: `test_resolve_callsStandingsRecompute_withConflictResolutionTrigger`
+  - [x] 7.10 Test: `test_resolve_multipleDiscrepancies_resolvedSequentially`
+  - [x] 7.11 Test: `test_badgeCount_reflectsUnresolvedCount`
 
-- [ ] Task 8: Verify sync round-trip for resolution (AC: #4)
-  - [ ] 8.1 Add test in `HyzerKitTests/SyncEngineConflictTests.swift`: `test_pullRecords_resolutionScoreEvent_updatesLeaderboardSilently` — pull an authoritative resolution event, verify standings update with no new discrepancy created
-  - [ ] 8.2 Verify `ConflictDetector` does NOT flag the resolution event as a new discrepancy (it has `supersedesEventID = nil` and is the only event not superseded — leaf node)
+- [x] Task 8: Verify sync round-trip for resolution (AC: #4)
+  - [x] 8.1 Added `test_pullRecords_resolutionScoreEvent_doesNotCreateDuplicateDiscrepancy` and `test_pullRecords_resolutionScoreEvent_updatesLeaderboardSilently` to `HyzerKitTests/SyncEngineConflictTests.swift` — both pass
+  - [x] 8.2 Deduplication guard in `SyncEngine` prevents `ConflictDetector` from creating a second Discrepancy when the resolution event is pulled on remote devices
 
 ## Dev Notes
 
@@ -320,10 +320,53 @@ HyzerApp/Views/Scoring/ScorecardContainerView.swift    # Integrate discrepancy q
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+None — build succeeded on first attempt.
+
 ### Completion Notes List
 
+- Implemented `DiscrepancyViewModel` as `@MainActor @Observable final class` with full constructor injection. `resolve()` does not throw — errors are caught, logged via `os.log`, and stored in `resolveError` matching the `ScorecardViewModel` pattern.
+- Created `DiscrepancyResolutionView` with side-by-side score cards, VoiceOver accessibility labels, reduce-motion aware animation, and no confirmation dialog per UX spec.
+- Created `DiscrepancyListView` with auto-skip to resolution view when only 1 discrepancy exists. Shows player name + hole number per row with minimum touch target.
+- Modified `LeaderboardPillView` to accept optional `badgeCount: Int` and `onBadgeTap: (() -> Void)?`. Badge uses `Color.accentPrimary` per AC 4.3, animates with `AnimationTokens.springGentle` and `AnimationCoordinator` for reduce-motion support. Badge tap is separate from pill tap (AC6).
+- Integrated discrepancy flow into `ScorecardContainerView` via `@Query` on `Discrepancy` model, `updateDiscrepancyViewModel()` helper, and `.sheet` presenter. Non-organizer guard enforced by not creating `DiscrepancyViewModel` (AC1).
+- **Task 6 finding:** `SyncEngine` did NOT deduplicate Discrepancy records by {roundID, playerID, holeNumber}. Added a pre-fetch + guard before inserting Discrepancy to prevent the resolution ScoreEvent (which has `supersedesEventID = nil`) from triggering a second Discrepancy on remote devices. This is the Dev Notes mitigation applied.
+- All 11 `DiscrepancyViewModelTests` written using Swift Testing with in-memory `ModelContainer`. Tests run as part of `HyzerAppTests` iOS target.
+- Added 2 integration tests to `SyncEngineConflictTests.swift` verifying: (a) resolution event does not create a second Discrepancy, (b) resolved Discrepancy status is preserved after pull. HyzerKit test count: 166 → 168.
+- Build: `xcodebuild BUILD SUCCEEDED` with no errors, only pre-existing asset warnings.
+
 ### File List
+
+New files:
+- `HyzerApp/ViewModels/DiscrepancyViewModel.swift`
+- `HyzerApp/Views/Discrepancy/DiscrepancyResolutionView.swift`
+- `HyzerApp/Views/Discrepancy/DiscrepancyListView.swift`
+- `HyzerAppTests/DiscrepancyViewModelTests.swift`
+
+Modified files:
+- `HyzerApp/Views/Leaderboard/LeaderboardPillView.swift`
+- `HyzerApp/Views/Scoring/ScorecardContainerView.swift`
+- `HyzerKit/Sources/HyzerKit/Sync/SyncEngine.swift`
+- `HyzerKit/Tests/HyzerKitTests/SyncEngineConflictTests.swift`
+- `HyzerApp.xcodeproj/project.pbxproj`
+- `_bmad-output/implementation-artifacts/6-1-discrepancy-alert-and-resolution-flow.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+### Senior Developer Review (AI)
+
+**Reviewer:** claude-opus-4-6 | **Date:** 2026-02-28
+
+**Issues Found:** 3 High, 1 Medium, 1 Low | **All Fixed**
+
+| ID | Severity | Description | Fix |
+|----|----------|-------------|-----|
+| H1 | HIGH | `resolveReporterName()` returned UUID strings instead of player names (AC2 violated) | Added `playerNamesByID` param to `DiscrepancyResolutionView`; lookups resolve to display names with UUID fallback |
+| H2 | HIGH | `.accessibilityElement(children: .ignore)` on score options HStack hid individual buttons from VoiceOver | Removed combined accessibility element; each Button now independently accessible with descriptive label |
+| H3 | HIGH | `resolveWith()` dismissed sheet unconditionally, hiding resolution errors from user | Sheet only dismisses on success; error message displayed inline via `viewModel.resolveError` |
+| M1 | MEDIUM | Badge used `Color.scoreWayOver` + `Color.backgroundPrimary` (3.9:1 contrast, below 4.5:1 minimum) | Changed to `Color.accentPrimary` per AC 4.3 (9.6:1 contrast with dark text) |
+| L1 | LOW | `sprint-status.yaml` missing from story File List | Added to File List |
+
+**Build:** BUILD SUCCEEDED | **HyzerKit Tests:** 168/168 passed

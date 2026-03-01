@@ -21,12 +21,15 @@ struct ScorecardContainerView: View {
     @Query(sort: \Hole.number) private var allHoles: [Hole]
     @Query(sort: \Player.displayName) private var allPlayers: [Player]
     @Query(sort: \Course.name) private var allCourses: [Course]
+    @Query private var allDiscrepancies: [Discrepancy]
 
     @State private var currentHole: Int = 1
     @State private var viewModel: ScorecardViewModel?
     @State private var leaderboardViewModel: LeaderboardViewModel?
     @State private var autoAdvanceTask: Task<Void, Never>?
     @State private var voiceOverlayViewModel: VoiceOverlayViewModel?
+    @State private var discrepancyViewModel: DiscrepancyViewModel?
+    @State private var isShowingDiscrepancySheet: Bool = false
 
     /// Shown when finishRound returns .hasMissingScores — confirms early termination.
     @State private var missingScoreCount: Int = 0
@@ -45,6 +48,16 @@ struct ScorecardContainerView: View {
 
     private var roundScoreEvents: [ScoreEvent] {
         allScoreEvents.filter { $0.roundID == round.id }
+    }
+
+    /// Unresolved discrepancies for the current round (organizer-only — AC1).
+    private var unresolvedDiscrepancies: [Discrepancy] {
+        allDiscrepancies.filter { $0.roundID == round.id && $0.status == .unresolved }
+    }
+
+    /// Quick lookup of player displayName by playerID string (for discrepancy UI).
+    private var playerNamesByID: [String: String] {
+        Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.id.uuidString, $0.displayName) })
     }
 
     private var courseHoles: [Hole] {
@@ -74,6 +87,62 @@ struct ScorecardContainerView: View {
     // MARK: - Body
 
     var body: some View {
+        baseView
+            .fullScreenCover(isPresented: $isShowingSummary) {
+                if let vm = summaryViewModel {
+                    RoundSummaryView(viewModel: vm, onDismiss: { isShowingSummary = false })
+                }
+            }
+            .sheet(isPresented: $isShowingDiscrepancySheet, onDismiss: { discrepancyViewModel?.loadUnresolved() }) {
+                discrepancySheetContent
+            }
+            .onAppear { initializeViewModels() }
+            .onChange(of: currentHole) { autoAdvanceTask?.cancel() }
+            .task {
+                guard !round.isFinished else { return }
+                await appServices.roundDidStart()
+            }
+            .onDisappear { Task { await appServices.roundDidEnd() } }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active && !round.isFinished {
+                    Task { await appServices.roundDidStart() }
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var baseView: some View {
+        scoringContent
+            .overlay { voiceOverlayContent }
+            .onChange(of: voiceOverlayViewModel?.isTerminated, handleVoiceOverlayTerminated)
+            .background(Color.backgroundPrimary)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) { SyncIndicatorView() }
+                ToolbarItem(placement: .navigationBarTrailing) { trailingToolbarContent }
+            }
+            .alert("Finalize Round?", isPresented: $isShowingFinalizationPrompt) {
+                Button("Finalize") { finalizeRoundConfirmed() }
+                Button("Keep Scoring", role: .cancel) { viewModel?.dismissFinalizationPrompt() }
+            } message: { Text("All scores recorded. Finalize the round?") }
+            .onChange(of: viewModel?.isAwaitingFinalization) { _, newValue in
+                if newValue == true { isShowingFinalizationPrompt = true }
+            }
+            .onChange(of: viewModel?.isRoundCompleted, handleRoundCompleted)
+            .onChange(of: unresolvedDiscrepancies.count) { _, _ in updateDiscrepancyViewModel() }
+            .alert("Missing Scores", isPresented: $isShowingEarlyFinishWarning) {
+                Button("Finish Anyway", role: .destructive) { finishRoundForced() }
+                Button("Keep Playing", role: .cancel) { }
+            } message: { Text("\(missingScoreCount) score\(missingScoreCount == 1 ? "" : "s") missing. Finish anyway?") }
+            .alert("Error", isPresented: showingLifecycleErrorBinding) {
+                Button("OK") { lifecycleError = nil }
+            } message: { Text(lifecycleError?.localizedDescription ?? "") }
+            .alert("Score Entry Error", isPresented: showingScoreErrorBinding) {
+                Button("OK") { }
+            } message: { Text(viewModel?.saveError?.localizedDescription ?? "") }
+    }
+
+    @ViewBuilder
+    private var scoringContent: some View {
         ZStack(alignment: .top) {
             TabView(selection: $currentHole) {
                 ForEach(1...max(1, round.holeCount), id: \.self) { holeNumber in
@@ -101,105 +170,42 @@ struct ScorecardContainerView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .automatic))
 
-            if let lvm = leaderboardViewModel,
-               lvm.currentStandings.contains(where: { $0.holesPlayed > 0 }) {
-                LeaderboardPillView(viewModel: lvm)
-                    .padding(.top, SpacingTokens.md)
-                    .padding(.horizontal, SpacingTokens.md)
-            }
-        }
-        .overlay { voiceOverlayContent }
-        .onChange(of: voiceOverlayViewModel?.isTerminated, handleVoiceOverlayTerminated)
-        .background(Color.backgroundPrimary)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                SyncIndicatorView()
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                trailingToolbarContent
-            }
-        }
-        // Finalization prompt: all scores recorded, user confirms
-        .alert(
-            "Finalize Round?",
-            isPresented: $isShowingFinalizationPrompt
-        ) {
-            Button("Finalize") { finalizeRoundConfirmed() }
-            Button("Keep Scoring", role: .cancel) {
-                viewModel?.dismissFinalizationPrompt()
-            }
-        } message: {
-            Text("All scores recorded. Finalize the round?")
-        }
-        .onChange(of: viewModel?.isAwaitingFinalization) { _, newValue in
-            if newValue == true {
-                isShowingFinalizationPrompt = true
-            }
-        }
-        .onChange(of: viewModel?.isRoundCompleted) { _, newValue in
-            if newValue == true {
-                let standings = leaderboardViewModel?.currentStandings ?? []
-                let played = standings.first?.holesPlayed ?? round.holeCount
-                let par = courseHoles.reduce(0) { $0 + $1.par }
-                let playerID = leaderboardViewModel?.currentPlayerID ?? round.organizerID.uuidString
-                summaryViewModel = RoundSummaryViewModel(
-                    round: round,
-                    standings: standings,
-                    courseName: courseName,
-                    holesPlayed: played,
-                    coursePar: par,
-                    currentPlayerID: playerID
-                )
-                withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
-                    isShowingSummary = true
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $isShowingSummary) {
-            if let vm = summaryViewModel {
-                RoundSummaryView(viewModel: vm, onDismiss: { isShowingSummary = false })
-            }
-        }
-        // Early finish warning: unscored holes remain
-        .alert(
-            "Missing Scores",
-            isPresented: $isShowingEarlyFinishWarning
-        ) {
-            Button("Finish Anyway", role: .destructive) { finishRoundForced() }
-            Button("Keep Playing", role: .cancel) { }
-        } message: {
-            Text("\(missingScoreCount) score\(missingScoreCount == 1 ? "" : "s") missing. Finish anyway?")
-        }
-        // General lifecycle error alert
-        .alert("Error", isPresented: showingLifecycleErrorBinding) {
-            Button("OK") { lifecycleError = nil }
-        } message: {
-            Text(lifecycleError?.localizedDescription ?? "")
-        }
-        .alert("Score Entry Error", isPresented: showingScoreErrorBinding) {
-            Button("OK") { }
-        } message: {
-            Text(viewModel?.saveError?.localizedDescription ?? "")
-        }
-        .onAppear { initializeViewModels() }
-        .onChange(of: currentHole) {
-            autoAdvanceTask?.cancel()
-        }
-        .task {
-            guard !round.isFinished else { return }
-            await appServices.roundDidStart()
-        }
-        .onDisappear {
-            Task { await appServices.roundDidEnd() }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active && !round.isFinished {
-                Task { await appServices.roundDidStart() }
-            }
+            leaderboardPillContent
         }
     }
 
     // MARK: - Private
+
+    /// Badge count passed to `LeaderboardPillView`. Non-nil only when user is organizer (AC1).
+    private var discrepancyBadgeCount: Int? {
+        guard let dvm = discrepancyViewModel, dvm.isOrganizer else { return nil }
+        let count = unresolvedDiscrepancies.count
+        return count > 0 ? count : nil
+    }
+
+    /// Creates or updates `DiscrepancyViewModel` when unresolved discrepancies exist and the
+    /// current user is the round organizer. Clears the ViewModel when no discrepancies remain (AC1).
+    private func updateDiscrepancyViewModel() {
+        guard let lvm = leaderboardViewModel else { return }
+        guard let currentPlayerUUID = UUID(uuidString: lvm.currentPlayerID) else { return }
+        let isOrganizer = currentPlayerUUID == round.organizerID
+
+        if !unresolvedDiscrepancies.isEmpty && isOrganizer {
+            if discrepancyViewModel == nil {
+                discrepancyViewModel = DiscrepancyViewModel(
+                    scoringService: appServices.scoringService,
+                    standingsEngine: appServices.standingsEngine,
+                    modelContext: modelContext,
+                    roundID: round.id,
+                    organizerID: round.organizerID,
+                    currentPlayerID: currentPlayerUUID
+                )
+            }
+            discrepancyViewModel?.loadUnresolved()
+        } else if unresolvedDiscrepancies.isEmpty {
+            discrepancyViewModel = nil
+        }
+    }
 
     private func initializeViewModels() {
         guard viewModel == nil else { return }
@@ -216,6 +222,7 @@ struct ScorecardContainerView: View {
                 currentPlayerID: round.organizerID.uuidString
             )
             appServices.standingsEngine.recompute(for: round.id, trigger: .localScore)
+            updateDiscrepancyViewModel()
             return
         }
         viewModel = ScorecardViewModel(
@@ -230,6 +237,7 @@ struct ScorecardContainerView: View {
             currentPlayerID: organizer.id.uuidString
         )
         appServices.standingsEngine.recompute(for: round.id, trigger: .localScore)
+        updateDiscrepancyViewModel()
     }
 
     private func enterScore(playerID: String, holeNumber: Int, strokeCount: Int) {
@@ -301,6 +309,27 @@ struct ScorecardContainerView: View {
         }
     }
 
+    // MARK: - Round completion handler
+
+    private func handleRoundCompleted(_: Bool?, _ newValue: Bool?) {
+        guard newValue == true else { return }
+        let standings = leaderboardViewModel?.currentStandings ?? []
+        let played = standings.first?.holesPlayed ?? round.holeCount
+        let par = courseHoles.reduce(0) { $0 + $1.par }
+        let playerID = leaderboardViewModel?.currentPlayerID ?? round.organizerID.uuidString
+        summaryViewModel = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: courseName,
+            holesPlayed: played,
+            coursePar: par,
+            currentPlayerID: playerID
+        )
+        withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
+            isShowingSummary = true
+        }
+    }
+
     // MARK: - Voice overlay termination
 
     private func handleVoiceOverlayTerminated(_: Bool?, _ isTerminal: Bool?) {
@@ -310,6 +339,36 @@ struct ScorecardContainerView: View {
         }
         withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
             voiceOverlayViewModel = nil
+        }
+    }
+
+    // MARK: - Discrepancy sheet
+
+    @ViewBuilder
+    private var discrepancySheetContent: some View {
+        if let dvm = discrepancyViewModel {
+            DiscrepancyListView(
+                viewModel: dvm,
+                playerNamesByID: playerNamesByID,
+                isPresented: $isShowingDiscrepancySheet
+            )
+            .presentationDetents([.medium])
+        }
+    }
+
+    // MARK: - Leaderboard pill
+
+    @ViewBuilder
+    private var leaderboardPillContent: some View {
+        if let lvm = leaderboardViewModel,
+           lvm.currentStandings.contains(where: { $0.holesPlayed > 0 }) {
+            LeaderboardPillView(
+                viewModel: lvm,
+                badgeCount: discrepancyBadgeCount,
+                onBadgeTap: { isShowingDiscrepancySheet = true }
+            )
+            .padding(.top, SpacingTokens.md)
+            .padding(.horizontal, SpacingTokens.md)
         }
     }
 
