@@ -84,7 +84,7 @@ stories:
     epic: 7
   "7.3":
     title: "Watch Voice Scoring & Bidirectional Communication"
-    status: not-started
+    status: ready-for-dev
     epic: 7
   "8.1":
     title: "History List & Round Detail"
