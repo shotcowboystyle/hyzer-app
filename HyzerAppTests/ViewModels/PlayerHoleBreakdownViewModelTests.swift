@@ -62,12 +62,12 @@ struct PlayerHoleBreakdownViewModelTests {
         let context = ModelContext(container)
 
         let playerID = UUID().uuidString
-        let (course, _) = insertCourseWithHoles(context: context, name: "Cedar Creek", holeCount: 3, parPerHole: 3)
+        let (course, _) = insertCourseWithHoles(context: context, name: "Cedar Creek", holeCount: 3, parPerHole: 4)
         let round = makeCompletedRound(courseID: course.id, playerIDs: [playerID], holeCount: 3)
         context.insert(round)
 
-        // Hole 1: birdie (2), Hole 2: par (3), Hole 3: bogey (4)
-        let strokesByHole = [1: 2, 2: 3, 3: 4]
+        // Par 4 holes — Hole 1: birdie (3), Hole 2: par (4), Hole 3: bogey (5)
+        let strokesByHole = [1: 3, 2: 4, 3: 5]
         for (holeNum, strokes) in strokesByHole {
             context.insert(ScoreEvent(
                 roundID: round.id, holeNumber: holeNum,
@@ -84,14 +84,17 @@ struct PlayerHoleBreakdownViewModelTests {
         )
         vm.computeBreakdown()
 
-        // Then: 3 hole scores, sorted by hole number
+        // Then: 3 hole scores, sorted by hole number, with correct par and strokes
         #expect(vm.holeScores.count == 3)
         #expect(vm.holeScores[0].holeNumber == 1)
-        #expect(vm.holeScores[0].strokeCount == 2)
+        #expect(vm.holeScores[0].par == 4)
+        #expect(vm.holeScores[0].strokeCount == 3)
         #expect(vm.holeScores[1].holeNumber == 2)
-        #expect(vm.holeScores[1].strokeCount == 3)
+        #expect(vm.holeScores[1].par == 4)
+        #expect(vm.holeScores[1].strokeCount == 4)
         #expect(vm.holeScores[2].holeNumber == 3)
-        #expect(vm.holeScores[2].strokeCount == 4)
+        #expect(vm.holeScores[2].par == 4)
+        #expect(vm.holeScores[2].strokeCount == 5)
     }
 
     @Test("computeBreakdown produces correct totals")
@@ -303,6 +306,64 @@ struct PlayerHoleBreakdownViewModelTests {
         vm.computeBreakdown()
 
         #expect(vm.overallScoreColor == Color.scoreUnderPar)
+    }
+
+    @Test("computeBreakdown overall score color is scoreAtPar when even")
+    func test_computeBreakdown_overallScoreColor_atPar_isScoreAtPar() throws {
+        // Given: all pars → even overall
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        let playerID = UUID().uuidString
+        let (course, _) = insertCourseWithHoles(context: context, holeCount: 3, parPerHole: 3)
+        let round = makeCompletedRound(courseID: course.id, playerIDs: [playerID], holeCount: 3)
+        context.insert(round)
+
+        for holeNum in 1...3 {
+            context.insert(ScoreEvent(
+                roundID: round.id, holeNumber: holeNum,
+                playerID: playerID, strokeCount: 3,
+                reportedByPlayerID: UUID(), deviceID: "test"
+            ))
+        }
+        try context.save()
+
+        let vm = PlayerHoleBreakdownViewModel(
+            modelContext: context, roundID: round.id,
+            playerID: playerID, playerName: "Ivy"
+        )
+        vm.computeBreakdown()
+
+        #expect(vm.overallScoreColor == Color.scoreAtPar)
+    }
+
+    @Test("computeBreakdown overall score color is scoreOverPar when over par")
+    func test_computeBreakdown_overallScoreColor_overPar_isScoreOverPar() throws {
+        // Given: all bogeys → over par overall
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        let playerID = UUID().uuidString
+        let (course, _) = insertCourseWithHoles(context: context, holeCount: 3, parPerHole: 3)
+        let round = makeCompletedRound(courseID: course.id, playerIDs: [playerID], holeCount: 3)
+        context.insert(round)
+
+        for holeNum in 1...3 {
+            context.insert(ScoreEvent(
+                roundID: round.id, holeNumber: holeNum,
+                playerID: playerID, strokeCount: 4,
+                reportedByPlayerID: UUID(), deviceID: "test"
+            ))
+        }
+        try context.save()
+
+        let vm = PlayerHoleBreakdownViewModel(
+            modelContext: context, roundID: round.id,
+            playerID: playerID, playerName: "Jake"
+        )
+        vm.computeBreakdown()
+
+        #expect(vm.overallScoreColor == Color.scoreOverPar)
     }
 
     @Test("computeBreakdown individual hole uses 4-tier scoreColor including scoreWayOver")

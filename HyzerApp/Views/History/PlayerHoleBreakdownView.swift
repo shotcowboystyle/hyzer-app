@@ -144,5 +144,20 @@ private struct SummaryFooterRow: View {
             .padding(.vertical, SpacingTokens.md)
         }
         .background(Color.backgroundElevated)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        let relative = totalStrokes - totalPar
+        let relativeText: String
+        if relative < 0 {
+            relativeText = "\(abs(relative)) under"
+        } else if relative == 0 {
+            relativeText = "even with"
+        } else {
+            relativeText = "\(relative) over"
+        }
+        return "Total, \(totalStrokes) strokes, par \(totalPar), \(relativeText) par"
     }
 }
