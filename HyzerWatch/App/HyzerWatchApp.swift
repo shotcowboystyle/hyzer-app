@@ -9,7 +9,7 @@ struct HyzerWatchApp: App {
         WindowGroup {
             WatchLeaderboardView(
                 viewModel: WatchLeaderboardViewModel(provider: connectivityService),
-                connectivityClient: connectivityService
+                connectivityService: connectivityService
             )
         }
     }

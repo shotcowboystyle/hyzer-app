@@ -14,7 +14,7 @@ import HyzerKit
 struct WatchLeaderboardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var viewModel: WatchLeaderboardViewModel
-    var connectivityClient: any WatchConnectivityClient
+    var connectivityService: WatchConnectivityService
 
     var body: some View {
         NavigationStack {
@@ -44,8 +44,10 @@ struct WatchLeaderboardView: View {
                             holeNumber: snapshot.currentHole,
                             parValue: snapshot.currentHolePar,
                             roundID: snapshot.roundID,
-                            connectivityClient: connectivityClient
-                        )
+                            connectivityClient: connectivityService
+                        ),
+                        connectivityService: connectivityService,
+                        snapshot: snapshot
                     )
                 }
             }

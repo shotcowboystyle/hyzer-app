@@ -56,10 +56,12 @@ final class AppServices {
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         let scoring = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
         self.scoringService = scoring
-        self.voiceRecognitionService = VoiceRecognitionService()
+        let voice = VoiceRecognitionService()
+        self.voiceRecognitionService = voice
         let connectivity = PhoneConnectivityService()
         connectivity.scoringService = scoring
         connectivity.localPlayerID = Self.resolveLocalPlayerID(from: modelContainer.mainContext)
+        connectivity.voiceRecognitionService = voice
         self.phoneConnectivityService = connectivity
         self.iCloudIdentityProvider = iCloudIdentityProvider
     }

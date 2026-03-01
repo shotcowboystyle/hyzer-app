@@ -1,5 +1,6 @@
 import Foundation
 import WatchConnectivity
+import WatchKit
 import Observation
 import os.log
 import HyzerKit
@@ -96,23 +97,41 @@ final class WatchConnectivityService: WatchConnectivityClient, WatchStandingsObs
         }
     }
 
+    // MARK: - Voice result callback
+
+    /// Set by `WatchVoiceOverlayView` while it is presented to receive voice recognition results
+    /// from the phone. Cleared when the overlay dismisses.
+    var voiceResultHandler: ((WatchVoiceResult) -> Void)?
+
     // MARK: - Private
 
     private func handleIncomingData(_ data: Data) {
-        guard let message = try? JSONDecoder().decode(WatchMessage.self, from: data) else {
-            logger.error("Failed to decode incoming WatchMessage")
+        let message: WatchMessage
+        do {
+            message = try JSONDecoder().decode(WatchMessage.self, from: data)
+        } catch {
+            logger.error("Failed to decode incoming WatchMessage: \(error)")
             return
         }
         switch message {
         case .standingsUpdate(let snapshot):
+            let previousScoreTotal = currentSnapshot?.standings.map(\.totalStrokes).reduce(0, +)
             currentSnapshot = snapshot
             do {
                 try cacheManager.save(snapshot)
             } catch {
                 logger.error("WatchCacheManager save failed: \(error)")
             }
+            let newScoreTotal = snapshot.standings.map(\.totalStrokes).reduce(0, +)
+            if let prev = previousScoreTotal, newScoreTotal != prev {
+                WKInterfaceDevice.current().play(.notification)
+            }
         case .scoreEvent:
             break // Watch never receives score events from phone
+        case .voiceResult(let result):
+            voiceResultHandler?(result)
+        case .voiceRequest:
+            break // Watch never receives voice requests from phone
         }
     }
 }

@@ -2,23 +2,6 @@ import Testing
 import Foundation
 @testable import HyzerKit
 
-// MARK: - Mock connectivity client
-
-@MainActor
-final class MockWatchConnectivityClient: WatchConnectivityClient {
-    var isReachable: Bool = false
-    private(set) var sentMessages: [WatchMessage] = []
-    private(set) var transferredMessages: [WatchMessage] = []
-
-    func sendMessage(_ message: WatchMessage) throws {
-        sentMessages.append(message)
-    }
-
-    func transferUserInfo(_ message: WatchMessage) {
-        transferredMessages.append(message)
-    }
-}
-
 // MARK: - WatchScoringViewModel tests
 
 @Suite("WatchScoringViewModel")

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Input type for `VoiceParser` — minimal player representation with no SwiftData dependency.
-public struct VoicePlayerEntry: Sendable {
+public struct VoicePlayerEntry: Sendable, Codable, Equatable {
     public let playerID: String
     public let displayName: String
     public let aliases: [String]
