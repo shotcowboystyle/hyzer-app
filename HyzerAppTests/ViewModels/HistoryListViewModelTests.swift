@@ -37,6 +37,7 @@ struct HistoryListViewModelTests {
         round.start()
         round.awaitFinalization()
         round.complete()
+        round.completedAt = completedAt
         return round
     }
 
@@ -333,5 +334,80 @@ struct HistoryListViewModelTests {
         #expect(data?.courseName == course.name)
         #expect(data?.playerCount == 1)
         #expect(data?.formattedDate.isEmpty == false)
+    }
+
+    // MARK: - Task 4.2: Reverse chronological ordering
+
+    @Test("Completed rounds query returns results in reverse chronological order")
+    func test_completedRounds_reverseChronological() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        let course = Course(name: "Ordering Course", holeCount: 9)
+        context.insert(course)
+
+        let olderDate = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        let newerDate = Date()
+
+        let olderRound = makeRound(courseID: course.id, playerIDs: ["p1"], completedAt: olderDate)
+        context.insert(olderRound)
+        let newerRound = makeRound(courseID: course.id, playerIDs: ["p1"], completedAt: newerDate)
+        context.insert(newerRound)
+
+        try context.save()
+
+        let descriptor = FetchDescriptor<Round>(
+            predicate: #Predicate<Round> { $0.status == "completed" },
+            sortBy: [SortDescriptor(\Round.completedAt, order: .reverse)]
+        )
+        let results = try context.fetch(descriptor)
+
+        #expect(results.count == 2)
+        #expect(results[0].id == newerRound.id)
+        #expect(results[1].id == olderRound.id)
+    }
+
+    // MARK: - Task 4.2: Non-completed rounds excluded
+
+    @Test("Non-completed rounds are excluded from completed rounds query")
+    func test_nonCompletedRounds_excluded() throws {
+        let container = try makeContainer()
+        let context = ModelContext(container)
+
+        let course = Course(name: "Filter Course", holeCount: 9)
+        context.insert(course)
+
+        let completedRound = makeRound(courseID: course.id, playerIDs: ["p1"])
+        context.insert(completedRound)
+
+        let activeRound = Round(
+            courseID: course.id,
+            organizerID: UUID(),
+            playerIDs: ["p1"],
+            guestNames: [],
+            holeCount: 9
+        )
+        activeRound.start()
+        context.insert(activeRound)
+
+        let setupRound = Round(
+            courseID: course.id,
+            organizerID: UUID(),
+            playerIDs: ["p1"],
+            guestNames: [],
+            holeCount: 9
+        )
+        context.insert(setupRound)
+
+        try context.save()
+
+        let descriptor = FetchDescriptor<Round>(
+            predicate: #Predicate<Round> { $0.status == "completed" },
+            sortBy: [SortDescriptor(\Round.completedAt, order: .reverse)]
+        )
+        let results = try context.fetch(descriptor)
+
+        #expect(results.count == 1)
+        #expect(results[0].id == completedRound.id)
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import SwiftData
 import HyzerKit
 
@@ -12,10 +13,14 @@ struct HistoryRoundCardData {
     let winnerName: String?
     /// Winner's formatted score relative to par (e.g. "-2", "E", "+1").
     let winnerFormattedScore: String?
+    /// Winner's score color derived from Standing.scoreColor.
+    let winnerScoreColor: Color?
     /// Current player's ordinal finishing position (e.g. "1st", "2nd").
     let userPosition: String?
     /// Current player's formatted score.
     let userFormattedScore: String?
+    /// Current player's score color derived from Standing.scoreColor.
+    let userScoreColor: Color?
 }
 
 /// Derives card display data for completed rounds in the history list.
@@ -28,6 +33,7 @@ struct HistoryRoundCardData {
 final class HistoryListViewModel {
     private let modelContext: ModelContext
     private let standingsEngine: StandingsEngine
+    private let dateFormatter: DateFormatter
     let currentPlayerID: String
 
     /// Cached card data keyed by round ID. Populated lazily as cards appear on screen.
@@ -37,6 +43,10 @@ final class HistoryListViewModel {
         self.modelContext = modelContext
         self.currentPlayerID = currentPlayerID
         self.standingsEngine = StandingsEngine(modelContext: modelContext)
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        self.dateFormatter = formatter
     }
 
     /// Computes and caches card data for the given round if not already cached.
@@ -59,10 +69,7 @@ final class HistoryListViewModel {
         let descriptor = FetchDescriptor<Course>(predicate: #Predicate { $0.id == courseIDLocal })
         let courseName = (try? modelContext.fetch(descriptor))?.first?.name ?? "Unknown Course"
 
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        let formattedDate = formatter.string(from: round.completedAt ?? Date())
+        let formattedDate = dateFormatter.string(from: round.completedAt ?? Date())
 
         cardDataCache[round.id] = HistoryRoundCardData(
             roundID: round.id,
@@ -71,8 +78,10 @@ final class HistoryListViewModel {
             playerCount: playerCount,
             winnerName: winner?.playerName,
             winnerFormattedScore: winner?.formattedScore,
+            winnerScoreColor: winner?.scoreColor,
             userPosition: userStanding.map { ordinalize($0.position) },
-            userFormattedScore: userStanding?.formattedScore
+            userFormattedScore: userStanding?.formattedScore,
+            userScoreColor: userStanding?.scoreColor
         )
     }
 

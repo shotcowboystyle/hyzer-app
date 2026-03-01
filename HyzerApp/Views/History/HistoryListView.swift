@@ -5,8 +5,8 @@ import HyzerKit
 /// History tab root view: reverse-chronological list of completed rounds (Epic 8, Story 8.1).
 ///
 /// `@Query` lives here per the established project pattern (see `ScoringTabView`).
-/// `HistoryListViewModel` handles data transformation. Card data is precomputed synchronously
-/// in `onAppear` so the list renders fully populated on first display.
+/// `HistoryListViewModel` handles data transformation. Card data is computed lazily
+/// per card via `onAppear` for smooth scroll performance with large history lists.
 struct HistoryListView: View {
     let currentPlayerID: String
 
@@ -36,11 +36,7 @@ struct HistoryListView: View {
         }
         .onAppear {
             guard viewModel == nil else { return }
-            let vm = HistoryListViewModel(modelContext: modelContext, currentPlayerID: currentPlayerID)
-            for round in completedRounds {
-                vm.ensureCardData(for: round)
-            }
-            viewModel = vm
+            viewModel = HistoryListViewModel(modelContext: modelContext, currentPlayerID: currentPlayerID)
         }
     }
 
@@ -92,7 +88,7 @@ private struct HistoryRoundCard: View {
         } else {
             RoundedRectangle(cornerRadius: SpacingTokens.md)
                 .fill(Color.backgroundElevated)
-                .frame(height: 100)
+                .frame(height: SpacingTokens.xxl * 2)
         }
     }
 
@@ -128,7 +124,7 @@ private struct HistoryRoundCard: View {
                         .foregroundStyle(Color.textPrimary)
                     Text(winnerScore)
                         .font(TypographyTokens.body)
-                        .foregroundStyle(scoreColor(for: winnerScore))
+                        .foregroundStyle(data.winnerScoreColor ?? Color.textPrimary)
                 }
             }
 
@@ -139,7 +135,7 @@ private struct HistoryRoundCard: View {
                         .foregroundStyle(Color.textPrimary)
                     Text(userScore)
                         .font(TypographyTokens.body)
-                        .foregroundStyle(scoreColor(for: userScore))
+                        .foregroundStyle(data.userScoreColor ?? Color.textPrimary)
                 }
             }
         }
@@ -148,12 +144,6 @@ private struct HistoryRoundCard: View {
         .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.md))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel(data: data))
-    }
-
-    private func scoreColor(for formattedScore: String) -> Color {
-        if formattedScore == "E" { return .scoreAtPar }
-        if formattedScore.hasPrefix("-") { return .scoreUnderPar }
-        return .scoreOverPar
     }
 
     private func accessibilityLabel(data: HistoryRoundCardData) -> String {
