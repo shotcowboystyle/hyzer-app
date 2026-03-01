@@ -12,6 +12,7 @@ struct DiscrepancyResolutionView: View {
     let viewModel: DiscrepancyViewModel
     let discrepancy: Discrepancy
     let playerName: String
+    let playerNamesByID: [String: String]
     @Binding var isPresented: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -43,12 +44,15 @@ struct DiscrepancyResolutionView: View {
                         }
                     )
                 }
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(voiceOverLabel(event1: event1, event2: event2))
-                .accessibilityHint("Tap the correct score to resolve the discrepancy.")
             } else {
                 ProgressView()
                     .tint(Color.accentPrimary)
+            }
+            if viewModel.resolveError != nil {
+                Text("Resolution failed. Please try again.")
+                    .font(TypographyTokens.caption)
+                    .foregroundStyle(Color.scoreWayOver)
+                    .multilineTextAlignment(.center)
             }
             Spacer()
         }
@@ -102,7 +106,7 @@ struct DiscrepancyResolutionView: View {
             .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.sm))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(strokeCount) strokes, recorded by \(reporterName)")
+        .accessibilityLabel("\(strokeCount) strokes, recorded by \(reporterName). Tap to select this score.")
     }
 
     // MARK: - Helpers
@@ -116,28 +120,19 @@ struct DiscrepancyResolutionView: View {
     }
 
     private func resolveReporterName(playerID: UUID) -> String {
-        // Best-effort player name resolution without an additional query per card.
-        // The reporter UUID maps to a Player in the domain store — using the uuidString as
-        // the fallback keeps the display functional even if the player record is unavailable.
-        playerID.uuidString
+        playerNamesByID[playerID.uuidString] ?? playerID.uuidString
     }
 
     private func resolveWith(strokeCount: Int) {
+        viewModel.resolve(
+            discrepancy: discrepancy,
+            selectedStrokeCount: strokeCount,
+            playerID: discrepancy.playerID,
+            holeNumber: discrepancy.holeNumber
+        )
+        guard viewModel.resolveError == nil else { return }
         withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
-            viewModel.resolve(
-                discrepancy: discrepancy,
-                selectedStrokeCount: strokeCount,
-                playerID: discrepancy.playerID,
-                holeNumber: discrepancy.holeNumber
-            )
             isPresented = false
         }
-    }
-
-    private func voiceOverLabel(event1: ScoreEvent, event2: ScoreEvent) -> String {
-        "Score discrepancy for \(playerName) on hole \(discrepancy.holeNumber). " +
-        "Option one: \(event1.strokeCount) strokes, recorded by \(reporterName1). " +
-        "Option two: \(event2.strokeCount) strokes, recorded by \(reporterName2). " +
-        "Tap to select the correct score."
     }
 }

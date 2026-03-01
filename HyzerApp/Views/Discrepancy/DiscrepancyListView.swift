@@ -25,6 +25,7 @@ struct DiscrepancyListView: View {
                     viewModel: viewModel,
                     discrepancy: only,
                     playerName: playerNamesByID[only.playerID] ?? only.playerID,
+                    playerNamesByID: playerNamesByID,
                     isPresented: $isPresented
                 )
             } else {
@@ -37,6 +38,7 @@ struct DiscrepancyListView: View {
                     viewModel: viewModel,
                     discrepancy: discrepancy,
                     playerName: playerNamesByID[discrepancy.playerID] ?? discrepancy.playerID,
+                    playerNamesByID: playerNamesByID,
                     isPresented: $isShowingResolution
                 )
                 .presentationDetents([.medium])

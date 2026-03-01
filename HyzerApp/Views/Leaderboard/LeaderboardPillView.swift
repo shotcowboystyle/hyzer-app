@@ -81,7 +81,7 @@ struct LeaderboardPillView: View {
                 .foregroundStyle(Color.backgroundPrimary)
                 .padding(.horizontal, SpacingTokens.xs)
                 .padding(.vertical, 2)
-                .background(Color.scoreWayOver)
+                .background(Color.accentPrimary)
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)

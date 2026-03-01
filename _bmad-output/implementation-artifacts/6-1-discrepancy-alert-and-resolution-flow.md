@@ -331,7 +331,7 @@ None — build succeeded on first attempt.
 - Implemented `DiscrepancyViewModel` as `@MainActor @Observable final class` with full constructor injection. `resolve()` does not throw — errors are caught, logged via `os.log`, and stored in `resolveError` matching the `ScorecardViewModel` pattern.
 - Created `DiscrepancyResolutionView` with side-by-side score cards, VoiceOver accessibility labels, reduce-motion aware animation, and no confirmation dialog per UX spec.
 - Created `DiscrepancyListView` with auto-skip to resolution view when only 1 discrepancy exists. Shows player name + hole number per row with minimum touch target.
-- Modified `LeaderboardPillView` to accept optional `badgeCount: Int` and `onBadgeTap: (() -> Void)?`. Badge uses `Color.scoreWayOver` (red) per design token, animates with `AnimationTokens.springGentle` and `AnimationCoordinator` for reduce-motion support. Badge tap is separate from pill tap (AC6).
+- Modified `LeaderboardPillView` to accept optional `badgeCount: Int` and `onBadgeTap: (() -> Void)?`. Badge uses `Color.accentPrimary` per AC 4.3, animates with `AnimationTokens.springGentle` and `AnimationCoordinator` for reduce-motion support. Badge tap is separate from pill tap (AC6).
 - Integrated discrepancy flow into `ScorecardContainerView` via `@Query` on `Discrepancy` model, `updateDiscrepancyViewModel()` helper, and `.sheet` presenter. Non-organizer guard enforced by not creating `DiscrepancyViewModel` (AC1).
 - **Task 6 finding:** `SyncEngine` did NOT deduplicate Discrepancy records by {roundID, playerID, holeNumber}. Added a pre-fetch + guard before inserting Discrepancy to prevent the resolution ScoreEvent (which has `supersedesEventID = nil`) from triggering a second Discrepancy on remote devices. This is the Dev Notes mitigation applied.
 - All 11 `DiscrepancyViewModelTests` written using Swift Testing with in-memory `ModelContainer`. Tests run as part of `HyzerAppTests` iOS target.
@@ -353,3 +353,20 @@ Modified files:
 - `HyzerKit/Tests/HyzerKitTests/SyncEngineConflictTests.swift`
 - `HyzerApp.xcodeproj/project.pbxproj`
 - `_bmad-output/implementation-artifacts/6-1-discrepancy-alert-and-resolution-flow.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+### Senior Developer Review (AI)
+
+**Reviewer:** claude-opus-4-6 | **Date:** 2026-02-28
+
+**Issues Found:** 3 High, 1 Medium, 1 Low | **All Fixed**
+
+| ID | Severity | Description | Fix |
+|----|----------|-------------|-----|
+| H1 | HIGH | `resolveReporterName()` returned UUID strings instead of player names (AC2 violated) | Added `playerNamesByID` param to `DiscrepancyResolutionView`; lookups resolve to display names with UUID fallback |
+| H2 | HIGH | `.accessibilityElement(children: .ignore)` on score options HStack hid individual buttons from VoiceOver | Removed combined accessibility element; each Button now independently accessible with descriptive label |
+| H3 | HIGH | `resolveWith()` dismissed sheet unconditionally, hiding resolution errors from user | Sheet only dismisses on success; error message displayed inline via `viewModel.resolveError` |
+| M1 | MEDIUM | Badge used `Color.scoreWayOver` + `Color.backgroundPrimary` (3.9:1 contrast, below 4.5:1 minimum) | Changed to `Color.accentPrimary` per AC 4.3 (9.6:1 contrast with dark text) |
+| L1 | LOW | `sprint-status.yaml` missing from story File List | Added to File List |
+
+**Build:** BUILD SUCCEEDED | **HyzerKit Tests:** 168/168 passed
