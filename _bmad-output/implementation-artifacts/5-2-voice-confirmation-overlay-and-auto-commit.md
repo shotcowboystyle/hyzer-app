@@ -1,6 +1,6 @@
 # Story 5.2: Voice Confirmation Overlay & Auto-Commit
 
-Status: review
+Status: done
 
 ## Story
 
