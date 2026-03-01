@@ -12,6 +12,9 @@ public final class WatchLeaderboardViewModel {
 
     // MARK: - Derived state
 
+    /// The current standings snapshot, exposed for navigation destination context (hole, par, roundID).
+    public var snapshot: StandingsSnapshot? { provider.currentSnapshot }
+
     public var standings: [Standing] {
         provider.currentSnapshot?.standings ?? []
     }

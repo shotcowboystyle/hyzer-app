@@ -17,13 +17,14 @@ struct WatchCacheManagerTests {
             .appendingPathComponent(UUID().uuidString + ".json")
     }
 
-    private func makeSnapshot(hole: Int = 1) -> StandingsSnapshot {
+    private func makeSnapshot(hole: Int = 1, par: Int = 3) -> StandingsSnapshot {
         StandingsSnapshot(
             standings: [
                 Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 33, holesPlayed: 9, scoreRelativeToPar: -3)
             ],
             roundID: UUID(),
             currentHole: hole,
+            currentHolePar: par,
             lastUpdatedAt: Date(timeIntervalSince1970: 1_700_000_000)
         )
     }
@@ -41,6 +42,19 @@ struct WatchCacheManagerTests {
         let loaded = manager.loadLatest()
 
         #expect(loaded == snapshot)
+    }
+
+    @Test("currentHolePar is preserved through save/load roundtrip")
+    func test_saveAndLoad_preservesCurrentHolePar() throws {
+        let url = makeTempURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let manager = makeManager(url: url)
+        let snapshot = makeSnapshot(hole: 3, par: 5)
+
+        try manager.save(snapshot)
+        let loaded = manager.loadLatest()
+
+        #expect(loaded?.currentHolePar == 5)
     }
 
     @Test("save overwrites previous snapshot with newest data")

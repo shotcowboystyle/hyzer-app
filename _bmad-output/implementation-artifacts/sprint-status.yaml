@@ -80,7 +80,7 @@ stories:
     epic: 7
   "7.2":
     title: "Crown Score Entry"
-    status: in-progress
+    status: review
     epic: 7
   "7.3":
     title: "Watch Voice Scoring & Bidirectional Communication"

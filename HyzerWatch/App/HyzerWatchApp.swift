@@ -8,7 +8,8 @@ struct HyzerWatchApp: App {
     var body: some Scene {
         WindowGroup {
             WatchLeaderboardView(
-                viewModel: WatchLeaderboardViewModel(provider: connectivityService)
+                viewModel: WatchLeaderboardViewModel(provider: connectivityService),
+                connectivityClient: connectivityService
             )
         }
     }

@@ -54,10 +54,25 @@ final class AppServices {
             networkMonitor: networkMonitor
         )
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        self.scoringService = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
+        let scoring = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
+        self.scoringService = scoring
         self.voiceRecognitionService = VoiceRecognitionService()
-        self.phoneConnectivityService = PhoneConnectivityService()
+        let connectivity = PhoneConnectivityService()
+        connectivity.scoringService = scoring
+        connectivity.localPlayerID = Self.resolveLocalPlayerID(from: modelContainer.mainContext)
+        self.phoneConnectivityService = connectivity
         self.iCloudIdentityProvider = iCloudIdentityProvider
+    }
+
+    // MARK: - Private helpers
+
+    /// Fetches the local player's UUID from SwiftData for use as `reportedByPlayerID`.
+    /// Returns `nil` on first launch before onboarding creates a Player record.
+    private static func resolveLocalPlayerID(from context: ModelContext) -> UUID? {
+        var descriptor = FetchDescriptor<Player>()
+        descriptor.fetchLimit = 1
+        let players = try? context.fetch(descriptor)
+        return players?.first?.id
     }
 
     // MARK: - Sync

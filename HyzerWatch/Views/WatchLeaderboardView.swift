@@ -9,9 +9,12 @@ import HyzerKit
 /// - Score colour-coded via `ColorTokens`
 /// - Stale indicator when standings are >30s old and phone is unreachable
 /// - Standings reshuffles animate with `AnimationCoordinator`
+///
+/// Story 7.2 addition: Player rows are tappable — navigates to `WatchScoringView`.
 struct WatchLeaderboardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var viewModel: WatchLeaderboardViewModel
+    var connectivityClient: any WatchConnectivityClient
 
     var body: some View {
         NavigationStack {
@@ -32,6 +35,20 @@ struct WatchLeaderboardView: View {
                     }
                 }
             }
+            .navigationDestination(for: Standing.self) { standing in
+                if let snapshot = viewModel.snapshot {
+                    WatchScoringView(
+                        viewModel: WatchScoringViewModel(
+                            playerName: standing.playerName,
+                            playerID: standing.playerID,
+                            holeNumber: snapshot.currentHole,
+                            parValue: snapshot.currentHolePar,
+                            roundID: snapshot.roundID,
+                            connectivityClient: connectivityClient
+                        )
+                    )
+                }
+            }
         }
     }
 
@@ -39,8 +56,10 @@ struct WatchLeaderboardView: View {
 
     private var leaderboardList: some View {
         List(viewModel.standings) { standing in
-            StandingRowView(standing: standing)
-                .listRowBackground(Color.backgroundElevated)
+            NavigationLink(value: standing) {
+                StandingRowView(standing: standing)
+            }
+            .listRowBackground(Color.backgroundElevated)
         }
         .listStyle(.plain)
         .animation(

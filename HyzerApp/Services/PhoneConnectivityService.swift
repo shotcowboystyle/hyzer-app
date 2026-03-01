@@ -9,7 +9,7 @@ import HyzerKit
 /// Bridges the phone's `StandingsEngine` to the paired Watch via `WCSession`.
 /// - Sends standings via `sendMessage` (instant, both apps active) and always writes
 ///   the JSON cache via `WatchCacheManager` for offline fallback.
-/// - Receives score events from the Watch (story 7.2 wiring scope).
+/// - Receives score events from the Watch and forwards them to `ScoringService`.
 ///
 /// **Thread safety:** All observable state is `@MainActor`-isolated.
 /// WCSessionDelegate callbacks arrive on an unspecified background thread and
@@ -33,6 +33,16 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     var activeRoundID: UUID?
     /// Current 1-based hole number used when building standings snapshots. Set by scoring views.
     var activeHole: Int = 1
+    /// Par for the current hole, included in standings snapshot so Watch can set Crown default.
+    var activeHolePar: Int = 3
+
+    /// Injected by `AppServices` to create `ScoreEvent` records from Watch payloads.
+    var scoringService: ScoringService?
+    /// The local phone player's UUID, used as `reportedByPlayerID` for Watch-sourced scores.
+    var localPlayerID: UUID?
+
+    /// Retained so score events can trigger a standings recompute after insertion.
+    private var standingsEngine: StandingsEngine?
 
     // MARK: - Init
 
@@ -83,6 +93,8 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             let data = try JSONEncoder().encode(message)
             session.transferUserInfo(["payload": data])
         } catch {
+            // Safe to continue: WatchMessage is a known Codable enum — encoding only fails
+            // if Foundation's JSONEncoder has a runtime bug. Protocol is non-throwing by design.
             logger.error("transferUserInfo encoding failed: \(error)")
         }
     }
@@ -99,7 +111,8 @@ final class PhoneConnectivityService: WatchConnectivityClient {
         let snapshot = StandingsSnapshot(
             standings: engine.currentStandings,
             roundID: roundID,
-            currentHole: activeHole
+            currentHole: activeHole,
+            currentHolePar: activeHolePar
         )
         do {
             try cacheManager.save(snapshot)
@@ -117,22 +130,48 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     /// Starts observing `engine.latestChange` and auto-pushes standings on every update.
     /// Uses recursive `withObservationTracking` — idiomatic Swift 6 pattern.
     func startObservingStandings(_ engine: StandingsEngine) {
+        standingsEngine = engine
         observeStandingsLoop(engine: engine)
     }
 
     // MARK: - Incoming message handling
 
     private func handleIncomingData(_ data: Data) {
-        guard let message = try? JSONDecoder().decode(WatchMessage.self, from: data) else {
-            logger.error("Failed to decode incoming WatchMessage")
+        let message: WatchMessage
+        do {
+            message = try JSONDecoder().decode(WatchMessage.self, from: data)
+        } catch {
+            logger.error("Failed to decode incoming WatchMessage: \(error)")
             return
         }
         switch message {
         case .standingsUpdate:
             break // Phone never receives standings updates from Watch
-        case .scoreEvent:
-            // Story 7.2: wire to ScoringService.createScoreEvent
-            logger.info("Received scoreEvent from Watch — wiring deferred to story 7.2")
+        case .scoreEvent(let payload):
+            handleWatchScoreEvent(payload)
+        }
+    }
+
+    private func handleWatchScoreEvent(_ payload: WatchScorePayload) {
+        guard let scoringService else {
+            logger.warning("scoreEvent received but scoringService not wired — ignoring")
+            return
+        }
+        guard let reporterID = localPlayerID else {
+            logger.warning("scoreEvent received but localPlayerID not set — ignoring")
+            return
+        }
+        do {
+            try scoringService.createScoreEvent(
+                roundID: payload.roundID,
+                holeNumber: payload.holeNumber,
+                playerID: payload.playerID,
+                strokeCount: payload.strokeCount,
+                reportedByPlayerID: reporterID
+            )
+            standingsEngine?.recompute(for: payload.roundID, trigger: .localScore)
+        } catch {
+            logger.error("Failed to create ScoreEvent from Watch payload: \(error)")
         }
     }
 
