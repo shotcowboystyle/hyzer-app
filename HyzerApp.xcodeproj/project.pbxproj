@@ -33,8 +33,10 @@
 		7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */; };
 		7786FCF97AD45E381EA39B83 /* MockVoiceRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98688BE6063C2F5A47B1BEF /* MockVoiceRecognitionService.swift */; };
 		7823F1D6F90939B940EFAD1F /* LiveCloudKitClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BEC27ED6A658066DE3B9F9 /* LiveCloudKitClient.swift */; };
+		7C8B9CB98A2D30D51FFE79DF /* DiscrepancyViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83B15D8AB4E6C5C4D852900E /* DiscrepancyViewModelTests.swift */; };
 		806B440616278187DD30A471 /* ScorecardViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54DB32460AB85326B67BFFE3 /* ScorecardViewModelTests.swift */; };
 		824CB3E7C4FE4793E135E5B0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 800D115E8B8669538227512F /* ContentView.swift */; };
+		8B0B01DAB282DFD68AFD0E28 /* DiscrepancyListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB21A82BF51C8A863A11601 /* DiscrepancyListView.swift */; };
 		8C3A37E858EC8BF31CCE054B /* HyzerWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED517066535936D3C664FF33 /* HyzerWatchApp.swift */; };
 		93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBF7E3B49360BEFE78202833 /* HyzerKit */; };
 		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -44,12 +46,14 @@
 		A96BC87130D06BB117DA9903 /* OnboardingViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */; };
 		AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */; };
 		AD08F59D9CCE35206B44FA22 /* HoleCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEA34634C0B7110CFCB8DDC4 /* HoleCardView.swift */; };
+		BB4F7B88144CBDAB1CC7F341 /* DiscrepancyResolutionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A104F8591B7E99E09D839F /* DiscrepancyResolutionView.swift */; };
 		BD0CC4EF29D368850F3C554C /* VoiceRecognitionServiceProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB3171CF658AC6851293F50 /* VoiceRecognitionServiceProtocol.swift */; };
 		BED316BD11BE024B8F9B7B12 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4814FA35A94A0628886B8CF5 /* Assets.xcassets */; };
 		C7D6A40505B804067EE9CF36 /* VoiceOverlayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D734EB6FDE18208A20EBAE /* VoiceOverlayViewModelTests.swift */; };
 		C8F759F08AE6456B030CC540 /* LeaderboardViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95AD8B9ED1E7E1DB41E7E024 /* LeaderboardViewModelTests.swift */; };
 		D09FF1B7C7769F36982ED120 /* CourseEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 253755A91DD162D3BE8524C6 /* CourseEditorViewModel.swift */; };
 		D2EF055D37B19C14B5DEF295 /* HyzerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */; };
+		D68B5A0057374F288D05E22F /* DiscrepancyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D931AE0A2DAE33CD82121208 /* DiscrepancyViewModel.swift */; };
 		E0B971BA203161D80992CAB3 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = BAC383C18DE2169D84F62B75 /* HyzerKit */; };
 		E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */; };
 		FA9AF7030053FC4206484C3D /* RoundSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */; };
@@ -109,6 +113,7 @@
 		6E77E4E336452EAE570A4531 /* LeaderboardPillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardPillView.swift; sourceTree = "<group>"; };
 		751B4A4FAE27078A43BE3A3F /* VoiceRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecognitionService.swift; sourceTree = "<group>"; };
 		800D115E8B8669538227512F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		83B15D8AB4E6C5C4D852900E /* DiscrepancyViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyViewModelTests.swift; sourceTree = "<group>"; };
 		89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseDetailView.swift; sourceTree = "<group>"; };
 		902F00FF404EE9264C780629 /* CourseEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseEditorView.swift; sourceTree = "<group>"; };
 		94FEC7DFA3A2314C63F5DD78 /* RoundSummaryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryViewModelTests.swift; sourceTree = "<group>"; };
@@ -122,13 +127,16 @@
 		B04BA312C596DB4B88277D5D /* RoundSummaryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryViewModel.swift; sourceTree = "<group>"; };
 		B5B4334F9A1744E9A0EA28B0 /* RoundSetupViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSetupViewModelTests.swift; sourceTree = "<group>"; };
 		BC03976642023E145926871B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BDB21A82BF51C8A863A11601 /* DiscrepancyListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyListView.swift; sourceTree = "<group>"; };
 		BEA34634C0B7110CFCB8DDC4 /* HoleCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleCardView.swift; sourceTree = "<group>"; };
 		C2DE096DC71267D6C2C700CD /* HyzerApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HyzerApp.entitlements; sourceTree = "<group>"; };
+		C7A104F8591B7E99E09D839F /* DiscrepancyResolutionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyResolutionView.swift; sourceTree = "<group>"; };
 		C98688BE6063C2F5A47B1BEF /* MockVoiceRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockVoiceRecognitionService.swift; sourceTree = "<group>"; };
 		CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNetworkMonitor.swift; sourceTree = "<group>"; };
 		D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		D567388ADB189B6F28DF15C2 /* CourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListView.swift; sourceTree = "<group>"; };
+		D931AE0A2DAE33CD82121208 /* DiscrepancyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyViewModel.swift; sourceTree = "<group>"; };
 		E1F2A20DA3AF53A4644D429F /* CourseEditorViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseEditorViewModelTests.swift; sourceTree = "<group>"; };
 		E63536A325A8FD3F5E743896 /* RoundSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryView.swift; sourceTree = "<group>"; };
 		ED517066535936D3C664FF33 /* HyzerWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerWatchApp.swift; sourceTree = "<group>"; };
@@ -170,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				253755A91DD162D3BE8524C6 /* CourseEditorViewModel.swift */,
+				D931AE0A2DAE33CD82121208 /* DiscrepancyViewModel.swift */,
 				A11CB2EA23B021251B93ADEE /* LeaderboardViewModel.swift */,
 				39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */,
 				0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */,
@@ -185,6 +194,7 @@
 			children = (
 				8FC692C15A07F650EB7E475A /* Components */,
 				9550B01599FC7C965A2ED49F /* Courses */,
+				E520D21E9391DBB074FAAEDE /* Discrepancy */,
 				BFA70554C01BF131C096FBB7 /* Leaderboard */,
 				4058938EE2AEF93A9B8E92C9 /* Onboarding */,
 				A3C6B5A93C04D6F5020F06AF /* Rounds */,
@@ -267,6 +277,7 @@
 			children = (
 				A328280BAEB8C4DC952A5113 /* Mocks */,
 				E1F2A20DA3AF53A4644D429F /* CourseEditorViewModelTests.swift */,
+				83B15D8AB4E6C5C4D852900E /* DiscrepancyViewModelTests.swift */,
 				2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */,
 				95AD8B9ED1E7E1DB41E7E024 /* LeaderboardViewModelTests.swift */,
 				9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */,
@@ -369,6 +380,15 @@
 				751B4A4FAE27078A43BE3A3F /* VoiceRecognitionService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		E520D21E9391DBB074FAAEDE /* Discrepancy */ = {
+			isa = PBXGroup;
+			children = (
+				BDB21A82BF51C8A863A11601 /* DiscrepancyListView.swift */,
+				C7A104F8591B7E99E09D839F /* DiscrepancyResolutionView.swift */,
+			);
+			path = Discrepancy;
 			sourceTree = "<group>";
 		};
 		E537675A7E8B329D16767E55 /* Resources */ = {
@@ -536,6 +556,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0F9A0D4BCB7C9197C852E4D5 /* CourseEditorViewModelTests.swift in Sources */,
+				7C8B9CB98A2D30D51FFE79DF /* DiscrepancyViewModelTests.swift in Sources */,
 				7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */,
 				C8F759F08AE6456B030CC540 /* LeaderboardViewModelTests.swift in Sources */,
 				7786FCF97AD45E381EA39B83 /* MockVoiceRecognitionService.swift in Sources */,
@@ -557,6 +578,9 @@
 				41CA9339A41BEC1B21B58E98 /* CourseEditorView.swift in Sources */,
 				D09FF1B7C7769F36982ED120 /* CourseEditorViewModel.swift in Sources */,
 				5105D60E9D7E55AB98453D0C /* CourseListView.swift in Sources */,
+				8B0B01DAB282DFD68AFD0E28 /* DiscrepancyListView.swift in Sources */,
+				BB4F7B88144CBDAB1CC7F341 /* DiscrepancyResolutionView.swift in Sources */,
+				D68B5A0057374F288D05E22F /* DiscrepancyViewModel.swift in Sources */,
 				AD08F59D9CCE35206B44FA22 /* HoleCardView.swift in Sources */,
 				E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */,
 				D2EF055D37B19C14B5DEF295 /* HyzerApp.swift in Sources */,
