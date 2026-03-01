@@ -60,6 +60,7 @@
 		E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */; };
 		EC918190F5A28016AF3C7294 /* WatchLeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE406E0E4D81D5D657E4758 /* WatchLeaderboardView.swift */; };
 		FA9AF7030053FC4206484C3D /* RoundSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */; };
+		FBBDF98F9A7365CEF7B7D679 /* WatchScoringView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42ABA57D928266A42D535841 /* WatchScoringView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +110,7 @@
 		3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncIndicatorView.swift; sourceTree = "<group>"; };
 		3FE406E0E4D81D5D657E4758 /* WatchLeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLeaderboardView.swift; sourceTree = "<group>"; };
 		41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveICloudIdentityProvider.swift; sourceTree = "<group>"; };
+		42ABA57D928266A42D535841 /* WatchScoringView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchScoringView.swift; sourceTree = "<group>"; };
 		4619B6CC10DE1F2616549B7E /* ScorecardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardContainerView.swift; sourceTree = "<group>"; };
 		46C43F8D9BA1A412FA48DB61 /* LeaderboardExpandedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardExpandedView.swift; sourceTree = "<group>"; };
 		4814FA35A94A0628886B8CF5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 			isa = PBXGroup;
 			children = (
 				3FE406E0E4D81D5D657E4758 /* WatchLeaderboardView.swift */,
+				42ABA57D928266A42D535841 /* WatchScoringView.swift */,
 				07389BA2B2E9434AE923CC28 /* WatchStaleIndicatorView.swift */,
 			);
 			path = Views;
@@ -632,6 +635,7 @@
 				8C3A37E858EC8BF31CCE054B /* HyzerWatchApp.swift in Sources */,
 				7C69FA5D188EEAD244C7BAB2 /* WatchConnectivityService.swift in Sources */,
 				EC918190F5A28016AF3C7294 /* WatchLeaderboardView.swift in Sources */,
+				FBBDF98F9A7365CEF7B7D679 /* WatchScoringView.swift in Sources */,
 				D556C78888055019E1CE1EA0 /* WatchStaleIndicatorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
