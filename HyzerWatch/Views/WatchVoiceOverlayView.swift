@@ -71,10 +71,15 @@ struct WatchVoiceOverlayView: View {
                 .font(TypographyTokens.hero)
                 .foregroundStyle(Color.accentPrimary)
                 .opacity(reduceMotion ? 1 : pulsingOpacity)
-                .animation(
-                    reduceMotion ? nil : Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true),
-                    value: pulsingOpacity
-                )
+                .onAppear {
+                    guard !reduceMotion else { return }
+                    withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                        pulsingOpacity = 1.0
+                    }
+                }
+                .onDisappear {
+                    pulsingOpacity = 0.4
+                }
             Text("Listening…")
                 .font(TypographyTokens.body)
                 .foregroundStyle(Color.textSecondary)

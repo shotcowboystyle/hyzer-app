@@ -47,6 +47,9 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     /// Parser for voice transcripts — stateless value type, no DI needed.
     private let voiceParser = VoiceParser()
 
+    /// Tracks the current voice recognition task so overlapping requests are cancelled.
+    private var currentVoiceTask: Task<Void, Never>?
+
     /// Retained so score events can trigger a standings recompute after insertion.
     private var standingsEngine: StandingsEngine?
 
@@ -156,7 +159,8 @@ final class PhoneConnectivityService: WatchConnectivityClient {
         case .scoreEvent(let payload):
             handleWatchScoreEvent(payload)
         case .voiceRequest(let request):
-            Task { @MainActor [weak self] in
+            currentVoiceTask?.cancel()
+            currentVoiceTask = Task { @MainActor [weak self] in
                 await self?.handleWatchVoiceRequest(request)
             }
         case .voiceResult:
@@ -174,8 +178,11 @@ final class PhoneConnectivityService: WatchConnectivityClient {
                 return
             }
             let transcript = try await voiceRecognitionService.recognize()
+            guard !Task.isCancelled else { return }
             let parseResult = voiceParser.parse(transcript: transcript, players: request.playerEntries)
             resultPayload = WatchVoiceResult(result: parseResult, holeNumber: request.holeNumber, roundID: request.roundID)
+        } catch is CancellationError {
+            return // Superseded by a newer voice request
         } catch {
             let description = (error as? VoiceParseError).map { "\($0)" } ?? error.localizedDescription
             logger.error("Watch voice recognition failed: \(description)")

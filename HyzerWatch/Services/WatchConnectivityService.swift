@@ -106,8 +106,11 @@ final class WatchConnectivityService: WatchConnectivityClient, WatchStandingsObs
     // MARK: - Private
 
     private func handleIncomingData(_ data: Data) {
-        guard let message = try? JSONDecoder().decode(WatchMessage.self, from: data) else {
-            logger.error("Failed to decode incoming WatchMessage")
+        let message: WatchMessage
+        do {
+            message = try JSONDecoder().decode(WatchMessage.self, from: data)
+        } catch {
+            logger.error("Failed to decode incoming WatchMessage: \(error)")
             return
         }
         switch message {

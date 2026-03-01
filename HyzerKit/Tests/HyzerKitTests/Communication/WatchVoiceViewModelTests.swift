@@ -72,6 +72,19 @@ struct WatchVoiceViewModelTests {
         #expect(client.sentMessages.isEmpty)
     }
 
+    @Test("startVoiceRequest sets unavailable when sendMessage throws")
+    func test_startVoiceRequest_sendMessageError_setsUnavailable() {
+        let (vm, client) = makeVM(reachable: true)
+        client.sendMessageError = WatchConnectivityError.encodingFailed(
+            NSError(domain: "test", code: 1)
+        )
+        vm.startVoiceRequest()
+        guard case .unavailable = vm.state else {
+            Issue.record("Expected .unavailable state when sendMessage throws")
+            return
+        }
+    }
+
     // MARK: - 8.4: handleVoiceResult success
 
     @Test("handleVoiceResult with success transitions to confirming with correct candidates")

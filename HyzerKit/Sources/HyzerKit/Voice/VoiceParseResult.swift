@@ -89,6 +89,23 @@ extension VoiceParseResult: Codable {
     }
 }
 
+// MARK: - VoiceParseResult Equatable
+
+extension VoiceParseResult: Equatable {
+    public static func == (lhs: VoiceParseResult, rhs: VoiceParseResult) -> Bool {
+        switch (lhs, rhs) {
+        case (.success(let l), .success(let r)):
+            return l == r
+        case (.partial(let lr, let lu), .partial(let rr, let ru)):
+            return lr == rr && lu == ru
+        case (.failed(let l), .failed(let r)):
+            return l == r
+        default:
+            return false
+        }
+    }
+}
+
 /// A classified token from a voice transcript.
 public enum Token: Sendable, Equatable {
     /// A token classified as a player name fragment.

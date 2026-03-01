@@ -314,6 +314,32 @@ None — implementation proceeded cleanly.
 
 8. Test baseline: **255 tests in 29 suites** (up from 219 in 27). All pass.
 
+### Senior Developer Review (AI)
+
+**Reviewer:** claude-opus-4-6 | **Date:** 2026-03-01
+
+**Result:** PASSED — All ACs implemented, all tasks verified complete.
+
+**Issues Found:** 0 Critical, 4 Medium, 3 Low
+
+**Fixes Applied:**
+
+1. **[MEDIUM] Fixed pulsing animation** (`WatchVoiceOverlayView.swift`): `pulsingOpacity` was never mutated so the listening mic icon never pulsed. Changed to use `withAnimation` in `onAppear` with `onDisappear` reset.
+
+2. **[MEDIUM] Added missing sendMessage error test** (`WatchVoiceViewModelTests.swift`): Added test exercising `sendMessageError` injection to verify `startVoiceRequest` transitions to `.unavailable` when `sendMessage` throws.
+
+3. **[MEDIUM] Noted: Player aliases always empty** (`WatchScoringView.swift:63-64`): `Standing` doesn't carry aliases, so Watch voice requests use `aliases: []`. Reduces voice parsing accuracy vs phone. Not fixed — requires `Standing` model changes from story 7.1.
+
+4. **[MEDIUM] Added concurrent voice request guard** (`PhoneConnectivityService.swift`): Added `currentVoiceTask` tracking with cancellation before starting new recognition. Added `CancellationError` handling and `Task.isCancelled` check after `recognize()`.
+
+5. **[LOW] Moved VoiceParseResult Equatable** from `WatchMessage.swift` to `VoiceParseResult.swift` alongside the type definition.
+
+6. **[LOW] Fixed Watch decode error logging** (`WatchConnectivityService.swift`): Changed from `try?` to `do/catch` to log actual decode error details, matching the phone-side pattern.
+
+7. **[LOW] Noted: Haptic heuristic uses total strokes sum** (`WatchConnectivityService.swift`): Fires on any total strokes change. Acceptable design tradeoff — not changed.
+
+**Post-fix test baseline:** 256 tests in 29 suites. All pass.
+
 ### File List
 
 **Modified:**
