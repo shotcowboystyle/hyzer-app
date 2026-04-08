@@ -39,7 +39,7 @@ struct NetworkMonitorTests {
             }
         }
 
-        try? await Task.sleep(for: .milliseconds(20))
+        await awaitCondition { await collector.count >= 1 }
         task.cancel()
         await task.value
 
@@ -59,11 +59,11 @@ struct NetworkMonitorTests {
             }
         }
 
-        try? await Task.sleep(for: .milliseconds(10))
+        await awaitCondition { await collector.count >= 1 }
         monitor.setConnected(false)
-        try? await Task.sleep(for: .milliseconds(10))
+        await awaitCondition { await collector.count >= 2 }
         monitor.setConnected(true)
-        try? await Task.sleep(for: .milliseconds(10))
+        await awaitCondition { await collector.count >= 3 }
 
         task.cancel()
         await task.value
@@ -71,17 +71,5 @@ struct NetworkMonitorTests {
         let values = await collector.values
         #expect(values.contains(false))
         #expect(values.contains(true))
-    }
-}
-
-// MARK: - Helper actor for thread-safe value collection
-
-private actor ValueCollector<T> {
-    private(set) var values: [T] = []
-
-    var count: Int { values.count }
-
-    func append(_ value: T) {
-        values.append(value)
     }
 }

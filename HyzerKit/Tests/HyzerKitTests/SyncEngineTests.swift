@@ -4,18 +4,6 @@ import SwiftData
 import CloudKit
 @testable import HyzerKit
 
-// MARK: - Helpers
-
-/// Builds an in-memory ModelContainer with ScoreEvent + SyncMetadata for sync tests.
-@MainActor
-private func makeSyncContainer() throws -> ModelContainer {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    return try ModelContainer(
-        for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self,
-        configurations: config
-    )
-}
-
 // MARK: - Test Suite
 
 @Suite("SyncEngine")
@@ -26,7 +14,7 @@ struct SyncEngineTests {
     @Test("pushPending sends .pending ScoreEvent to CloudKit as CKRecord")
     @MainActor
     func test_pushPending_sendsPendingEvent_toCloudKit() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Arrange: create a ScoreEvent and a matching SyncMetadata entry
@@ -54,7 +42,7 @@ struct SyncEngineTests {
     @Test("pushPending marks SyncMetadata .synced after successful push")
     @MainActor
     func test_pushPending_marksSynced_onSuccess() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()
@@ -72,10 +60,14 @@ struct SyncEngineTests {
 
         await engine.pushPending()
 
-        // Allow background context save to merge into main context
-        try await Task.sleep(for: .milliseconds(50))
+        // Poll until background context save merges into main context
+        let eventID = event.id.uuidString
+        await awaitCondition {
+            let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
+            return allMeta.contains { $0.recordID == eventID && $0.syncStatus == .synced }
+        }
         let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
-        let fetched = allMeta.filter { $0.recordID == event.id.uuidString }
+        let fetched = allMeta.filter { $0.recordID == eventID }
         #expect(fetched.count == 1)
         #expect(fetched[0].syncStatus == .synced)
     }
@@ -83,7 +75,7 @@ struct SyncEngineTests {
     @Test("pushPending marks SyncMetadata .failed when CloudKit throws")
     @MainActor
     func test_pushPending_marksFailed_onCloudKitError() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()
@@ -109,7 +101,7 @@ struct SyncEngineTests {
     @Test("pushPending skips .inFlight entries (reentrancy guard)")
     @MainActor
     func test_pushPending_skipsInFlightEntries() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()
@@ -136,7 +128,7 @@ struct SyncEngineTests {
     @Test("pushPending does nothing when no .pending entries exist")
     @MainActor
     func test_pushPending_noEntries_doesNothing() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let mockCK = MockCloudKitClient()
         let engine = SyncEngine(
             cloudKitClient: mockCK,
@@ -154,7 +146,7 @@ struct SyncEngineTests {
     @Test("pullRecords inserts remote ScoreEvent into local SwiftData")
     @MainActor
     func test_pullRecords_insertsRemoteEvent_intoSwiftData() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Arrange: seed MockCloudKitClient with a remote CKRecord
@@ -173,17 +165,20 @@ struct SyncEngineTests {
         // Act
         await engine.pullRecords()
 
-        // Assert: ScoreEvent now exists locally
-        // Give context time to merge background saves
-        try await Task.sleep(for: .milliseconds(50))
+        // Assert: ScoreEvent now exists locally (poll until background save merges)
+        let remoteID = remoteEvent.id
+        await awaitCondition {
+            let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
+            return events.contains { $0.id == remoteID }
+        }
         let localEvents = try context.fetch(FetchDescriptor<ScoreEvent>())
-        #expect(localEvents.contains { $0.id == remoteEvent.id })
+        #expect(localEvents.contains { $0.id == remoteID })
     }
 
     @Test("pullRecords does not duplicate an event already present locally")
     @MainActor
     func test_pullRecords_deduplicates_existingEvent() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Arrange: local event already exists
@@ -204,10 +199,15 @@ struct SyncEngineTests {
 
         await engine.pullRecords()
 
-        try await Task.sleep(for: .milliseconds(50))
+        // Poll until background save merges (dedup check)
+        let eventID = event.id
+        await awaitCondition {
+            let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
+            return !events.isEmpty && events.filter({ $0.id == eventID }).count == 1
+        }
         let localEvents = try context.fetch(FetchDescriptor<ScoreEvent>())
         // Exactly one copy
-        #expect(localEvents.filter { $0.id == event.id }.count == 1)
+        #expect(localEvents.filter { $0.id == eventID }.count == 1)
     }
 
     // MARK: - State machine tests (AC4)
@@ -215,7 +215,7 @@ struct SyncEngineTests {
     @Test("SyncMetadata pending -> inFlight -> synced state machine")
     @MainActor
     func test_syncMetadata_stateMachine_pendingToSynced() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()
@@ -239,9 +239,13 @@ struct SyncEngineTests {
 
         // After completion, verify state reached .synced
         #expect(mockCK.savedRecords.count == 1)
-        try await Task.sleep(for: .milliseconds(50))
+        let eventID = event.id.uuidString
+        await awaitCondition {
+            let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
+            return allMeta.contains { $0.recordID == eventID && $0.syncStatus == .synced }
+        }
         let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
-        let fetched = allMeta.filter { $0.recordID == event.id.uuidString }
+        let fetched = allMeta.filter { $0.recordID == eventID }
         #expect(fetched.count == 1)
         #expect(fetched[0].syncStatus == .synced)
     }
@@ -249,7 +253,7 @@ struct SyncEngineTests {
     @Test("SyncMetadata transitions to .failed on CloudKit error")
     @MainActor
     func test_syncMetadata_stateMachine_inFlightToFailed() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()
@@ -271,9 +275,13 @@ struct SyncEngineTests {
 
         #expect(mockCK.savedRecords.isEmpty)
         // Verify metadata transitioned to .failed
-        try await Task.sleep(for: .milliseconds(50))
+        let eventID = event.id.uuidString
+        await awaitCondition {
+            let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
+            return allMeta.contains { $0.recordID == eventID && $0.syncStatus == .failed }
+        }
         let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
-        let fetched = allMeta.filter { $0.recordID == event.id.uuidString }
+        let fetched = allMeta.filter { $0.recordID == eventID }
         #expect(fetched.count == 1)
         #expect(fetched[0].syncStatus == .failed)
     }
@@ -309,7 +317,7 @@ struct SyncEngineTests {
     @Test("concurrent pushPending calls each result in exactly one CloudKit save per entry")
     @MainActor
     func test_concurrentPushPending_noduplicateSaves() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()

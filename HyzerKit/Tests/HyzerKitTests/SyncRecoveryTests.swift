@@ -4,17 +4,6 @@ import SwiftData
 import CloudKit
 @testable import HyzerKit
 
-// MARK: - Helpers
-
-@MainActor
-private func makeSyncContainer() throws -> ModelContainer {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    return try ModelContainer(
-        for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self,
-        configurations: config
-    )
-}
-
 // MARK: - SyncRecoveryTests
 
 @Suite("SyncRecovery")
@@ -25,7 +14,7 @@ struct SyncRecoveryTests {
     @Test("offline events sync to CloudKit when connectivity is restored")
     @MainActor
     func test_offlineOnlineRecovery_pushesAllPendingEvents() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Arrange: create 3 events as if entered offline (SyncMetadata = .pending)
@@ -64,7 +53,7 @@ struct SyncRecoveryTests {
     @Test("extended offline recovery — many local events all sync without duplication")
     @MainActor
     func test_extendedOfflineRecovery_noDataLossOrDuplication() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Simulate many events from a 4-hour offline period (18 holes × 4 players = 72 events)
@@ -111,7 +100,7 @@ struct SyncRecoveryTests {
     @Test("retryFailed resets .failed entries to .pending and pushes them")
     @MainActor
     func test_retryFailed_resetsToPendingAndPushes() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Arrange: create events with .failed SyncMetadata
@@ -141,8 +130,15 @@ struct SyncRecoveryTests {
         // Assert: both events were pushed to CloudKit
         #expect(mockCK.savedRecords.count == 2)
 
-        // Verify SyncMetadata status is now .synced
-        try await Task.sleep(for: .milliseconds(50))
+        // Poll until SyncMetadata status is .synced for both entries
+        let id1 = event1.id.uuidString
+        let id2 = event2.id.uuidString
+        await awaitCondition {
+            let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
+            let m1 = allMeta.first { $0.recordID == id1 }
+            let m2 = allMeta.first { $0.recordID == id2 }
+            return m1?.syncStatus == .synced && m2?.syncStatus == .synced
+        }
         let allMeta = try context.fetch(FetchDescriptor<SyncMetadata>())
         let event1Meta = allMeta.first { $0.recordID == event1.id.uuidString }
         let event2Meta = allMeta.first { $0.recordID == event2.id.uuidString }
@@ -153,7 +149,7 @@ struct SyncRecoveryTests {
     @Test("pushPending picks up both .pending and .failed entries")
     @MainActor
     func test_pushPending_picksBothPendingAndFailed() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event1 = ScoreEvent.fixture(deviceID: "device-pending")
@@ -187,7 +183,7 @@ struct SyncRecoveryTests {
     @Test("concurrent push and pull produce no duplicates in SwiftData")
     @MainActor
     func test_concurrentPushAndPull_noSwiftDataDuplicates() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Create a local event that will also arrive via pull
@@ -213,7 +209,12 @@ struct SyncRecoveryTests {
             group.addTask { await engine.pullRecords() }
         }
 
-        try await Task.sleep(for: .milliseconds(100))
+        // Poll until exactly one copy of the event exists in the local store
+        let eventID = event.id
+        await awaitCondition {
+            let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
+            return events.filter { $0.id == eventID }.count == 1
+        }
 
         // Should have exactly one ScoreEvent (not a duplicate from pull)
         let localEvents = try context.fetch(FetchDescriptor<ScoreEvent>())
@@ -226,7 +227,7 @@ struct SyncRecoveryTests {
     @Test("SyncEngine emits state changes on syncStateStream")
     @MainActor
     func test_syncStateStream_emitsSyncingState() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         // Seed a pending event
@@ -261,7 +262,8 @@ struct SyncRecoveryTests {
         // Trigger a sync cycle
         await engine.pushPending()
 
-        try await Task.sleep(for: .milliseconds(200))
+        // Poll until the collector has observed "syncing"
+        await awaitCondition { await collector.values.contains("syncing") }
         streamTask.cancel()
         await streamTask.value
 
@@ -274,7 +276,7 @@ struct SyncRecoveryTests {
     @Test("SyncEngine syncState is .offline when network error occurs")
     @MainActor
     func test_syncStateStream_emitsOffline_onNetworkError() async throws {
-        let container = try makeSyncContainer()
+        let container = try TestContainerFactory.makeSyncContainer()
         let context = container.mainContext
 
         let event = ScoreEvent.fixture()
@@ -308,7 +310,8 @@ struct SyncRecoveryTests {
 
         await engine.pushPending()
 
-        try await Task.sleep(for: .milliseconds(100))
+        // Poll until the stream task observes .offline and sets the flag
+        await awaitCondition { await offlineReceived.value == true }
         streamTask.cancel()
         await streamTask.value
 
@@ -346,12 +349,6 @@ struct SyncRecoveryTests {
 }
 
 // MARK: - Thread-safe helpers for test assertions
-
-private actor ValueCollector<T> {
-    private(set) var values: [T] = []
-    var count: Int { values.count }
-    func append(_ value: T) { values.append(value) }
-}
 
 private actor OfflineReceivedBox {
     private(set) var value: Bool = false
