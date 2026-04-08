@@ -48,7 +48,10 @@ final class WatchConnectivityService: WatchConnectivityClient, WatchStandingsObs
         // Load offline fallback immediately (before WCSession activates)
         currentSnapshot = cacheManager.loadLatest()
 
-        guard WCSession.isSupported() else { return }
+        guard WCSession.isSupported() else {
+            logger.warning("WCSession not supported on this device — connectivity disabled")
+            return
+        }
         session.delegate = delegate
         session.activate()
 
@@ -115,15 +118,14 @@ final class WatchConnectivityService: WatchConnectivityClient, WatchStandingsObs
         }
         switch message {
         case .standingsUpdate(let snapshot):
-            let previousScoreTotal = currentSnapshot?.standings.map(\.totalStrokes).reduce(0, +)
+            let previousStandings = currentSnapshot?.standings
             currentSnapshot = snapshot
             do {
                 try cacheManager.save(snapshot)
             } catch {
                 logger.error("WatchCacheManager save failed: \(error)")
             }
-            let newScoreTotal = snapshot.standings.map(\.totalStrokes).reduce(0, +)
-            if let prev = previousScoreTotal, newScoreTotal != prev {
+            if let prev = previousStandings, prev != snapshot.standings {
                 WKInterfaceDevice.current().play(.notification)
             }
         case .scoreEvent:

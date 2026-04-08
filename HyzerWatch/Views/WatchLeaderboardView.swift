@@ -99,7 +99,7 @@ private struct StandingRowView: View {
             Text("#\(standing.position)")
                 .font(TypographyTokens.caption)
                 .foregroundStyle(Color.textSecondary)
-                .frame(width: 28, alignment: .leading)
+                .frame(width: SpacingTokens.watchPositionColumnWidth, alignment: .leading)
 
             Text(standing.playerName)
                 .font(TypographyTokens.body)
