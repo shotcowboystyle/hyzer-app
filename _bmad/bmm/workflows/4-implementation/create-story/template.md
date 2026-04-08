@@ -36,6 +36,18 @@ so that {{benefit}}.
 
 - Cite all technical details with source paths and sections, e.g. [Source: docs/<file>.md#Section]
 
+## Definition of Done
+
+- [ ] All acceptance criteria verified
+- [ ] Unit tests written (Swift Testing framework)
+- [ ] No silent `try?` without justification comment
+- [ ] Accessibility: all interactive elements have `.accessibilityLabel`
+- [ ] Design tokens used (no hardcoded colors, fonts, spacing, animation durations)
+- [ ] SwiftLint passes with zero warnings
+- [ ] Code review completed — all findings resolved
+- [ ] Knowledgebase updated with any new patterns or gotchas discovered
+- [ ] Project documentation updated if architecture or public API changed
+
 ## Dev Agent Record
 
 ### Agent Model Used
