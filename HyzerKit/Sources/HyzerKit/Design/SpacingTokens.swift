@@ -15,4 +15,12 @@ public enum SpacingTokens {
     public static let minimumTouchTarget: CGFloat = 44
     /// Recommended touch target for scoring controls.
     public static let scoringTouchTarget: CGFloat = 52
+
+    /// Fixed width for position column in Watch leaderboard rows.
+    public static let watchPositionColumnWidth: CGFloat = 28
+
+    /// Corner radius for card-level containers (hole cards, overlays).
+    public static let cornerRadiusCard: CGFloat = 16
+    /// Corner radius for inline elements (score buttons, row backgrounds).
+    public static let cornerRadiusInline: CGFloat = 8
 }

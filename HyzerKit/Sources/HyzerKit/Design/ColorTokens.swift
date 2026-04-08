@@ -44,4 +44,20 @@ public extension Color {
 
     // Destructive actions only
     static let destructive = Color(hex: "#FF3B30")
+
+    /// 4-tier score colour based on strokes relative to par.
+    ///
+    /// | Condition        | Color          |
+    /// |------------------|----------------|
+    /// | strokes < par    | scoreUnderPar  |
+    /// | strokes == par   | scoreAtPar     |
+    /// | strokes == par+1 | scoreOverPar   |
+    /// | strokes >= par+2 | scoreWayOver   |
+    static func scoreColor(strokes: Int, par: Int) -> Color {
+        let delta = strokes - par
+        if delta < 0 { return .scoreUnderPar }
+        if delta == 0 { return .scoreAtPar }
+        if delta == 1 { return .scoreOverPar }
+        return .scoreWayOver
+    }
 }

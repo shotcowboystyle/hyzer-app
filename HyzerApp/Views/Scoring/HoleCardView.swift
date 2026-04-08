@@ -43,7 +43,7 @@ struct HoleCardView: View {
             .padding(SpacingTokens.md)
         }
         .background(Color.backgroundElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusCard))
         .padding(.horizontal, SpacingTokens.md)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Hole \(holeNumber), Par \(par)")
@@ -116,7 +116,7 @@ struct HoleCardView: View {
             if let score {
                 Text("\(score.strokeCount)")
                     .font(TypographyTokens.score)
-                    .foregroundStyle(scoreColor(strokeCount: score.strokeCount, par: par))
+                    .foregroundStyle(Color.scoreColor(strokes: score.strokeCount, par: par))
                     .accessibilityLabel("\(player.displayName), score \(score.strokeCount)")
             } else {
                 Text("—")
@@ -128,7 +128,7 @@ struct HoleCardView: View {
         .padding(.horizontal, SpacingTokens.md)
         .frame(minHeight: SpacingTokens.minimumTouchTarget)
         .background(Color.backgroundPrimary.opacity(0.5))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline))
         .contentShape(Rectangle())
         .onTapGesture {
             guard !isRoundFinished else { return }
@@ -143,13 +143,4 @@ struct HoleCardView: View {
         .accessibilityAddTraits(isRoundFinished ? [] : [.isButton])
     }
 
-    // MARK: - Score Color
-
-    private func scoreColor(strokeCount: Int, par: Int) -> Color {
-        let diff = strokeCount - par
-        if diff <= -1 { return .scoreUnderPar }
-        if diff == 0  { return .scoreAtPar }
-        if diff == 1  { return .scoreOverPar }
-        return .scoreWayOver
-    }
 }

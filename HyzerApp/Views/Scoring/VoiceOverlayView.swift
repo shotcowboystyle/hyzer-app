@@ -40,7 +40,7 @@ struct VoiceOverlayView: View {
     private var listeningView: some View {
         VStack(spacing: SpacingTokens.md) {
             Image(systemName: "waveform.circle.fill")
-                .font(.system(size: 48))
+                .font(TypographyTokens.hero)
                 .foregroundStyle(Color.accentPrimary)
                 .symbolEffect(.pulse, options: .repeating)
                 .accessibilityHidden(true)
@@ -51,7 +51,7 @@ struct VoiceOverlayView: View {
         .frame(maxWidth: .infinity)
         .padding(SpacingTokens.lg)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusCard))
         .padding(.horizontal, SpacingTokens.md)
     }
 
@@ -103,7 +103,7 @@ struct VoiceOverlayView: View {
         }
         .padding(.vertical, SpacingTokens.md)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusCard))
         .padding(.horizontal, SpacingTokens.md)
         .onAppear {
             if UIAccessibility.isVoiceOverRunning {
@@ -132,7 +132,7 @@ struct VoiceOverlayView: View {
 
             Text("\(candidate.strokeCount)")
                 .font(TypographyTokens.scoreLarge)
-                .foregroundStyle(scoreColor(strokes: candidate.strokeCount, par: par))
+                .foregroundStyle(Color.scoreColor(strokes: candidate.strokeCount, par: par))
                 .monospacedDigit()
         }
         .frame(minHeight: 56)
@@ -206,7 +206,7 @@ struct VoiceOverlayView: View {
         }
         .padding(.vertical, SpacingTokens.md)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusCard))
         .padding(.horizontal, SpacingTokens.md)
         .sheet(item: Binding(
             get: { unresolvedIndex.map { IdentifiableIndex(value: $0) } },
@@ -270,11 +270,11 @@ struct VoiceOverlayView: View {
             Button(action: { viewModel.retry() }) {
                 Text("Try Again")
                     .font(TypographyTokens.body)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.backgroundPrimary)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: SpacingTokens.minimumTouchTarget)
                     .background(Color.accentPrimary)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, SpacingTokens.md)
@@ -291,7 +291,7 @@ struct VoiceOverlayView: View {
         }
         .padding(SpacingTokens.lg)
         .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusCard))
         .padding(.horizontal, SpacingTokens.md)
         .onAppear {
             if UIAccessibility.isVoiceOverRunning {
@@ -311,7 +311,7 @@ struct VoiceOverlayView: View {
             if reduceMotion {
                 progress = 1
             } else {
-                progressAnimation = .linear(duration: 1.5)
+                progressAnimation = .linear(duration: AnimationTokens.autoCommitDuration)
                 progress = 1
             }
         }
@@ -339,16 +339,6 @@ struct VoiceOverlayView: View {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
-        }
-    }
-
-    private func scoreColor(strokes: Int, par: Int) -> Color {
-        let delta = strokes - par
-        switch delta {
-        case ..<0:  return .scoreUnderPar
-        case 0:     return .scoreAtPar
-        case 1:     return .scoreOverPar
-        default:    return .scoreWayOver
         }
     }
 
