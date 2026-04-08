@@ -15,6 +15,5 @@ public func resolveCurrentScore(for playerID: String, hole: Int, in events: [Sco
     // for deterministic resolution (NFR20 — identical scores from 2+ devices always merges silently).
     return holeEvents
         .filter { !supersededIDs.contains($0.id) }
-        .sorted { $0.createdAt < $1.createdAt }
-        .first
+        .min { $0.createdAt < $1.createdAt }
 }

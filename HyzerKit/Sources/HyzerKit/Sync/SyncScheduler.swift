@@ -33,6 +33,7 @@ public actor SyncScheduler {
     private let syncEngine: SyncEngine
     private let cloudKitClient: any CloudKitClient
     private let networkMonitor: any NetworkMonitor
+    private let userDefaults: UserDefaults
 
     /// Active polling task; non-nil while a round is in progress.
     private var pollingTask: Task<Void, Never>?
@@ -45,10 +46,16 @@ public actor SyncScheduler {
 
     // MARK: - Init
 
-    public init(syncEngine: SyncEngine, cloudKitClient: any CloudKitClient, networkMonitor: any NetworkMonitor) {
+    public init(
+        syncEngine: SyncEngine,
+        cloudKitClient: any CloudKitClient,
+        networkMonitor: any NetworkMonitor,
+        userDefaults: UserDefaults = .standard
+    ) {
         self.syncEngine = syncEngine
         self.cloudKitClient = cloudKitClient
         self.networkMonitor = networkMonitor
+        self.userDefaults = userDefaults
     }
 
     // MARK: - App lifecycle
@@ -145,10 +152,8 @@ public actor SyncScheduler {
         }
 
         for recordType in recordTypes {
-            // UserDefaults.standard accessed directly for subscription persistence.
-            // Future: inject UserDefaults for testability.
             let defaultsKey = "HyzerApp.subscriptionID.\(recordType)"
-            let storedID = UserDefaults.standard.string(forKey: defaultsKey)
+            let storedID = userDefaults.string(forKey: defaultsKey)
 
             // Skip creation if the stored subscription ID still exists in CloudKit
             if let storedID, existingIDs.contains(storedID) {
@@ -161,7 +166,7 @@ public actor SyncScheduler {
                     to: recordType,
                     predicate: NSPredicate(value: true)
                 )
-                UserDefaults.standard.set(subID, forKey: defaultsKey)
+                userDefaults.set(subID, forKey: defaultsKey)
                 logger.info("SyncScheduler: registered CKSubscription \(subID) for \(recordType)")
             } catch {
                 logger.error("SyncScheduler: failed to subscribe to \(recordType): \(error)")

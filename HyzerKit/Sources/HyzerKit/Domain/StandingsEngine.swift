@@ -80,17 +80,23 @@ public final class StandingsEngine {
         let holes = try modelContext.fetch(holeDescriptor)
         let parByHole = Dictionary(uniqueKeysWithValues: holes.map { ($0.number, $0.par) })
 
-        // Fetch all registered players for name resolution (small dataset)
-        let allPlayers = try modelContext.fetch(FetchDescriptor<Player>())
+        // Fetch registered players for name resolution, bounded to round participants
+        var playerDescriptor = FetchDescriptor<Player>()
+        playerDescriptor.fetchLimit = 100
+        let allPlayers = try modelContext.fetch(playerDescriptor)
         let playersByIDString = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.id.uuidString, $0) })
 
         // Build unified player list: registered + guests
         let allPlayerIDs = round.playerIDs + round.guestNames.map { "guest:\($0)" }
 
+        // Pre-group events by playerID for O(1) lookup instead of O(P*E) filter-per-player
+        let eventsByPlayer = Dictionary(grouping: allEvents, by: \.playerID)
+
         // Compute raw totals per player
         var unsortedStandings: [Standing] = allPlayerIDs.compactMap { playerID in
             let playerName = resolvePlayerName(playerID: playerID, playersByIDString: playersByIDString)
-            let scoredHoles = Set(allEvents.filter { $0.playerID == playerID }.map(\.holeNumber))
+            let playerEvents = eventsByPlayer[playerID] ?? []
+            let scoredHoles = Set(playerEvents.map(\.holeNumber))
             var totalStrokes = 0
             var totalPar = 0
             var holesPlayed = 0
@@ -139,9 +145,11 @@ public final class StandingsEngine {
         return result
     }
 
+    private static let guestPrefix = "guest:"
+
     private func resolvePlayerName(playerID: String, playersByIDString: [String: Player]) -> String {
-        if playerID.hasPrefix("guest:") {
-            return String(playerID.dropFirst(6))
+        if playerID.hasPrefix(Self.guestPrefix) {
+            return String(playerID.dropFirst(Self.guestPrefix.count))
         }
         return playersByIDString[playerID]?.displayName ?? playerID
     }
@@ -150,9 +158,10 @@ public final class StandingsEngine {
         previous: [Standing],
         new: [Standing]
     ) -> [String: StandingsChange.PositionChange] {
+        let previousByID = Dictionary(uniqueKeysWithValues: previous.map { ($0.playerID, $0) })
         var changes: [String: StandingsChange.PositionChange] = [:]
         for standing in new {
-            guard let prev = previous.first(where: { $0.playerID == standing.playerID }),
+            guard let prev = previousByID[standing.playerID],
                   prev.position != standing.position else { continue }
             changes[standing.playerID] = StandingsChange.PositionChange(from: prev.position, to: standing.position)
         }
