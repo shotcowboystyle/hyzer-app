@@ -47,6 +47,7 @@
 		915770F21BA9C30CDAC86B2B /* PhoneConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF27AB5613FDD66774D32B9 /* PhoneConnectivityService.swift */; };
 		93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBF7E3B49360BEFE78202833 /* HyzerKit */; };
 		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9DEF4DF4CD1156899DCAD968 /* TestPolling.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4139B302C98F9C9D8B834E7 /* TestPolling.swift */; };
 		A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */; };
 		A74792297AFB13394CA53E4C /* RoundSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE478A199AC62B27F4479A5D /* RoundSetupView.swift */; };
 		A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975F8EB2A2D2513F584FD186 /* OnboardingView.swift */; };
@@ -147,6 +148,7 @@
 		A3C3F19349A703AA16ABD044 /* PlayerHoleBreakdownViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHoleBreakdownViewModelTests.swift; sourceTree = "<group>"; };
 		AA0179A787B752A224A7B38E /* VoiceOverlayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverlayViewModel.swift; sourceTree = "<group>"; };
 		B04BA312C596DB4B88277D5D /* RoundSummaryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryViewModel.swift; sourceTree = "<group>"; };
+		B4139B302C98F9C9D8B834E7 /* TestPolling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestPolling.swift; sourceTree = "<group>"; };
 		B5B4334F9A1744E9A0EA28B0 /* RoundSetupViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSetupViewModelTests.swift; sourceTree = "<group>"; };
 		B71B0A69F77A31983FE5A9F8 /* WatchConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectivityService.swift; sourceTree = "<group>"; };
 		BC03976642023E145926871B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -213,6 +215,14 @@
 				AA0179A787B752A224A7B38E /* VoiceOverlayViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		3BE606D75406E1D45E24D4A1 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				B4139B302C98F9C9D8B834E7 /* TestPolling.swift */,
+			);
+			path = Fixtures;
 			sourceTree = "<group>";
 		};
 		3F9EE8EAEFE2495CF3D31074 /* Views */ = {
@@ -305,6 +315,7 @@
 		A6513A9E2C4A140FCD7073D2 /* HyzerAppTests */ = {
 			isa = PBXGroup;
 			children = (
+				3BE606D75406E1D45E24D4A1 /* Fixtures */,
 				A328280BAEB8C4DC952A5113 /* Mocks */,
 				C960E07338C905380AE64309 /* ViewModels */,
 				E1F2A20DA3AF53A4644D429F /* CourseEditorViewModelTests.swift */,
@@ -543,9 +554,10 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
 			};
 			buildConfigurationList = 7695FBD39CF0233934147071 /* Build configuration list for PBXProject "HyzerApp" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -558,6 +570,7 @@
 				6D6E64350F09E1FC3F6A5091 /* XCLocalSwiftPackageReference "HyzerKit" */,
 			);
 			preferredProjectObjectVersion = 77;
+			productRefGroup = EEE56E501DA65667981A9D89 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -626,6 +639,7 @@
 				1B216ACD7E371E7C974AA480 /* RoundSetupViewModelTests.swift in Sources */,
 				2D30EA8B327D17A6C16A3310 /* RoundSummaryViewModelTests.swift in Sources */,
 				806B440616278187DD30A471 /* ScorecardViewModelTests.swift in Sources */,
+				9DEF4DF4CD1156899DCAD968 /* TestPolling.swift in Sources */,
 				C7D6A40505B804067EE9CF36 /* VoiceOverlayViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
