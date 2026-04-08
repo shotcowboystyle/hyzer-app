@@ -94,3 +94,10 @@ stories:
     title: "Player Hole-by-Hole Breakdown"
     status: done
     epic: 8
+
+retrospectives:
+  "epics-1-8":
+    title: "Full Project Retrospective — Epics 1–8"
+    status: done
+    date: 2026-04-07
+    artifact: "epics-1-8-retro-2026-04-07.md"
