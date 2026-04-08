@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import HyzerKit
+import os.log
 
 /// Navigation-pushed detail view for a completed round (Epic 8, Story 8.1).
 ///
@@ -152,21 +153,27 @@ struct HistoryRoundDetailView: View {
         let standings = engine.currentStandings
 
         let courseIDLocal = round.courseID
-        let courseDescriptor = FetchDescriptor<Course>(predicate: #Predicate { $0.id == courseIDLocal })
-        let courseName = (try? modelContext.fetch(courseDescriptor))?.first?.name ?? "Unknown Course"
+        do {
+            let courseDescriptor = FetchDescriptor<Course>(predicate: #Predicate { $0.id == courseIDLocal })
+            let courseName = try modelContext.fetch(courseDescriptor).first?.name ?? "Unknown Course"
 
-        let holeDescriptor = FetchDescriptor<Hole>(predicate: #Predicate { $0.courseID == courseIDLocal })
-        let holes = (try? modelContext.fetch(holeDescriptor)) ?? []
-        let coursePar = holes.reduce(0) { $0 + $1.par }
+            let holeDescriptor = FetchDescriptor<Hole>(predicate: #Predicate { $0.courseID == courseIDLocal })
+            let holes = try modelContext.fetch(holeDescriptor)
+            let coursePar = holes.reduce(0) { $0 + $1.par }
 
-        return RoundSummaryViewModel(
-            round: round,
-            standings: standings,
-            courseName: courseName,
-            holesPlayed: round.holeCount,
-            coursePar: coursePar,
-            currentPlayerID: currentPlayerID
-        )
+            return RoundSummaryViewModel(
+                round: round,
+                standings: standings,
+                courseName: courseName,
+                holesPlayed: round.holeCount,
+                coursePar: coursePar,
+                currentPlayerID: currentPlayerID
+            )
+        } catch {
+            let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "HistoryRoundDetailView")
+            logger.error("HistoryRoundDetailView.buildViewModel failed: \(error)")
+            return nil
+        }
     }
 }
 

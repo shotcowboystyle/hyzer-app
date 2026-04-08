@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import SwiftData
 import HyzerKit
+import os.log
 
 /// Fetches and transforms per-hole score data for one player in a completed round.
 ///
@@ -15,6 +16,7 @@ final class PlayerHoleBreakdownViewModel {
     private(set) var holeScores: [HoleScore] = []
     private(set) var totalStrokes: Int = 0
     private(set) var totalPar: Int = 0
+    private(set) var errorMessage: String?
 
     var overallRelativeToPar: Int { totalStrokes - totalPar }
 
@@ -33,6 +35,7 @@ final class PlayerHoleBreakdownViewModel {
     private let modelContext: ModelContext
     private let roundID: UUID
     private let playerID: String
+    private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "PlayerHoleBreakdownViewModel")
 
     init(modelContext: ModelContext, roundID: UUID, playerID: String, playerName: String) {
         self.modelContext = modelContext
@@ -46,31 +49,36 @@ final class PlayerHoleBreakdownViewModel {
     func computeBreakdown() {
         let roundIDLocal = roundID
 
-        // Fetch round to get courseID and holeCount
-        let roundDescriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == roundIDLocal })
-        guard let round = (try? modelContext.fetch(roundDescriptor))?.first else { return }
+        do {
+            // Fetch round to get courseID and holeCount
+            let roundDescriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == roundIDLocal })
+            guard let round = try modelContext.fetch(roundDescriptor).first else { return }
 
-        // Fetch holes to build par lookup
-        let courseIDLocal = round.courseID
-        let holeDescriptor = FetchDescriptor<Hole>(predicate: #Predicate { $0.courseID == courseIDLocal })
-        let holes = (try? modelContext.fetch(holeDescriptor)) ?? []
-        let parByHole = Dictionary(uniqueKeysWithValues: holes.map { ($0.number, $0.par) })
+            // Fetch holes to build par lookup
+            let courseIDLocal = round.courseID
+            let holeDescriptor = FetchDescriptor<Hole>(predicate: #Predicate { $0.courseID == courseIDLocal })
+            let holes = try modelContext.fetch(holeDescriptor)
+            let parByHole = Dictionary(uniqueKeysWithValues: holes.map { ($0.number, $0.par) })
 
-        // Fetch all ScoreEvents for this round
-        let eventDescriptor = FetchDescriptor<ScoreEvent>(predicate: #Predicate { $0.roundID == roundIDLocal })
-        let allEvents = (try? modelContext.fetch(eventDescriptor)) ?? []
+            // Fetch all ScoreEvents for this round
+            let eventDescriptor = FetchDescriptor<ScoreEvent>(predicate: #Predicate { $0.roundID == roundIDLocal })
+            let allEvents = try modelContext.fetch(eventDescriptor)
 
-        // Resolve per-hole scores using Amendment A7 leaf-node resolution
-        let playerIDLocal = playerID
-        var scores: [HoleScore] = []
-        for holeNumber in 1...round.holeCount {
-            guard let leaf = resolveCurrentScore(for: playerIDLocal, hole: holeNumber, in: allEvents) else { continue }
-            let par = parByHole[holeNumber] ?? 3
-            scores.append(HoleScore(holeNumber: holeNumber, par: par, strokeCount: leaf.strokeCount))
+            // Resolve per-hole scores using Amendment A7 leaf-node resolution
+            let playerIDLocal = playerID
+            var scores: [HoleScore] = []
+            for holeNumber in 1...round.holeCount {
+                guard let leaf = resolveCurrentScore(for: playerIDLocal, hole: holeNumber, in: allEvents) else { continue }
+                let par = parByHole[holeNumber] ?? 3
+                scores.append(HoleScore(holeNumber: holeNumber, par: par, strokeCount: leaf.strokeCount))
+            }
+
+            holeScores = scores.sorted { $0.holeNumber < $1.holeNumber }
+            totalStrokes = holeScores.reduce(0) { $0 + $1.strokeCount }
+            totalPar = holeScores.reduce(0) { $0 + $1.par }
+        } catch {
+            logger.error("PlayerHoleBreakdownViewModel.computeBreakdown failed: \(error)")
+            errorMessage = "Unable to load hole scores."
         }
-
-        holeScores = scores.sorted { $0.holeNumber < $1.holeNumber }
-        totalStrokes = holeScores.reduce(0) { $0 + $1.strokeCount }
-        totalPar = holeScores.reduce(0) { $0 + $1.par }
     }
 }
