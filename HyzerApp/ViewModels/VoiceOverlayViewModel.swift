@@ -66,9 +66,9 @@ final class VoiceOverlayViewModel {
 
     // MARK: - Timer
 
-    // nonisolated(unsafe): allows deinit to call cancel() without a main-actor hop.
-    // All writes happen on @MainActor; deinit only calls cancel().
-    nonisolated(unsafe) private var timerTask: Task<Void, Never>?
+    // ObservationIgnored + nonisolated: allows deinit to call cancel() without a main-actor hop.
+    // All writes happen on @MainActor; deinit only calls cancel(). No observation tracking needed.
+    @ObservationIgnored nonisolated(unsafe) private var timerTask: Task<Void, Never>?
 
     /// When `true` (VoiceOver focus on overlay), the auto-commit timer is paused.
     var isVoiceOverFocused: Bool = false {

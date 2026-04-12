@@ -289,7 +289,7 @@ struct ScorecardContainerView: View {
     private func finishRoundForced() {
         guard let vm = viewModel else { return }
         do {
-            try vm.finishRound(force: true)
+            _ = try vm.finishRound(force: true)
             // Post-completion navigation: HomeView's @Query no longer includes this round,
             // so ScoringTabView automatically switches back to the "Start Round" state.
         } catch {

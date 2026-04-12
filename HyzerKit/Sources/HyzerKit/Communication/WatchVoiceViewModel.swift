@@ -37,8 +37,9 @@ public final class WatchVoiceViewModel {
     private let playerEntries: [VoicePlayerEntry]
     private let connectivityClient: any WatchConnectivityClient
 
-    // nonisolated(unsafe): deinit is nonisolated; all actual use is on @MainActor.
-    nonisolated(unsafe) private var timerTask: Task<Void, Never>?
+    // ObservationIgnored + nonisolated: deinit is nonisolated; all actual use is on @MainActor.
+    // Timer task doesn't need observation tracking.
+    @ObservationIgnored nonisolated(unsafe) private var timerTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -134,7 +135,7 @@ public final class WatchVoiceViewModel {
         timerTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(1.5))
             guard !Task.isCancelled else { return }
-            await self?.confirmScores()
+            self?.confirmScores()
         }
     }
 
