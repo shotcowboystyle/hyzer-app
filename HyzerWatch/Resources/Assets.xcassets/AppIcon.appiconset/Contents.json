@@ -1,6 +1,7 @@
 {
   "images": [
     {
+      "filename": "AppIcon-Watch-44@2x.png",
       "idiom": "watch",
       "role": "appLauncher",
       "scale": "2x",
@@ -8,6 +9,7 @@
       "subtype": "44mm"
     },
     {
+      "filename": "AppIcon-Watch-Marketing.png",
       "idiom": "watch-marketing",
       "scale": "1x",
       "size": "1024x1024"
