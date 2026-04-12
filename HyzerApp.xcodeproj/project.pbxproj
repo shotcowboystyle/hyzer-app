@@ -764,6 +764,7 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.shotcowboystyle.hyzerapp;
 				INFOPLIST_KEY_WKWatchKitApp = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
@@ -865,6 +866,7 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.shotcowboystyle.hyzerapp;
 				INFOPLIST_KEY_WKWatchKitApp = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
