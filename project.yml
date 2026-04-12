@@ -40,6 +40,13 @@ targets:
       path: HyzerApp/App/Info.plist
       properties:
         UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UIBackgroundModes:
           - remote-notification
         NSMicrophoneUsageDescription: "HyzerApp uses the microphone to hear player names and scores for hands-free scoring."
@@ -76,6 +83,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp.watchkitapp
         CODE_SIGN_ENTITLEMENTS: HyzerWatch/App/HyzerWatch.entitlements
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleIconName: AppIcon
         INFOPLIST_KEY_WKWatchKitApp: YES
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
