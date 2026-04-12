@@ -1,0 +1,139 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  XCODE_VERSION: '16.2'
+
+jobs:
+  swiftlint:
+    name: SwiftLint
+    runs-on: macos-15
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+  hyzerkit-tests:
+    name: HyzerKit Tests (swift test)
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            HyzerKit/.build
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('HyzerKit/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Resolve packages
+        run: swift package --package-path HyzerKit resolve
+
+      - name: Run HyzerKit tests
+        run: swift test --package-path HyzerKit 2>&1 | tee hyzerkit-test-output.txt
+
+      - name: Upload test output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyzerkit-test-output
+          path: hyzerkit-test-output.txt
+          retention-days: 7
+
+  app-tests:
+    name: HyzerApp ViewModel Tests (xcodebuild)
+    runs-on: macos-15
+    timeout-minutes: 30
+    needs: hyzerkit-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.XCODE_VERSION }}.app
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Cache SPM packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+          key: ${{ runner.os }}-xcode-spm-${{ hashFiles('HyzerKit/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-spm-
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Find simulator
+        id: sim
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j \
+            | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          for r,devs in sorted(d['devices'].items(),reverse=True):
+            if 'iOS' in r:
+              for x in devs:
+                if x['isAvailable'] and 'iPhone' in x['name']:
+                  print(x['udid']); sys.exit(0)
+          ")
+          echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$DEVICE_ID" || true
+
+      - name: Run HyzerApp tests
+        run: |
+          xcodebuild test \
+            -project HyzerApp.xcodeproj \
+            -scheme HyzerApp \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
+            -resultBundlePath TestResults.xcresult \
+            -enableCodeCoverage YES \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee xcodebuild-test-output.txt
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-test-results
+          path: |
+            TestResults.xcresult
+            xcodebuild-test-output.txt
+          retention-days: 7
+
+      - name: Upload xcresult bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-xcresult
+          path: TestResults.xcresult
+          retention-days: 30
