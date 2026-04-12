@@ -6,16 +6,21 @@ import Foundation
 /// polling loop that terminates as soon as the condition is met — faster on fast machines,
 /// still reliable on slow CI.
 ///
+/// NOTE: Canonical implementation lives in HyzerKitTests/Fixtures/TestPolling.swift.
+/// This copy must stay in sync — both targets need their own copy because test targets
+/// cannot share source files across module boundaries.
+///
 /// - Parameters:
 ///   - timeout: Maximum time to wait before returning `false`. Default 2 seconds.
 ///   - pollInterval: Time between polls. Default 10ms.
 ///   - condition: Closure evaluated each poll cycle. Return `true` to stop waiting.
 /// - Returns: `true` if the condition was met within timeout, `false` otherwise.
 @discardableResult
+@MainActor
 func awaitCondition(
     timeout: Duration = .seconds(2),
     pollInterval: Duration = .milliseconds(10),
-    _ condition: @Sendable () async throws -> Bool
+    _ condition: () async throws -> Bool
 ) async rethrows -> Bool {
     let deadline = ContinuousClock.now + timeout
     while ContinuousClock.now < deadline {

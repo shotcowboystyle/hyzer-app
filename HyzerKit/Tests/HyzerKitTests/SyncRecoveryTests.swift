@@ -134,6 +134,7 @@ struct SyncRecoveryTests {
         let id1 = event1.id.uuidString
         let id2 = event2.id.uuidString
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
             let m1 = allMeta.first { $0.recordID == id1 }
             let m2 = allMeta.first { $0.recordID == id2 }
@@ -212,6 +213,7 @@ struct SyncRecoveryTests {
         // Poll until exactly one copy of the event exists in the local store
         let eventID = event.id
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
             return events.filter { $0.id == eventID }.count == 1
         }

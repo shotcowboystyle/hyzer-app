@@ -148,6 +148,7 @@ struct SyncSchedulerTests {
         // Poll until background context saves and merges the remote event
         let remoteID = remoteEvent.id
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
             return events.contains { $0.id == remoteID }
         }
