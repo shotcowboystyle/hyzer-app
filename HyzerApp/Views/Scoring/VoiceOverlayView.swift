@@ -327,7 +327,10 @@ struct VoiceOverlayView: View {
     }
 
     private func announcePartial(recognizedCount: Int, unresolvedCount: Int) {
-        let announcement = "Partial recognition. \(recognizedCount) scores confirmed, \(unresolvedCount) unresolved. Tap the highlighted names to select the correct player."
+        let announcement = "Partial recognition. " +
+            "\(recognizedCount) scores confirmed, " +
+            "\(unresolvedCount) unresolved. " +
+            "Tap the highlighted names to select the correct player."
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
