@@ -66,11 +66,11 @@ struct ScoreInputView: View {
                                         ? Color.accentPrimary
                                         : Color.backgroundPrimary.opacity(0.6)
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline))
                                 .overlay(
                                     // Ring indicator for the current correction value
                                     value == preSelectedScore
-                                        ? RoundedRectangle(cornerRadius: 8)
+                                        ? RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline)
                                             .stroke(Color.textSecondary, lineWidth: 2)
                                         : nil
                                 )
@@ -87,7 +87,7 @@ struct ScoreInputView: View {
         }
         .padding(.vertical, SpacingTokens.sm)
         .background(Color.backgroundElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Select score for \(playerName)")
         .onAppear { haptic.prepare() }

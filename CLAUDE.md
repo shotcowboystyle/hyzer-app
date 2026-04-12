@@ -67,7 +67,7 @@ ViewModels receive individual services — never the full `AppServices` containe
 ### Data & Persistence
 
 **Two SwiftData stores** configured in `HyzerApp.swift`:
-- **Domain store** — `Player`, `Round`, `Course`, `Hole`, `ScoreEvent` — synced to CloudKit
+- **Domain store** — `Player`, `Round`, `Course`, `Hole`, `ScoreEvent`, `Discrepancy` — synced to CloudKit
 - **Operational store** — `SyncMetadata` — local-only, never synced
 
 **CloudKit:** Manual sync via the CloudKit public database API. SwiftData's built-in `.cloudKit` sync is intentionally NOT used (it only supports private DB; this app needs the public DB for shared rounds). CloudKit models must have all properties optional/defaulted and no `@Attribute(.unique)`.
@@ -108,6 +108,44 @@ Tests use **Swift Testing** (`@Suite`, `@Test` macros) — not XCTest syntax.
 
 Branch protection enforces Git Flow. Branches must follow: `feature/<name>`, `release/v<MAJOR>.<MINOR>.<PATCH>`, `hotfix/<name>`. Direct push to `main` or `develop` is blocked. Commit messages must follow Conventional Commits (`type(scope): description`).
 
+### Known Technical Debt
+
+From the Epics 1–8 retrospective (`_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md`):
+
+- `ValueCollector` test helper duplicated across multiple test files — needs extraction to shared utility
+- `Task.sleep(for: .milliseconds(100))` flaky timing pattern in tests — replace with deterministic waits
+- `ShareSheetRepresentable` duplicated in two History views — extract to shared component
+- `ConflictResult` missing `Equatable` conformance
+- `SyncScheduler` uses `UserDefaults.standard` directly — testability concern
+- `ColorTokens.border` referenced but never defined
+- DTO stubs (`CourseRecord`, `PlayerRecord`, `RoundRecord`) — identity-only, deferred to future sync expansion
+
+### Coding Standards (Enforce, Don't Review)
+
+These patterns were caught repeatedly in code review across 8 epics. Treat violations as bugs:
+
+- **No silent `try?`** — every `try?` must have a comment explaining why it's safe. Use `do/catch` with logging otherwise.
+- **Bounded queries** — every SwiftData fetch must have `fetchLimit` or equivalent constraint.
+- **Accessibility first** — every interactive element needs VoiceOver labels; every text needs Dynamic Type support.
+- **Design tokens only** — never hardcode colors, fonts, spacing, or animation durations.
+
 ### BMAD Project Management
 
 Stories, epics, and sprint state live in `_bmad-output/`. The canonical architecture document is `_bmad-output/planning-artifacts/architecture.md` — read it before making significant architectural decisions. Story files are in `_bmad-output/implementation-artifacts/`. GitHub issues (via `github-issue-map.json`) are the source of truth for story completion status.
+
+### Project Documentation
+
+Comprehensive docs generated from deep scan live in `docs/`:
+
+- [Index](docs/index.md) — documentation hub
+- [Architecture](docs/architecture.md) — full system architecture, data flow, sync design
+- [Data Models](docs/data-models.md) — all SwiftData models, relationships, constraints
+- [Component Inventory](docs/component-inventory.md) — models, ViewModels, views, services, protocols, tokens
+- [Source Tree](docs/source-tree-analysis.md) — annotated directory structure
+- [Development Guide](docs/development-guide.md) — build, test, lint, conventions
+
+### Project Status (as of 2026-04-08)
+
+- **Epics 1–8 complete** — 23/23 stories, 407 tests
+- **Not yet deployed** — no TestFlight or App Store builds
+- **Stabilization phase** — code review, test audit, tech debt cleanup in progress

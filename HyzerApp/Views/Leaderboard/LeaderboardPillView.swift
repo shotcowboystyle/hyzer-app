@@ -42,7 +42,7 @@ struct LeaderboardPillView: View {
                 }
                 .scaleEffect(viewModel.showPulse ? 1.03 : 1.0)
                 .animation(
-                    AnimationCoordinator.animation(.easeInOut(duration: 0.3), reduceMotion: reduceMotion),
+                    AnimationCoordinator.animation(.easeInOut(duration: AnimationTokens.easeStandardDuration), reduceMotion: reduceMotion),
                     value: viewModel.showPulse
                 )
                 .accessibilityElement(children: .ignore)
@@ -53,7 +53,7 @@ struct LeaderboardPillView: View {
                     if let index = viewModel.currentPlayerStandingIndex,
                        index < viewModel.currentStandings.count {
                         let playerID = viewModel.currentStandings[index].playerID
-                        withAnimation(AnimationCoordinator.animation(.easeInOut(duration: 0.3), reduceMotion: reduceMotion)) {
+                        withAnimation(AnimationCoordinator.animation(.easeInOut(duration: AnimationTokens.easeStandardDuration), reduceMotion: reduceMotion)) {
                             proxy.scrollTo(playerID, anchor: .center)
                         }
                     }

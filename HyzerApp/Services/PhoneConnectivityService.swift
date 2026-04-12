@@ -58,7 +58,10 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     init() {
         let delegate = SessionDelegate()
         self.delegate = delegate
-        guard WCSession.isSupported() else { return }
+        guard WCSession.isSupported() else {
+            logger.warning("WCSession not supported on this device — connectivity disabled")
+            return
+        }
         session.delegate = delegate
         session.activate()
         delegate.onReachabilityChange = { [weak self] reachable in
@@ -174,7 +177,11 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             guard let voiceRecognitionService else {
                 logger.warning("voiceRequest received but voiceRecognitionService not wired — sending failed result")
                 let failed = WatchVoiceResult(result: .failed(transcript: ""), holeNumber: request.holeNumber, roundID: request.roundID)
-                try? sendMessage(.voiceResult(failed))
+                do {
+                    try sendMessage(.voiceResult(failed))
+                } catch {
+                    logger.error("Failed to send voiceResult(failed) to Watch: \(error)")
+                }
                 return
             }
             let transcript = try await voiceRecognitionService.recognize()

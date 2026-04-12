@@ -231,7 +231,7 @@ final class VoiceOverlayViewModel {
         timerTask?.cancel()
         timerResetCount += 1
         timerTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(for: .seconds(AnimationTokens.autoCommitDuration))
             guard !Task.isCancelled else { return }
             self?.commitScores()
         }

@@ -61,8 +61,8 @@ struct VoiceOverlayViewModelTests {
 
         // When
         vm.startListening()
-        // Allow async recognition to propagate
-        try await Task.sleep(for: .milliseconds(100))
+        // Poll until async recognition propagates
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
 
         // Then
         if case .confirming(let candidates) = vm.state {
@@ -87,7 +87,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
         guard case .confirming = vm.state else {
             Issue.record("Setup: expected .confirming state")
             return
@@ -120,7 +120,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
         guard case .confirming = vm.state else {
             Issue.record("Setup: expected .confirming state")
             return
@@ -148,7 +148,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
 
         // When
         vm.cancel()
@@ -175,7 +175,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
 
         // When
         vm.commitScores()
@@ -198,7 +198,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
         guard case .confirming = vm.state else {
             Issue.record("Setup: expected .confirming state")
             return
@@ -206,8 +206,8 @@ struct VoiceOverlayViewModelTests {
 
         // When — VoiceOver focuses on overlay
         vm.isVoiceOverFocused = true
-        // Wait longer than 1.5s auto-commit window
-        try await Task.sleep(for: .seconds(2))
+        // Wait longer than 1.5s auto-commit window; timer should be paused so state remains .confirming
+        await awaitCondition(timeout: .seconds(3)) { if case .committed = vm.state { return true } else { return false } }
 
         // Then — timer should have been cancelled; state is still .confirming, no scores committed
         if case .confirming = vm.state { } else {
@@ -228,14 +228,14 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
         guard case .confirming = vm.state else {
             Issue.record("Setup: expected .confirming state")
             return
         }
 
         // When — wait for auto-commit timer (1.5s) plus buffer
-        try await Task.sleep(for: .seconds(2))
+        await awaitCondition(timeout: .seconds(3)) { if case .committed = vm.state { return true } else { return false } }
 
         // Then — timer should have fired and committed scores
         if case .committed = vm.state { } else {
@@ -259,7 +259,7 @@ struct VoiceOverlayViewModelTests {
 
         // When
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .partial = vm.state { return true } else { return false } }
 
         // Then
         if case .partial(let recognized, let unresolved) = vm.state {
@@ -287,7 +287,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: players)
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .partial = vm.state { return true } else { return false } }
         guard case .partial = vm.state else {
             Issue.record("Setup: expected .partial state")
             return
@@ -323,7 +323,9 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: players)
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition {
+            if case .partial(_, let unresolved) = vm.state { return unresolved.count == 2 } else { return false }
+        }
         guard case .partial(_, let unresolved) = vm.state, unresolved.count == 2 else {
             Issue.record("Setup: expected .partial state with 2 unresolved")
             return
@@ -356,7 +358,9 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: players)
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition {
+            if case .partial(_, let unresolved) = vm.state { return !unresolved.isEmpty } else { return false }
+        }
         guard case .partial(_, let unresolved) = vm.state, !unresolved.isEmpty else {
             Issue.record("Setup: expected .partial state with unresolved entries, got \(vm.state)")
             return
@@ -389,7 +393,7 @@ struct VoiceOverlayViewModelTests {
 
         // When
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .failed = vm.state { return true } else { return false } }
 
         // Then: .failed state and NOT terminated (retry must be available)
         if case .failed = vm.state { } else {
@@ -409,7 +413,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .failed = vm.state { return true } else { return false } }
         guard case .failed = vm.state else {
             Issue.record("Setup: expected .failed state")
             return
@@ -420,7 +424,7 @@ struct VoiceOverlayViewModelTests {
 
         // When
         vm.retry()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .confirming = vm.state { return true } else { return false } }
 
         // Then: recognizeCallCount is 2 and state is .confirming
         #expect(mock.recognizeCallCount == 2)
@@ -443,7 +447,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .partial = vm.state { return true } else { return false } }
         guard case .partial = vm.state else {
             Issue.record("Setup: expected .partial state")
             return
@@ -472,7 +476,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: samplePlayers())
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .failed = vm.state { return true } else { return false } }
         guard case .failed = vm.state else {
             Issue.record("Setup: expected .failed state")
             return
@@ -502,7 +506,7 @@ struct VoiceOverlayViewModelTests {
         let (vm, _) = makeVM(mock: mock, context: context, players: players)
 
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .partial = vm.state { return true } else { return false } }
         guard case .partial = vm.state else {
             Issue.record("Setup: expected .partial state")
             return
@@ -527,7 +531,7 @@ struct VoiceOverlayViewModelTests {
 
         // When
         vm.startListening()
-        try await Task.sleep(for: .milliseconds(100))
+        await awaitCondition { if case .error = vm.state { return true } else { return false } }
 
         // Then — use pattern matching (VoiceParseError is not Equatable)
         if case .error(.microphonePermissionDenied) = vm.state {

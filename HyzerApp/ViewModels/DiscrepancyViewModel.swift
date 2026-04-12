@@ -93,14 +93,18 @@ final class DiscrepancyViewModel {
         let descriptor1 = FetchDescriptor<ScoreEvent>(predicate: #Predicate { $0.id == id1 })
         let descriptor2 = FetchDescriptor<ScoreEvent>(predicate: #Predicate { $0.id == id2 })
 
-        guard
-            let event1 = (try? modelContext.fetch(descriptor1))?.first,
-            let event2 = (try? modelContext.fetch(descriptor2))?.first
-        else {
-            logger.error("DiscrepancyViewModel.loadConflictingEvents: could not find events for discrepancy \(discrepancy.id)")
+        do {
+            guard let event1 = try modelContext.fetch(descriptor1).first,
+                  let event2 = try modelContext.fetch(descriptor2).first else {
+                logger.error("DiscrepancyViewModel.loadConflictingEvents: events not found for discrepancy \(discrepancy.id)")
+                return nil
+            }
+            return (event1, event2)
+        } catch {
+            logger.error("DiscrepancyViewModel.loadConflictingEvents: fetch failed for discrepancy \(discrepancy.id): \(error)")
+            resolveError = error
             return nil
         }
-        return (event1, event2)
     }
 
     /// Resolves a discrepancy by creating an authoritative ScoreEvent and updating the Discrepancy status.

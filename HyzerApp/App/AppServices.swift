@@ -135,7 +135,9 @@ final class AppServices {
 
         do {
             let context = ModelContext(modelContainer)
-            let players = try context.fetch(FetchDescriptor<Player>())
+            var descriptor = FetchDescriptor<Player>()
+            descriptor.fetchLimit = 1
+            let players = try context.fetch(descriptor)
             guard let player = players.first else {
                 iCloudLogger.info("iCloud identity: no player found, skipping")
                 return

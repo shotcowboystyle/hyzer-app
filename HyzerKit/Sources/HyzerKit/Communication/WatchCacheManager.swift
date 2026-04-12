@@ -1,4 +1,5 @@
 import Foundation
+import os.log
 
 /// Persists and retrieves the latest `StandingsSnapshot` in the shared app group container.
 ///
@@ -38,11 +39,18 @@ public final class WatchCacheManager {
         try data.write(to: url, options: .atomic)
     }
 
+    private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "WatchCacheManager")
+
     /// Loads the most recently persisted standings snapshot.
     /// - Returns: The cached snapshot, or `nil` if the file doesn't exist or is corrupt.
     public func loadLatest() -> StandingsSnapshot? {
-        guard let url = cacheURL,
-              let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode(StandingsSnapshot.self, from: data)
+        guard let url = cacheURL else { return nil }
+        do {
+            let data = try Data(contentsOf: url)
+            return try JSONDecoder().decode(StandingsSnapshot.self, from: data)
+        } catch {
+            logger.warning("WatchCacheManager.loadLatest failed: \(error)")
+            return nil
+        }
     }
 }

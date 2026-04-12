@@ -47,3 +47,22 @@ rules:
   file_length:
     warning: 400
     error: 600
+
+custom_rules:
+  try_without_justification:
+    name: "Try? Without Justification"
+    regex: 'try\?'
+    message: "Prefer explicit do/catch. If try? is intentional, add a comment explaining why it is safe."
+    severity: warning
+
+  hardcoded_colors:
+    name: "Hardcoded Color Values"
+    regex: '\.foregroundStyle\s*\(\s*\.(?:white|black)\s*\)'
+    message: "Use ColorTokens design system instead of hardcoded colors (e.g. Color.textPrimary, Color.backgroundPrimary)"
+    severity: warning
+
+  hardcoded_animation_duration:
+    name: "Hardcoded Animation Duration"
+    regex: 'duration\s*:\s*0\.\d+'
+    message: "Use AnimationTokens presets (springStiff, springGentle) or explicit constants instead of hardcoded durations"
+    severity: warning

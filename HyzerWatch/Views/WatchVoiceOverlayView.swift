@@ -73,7 +73,7 @@ struct WatchVoiceOverlayView: View {
                 .opacity(reduceMotion ? 1 : pulsingOpacity)
                 .onAppear {
                     guard !reduceMotion else { return }
-                    withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    withAnimation(Animation.easeInOut(duration: AnimationTokens.micPulseDuration).repeatForever(autoreverses: true)) {
                         pulsingOpacity = 1.0
                     }
                 }

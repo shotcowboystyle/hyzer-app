@@ -4,19 +4,6 @@ import SwiftData
 import CloudKit
 @testable import HyzerKit
 
-// MARK: - Helpers
-
-/// Builds an in-memory ModelContainer for conflict integration tests.
-/// Includes Discrepancy in the domain schema.
-@MainActor
-private func makeConflictTestContainer() throws -> ModelContainer {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    return try ModelContainer(
-        for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self, Discrepancy.self,
-        configurations: config
-    )
-}
-
 // MARK: - Test Suite
 
 @Suite("SyncEngine — Conflict Detection")
@@ -27,7 +14,7 @@ struct SyncEngineConflictTests {
     @Test("pullRecords with identical remote score from different device silently merges — no Discrepancy created")
     @MainActor
     func test_pullRecords_identicalRemoteScore_silentMerge_noDiscrepancy() async throws {
-        let container = try makeConflictTestContainer()
+        let container = try TestContainerFactory.makeConflictTestContainer()
         let context = container.mainContext
 
         let roundID = UUID()
@@ -58,7 +45,10 @@ struct SyncEngineConflictTests {
 
         // Act
         await engine.pullRecords()
-        try await Task.sleep(for: .milliseconds(100))
+        try await awaitCondition {
+            let events = try context.fetch(FetchDescriptor<ScoreEvent>())
+            return events.contains { $0.id == remoteEventB.id }
+        }
 
         // Assert: device-B's event was inserted
         let allEvents = try context.fetch(FetchDescriptor<ScoreEvent>())
@@ -74,7 +64,7 @@ struct SyncEngineConflictTests {
     @Test("pullRecords with conflicting remote score creates Discrepancy with correct fields")
     @MainActor
     func test_pullRecords_conflictingRemoteScore_createsDiscrepancy() async throws {
-        let container = try makeConflictTestContainer()
+        let container = try TestContainerFactory.makeConflictTestContainer()
         let context = container.mainContext
 
         let roundID = UUID()
@@ -104,7 +94,10 @@ struct SyncEngineConflictTests {
 
         // Act
         await engine.pullRecords()
-        try await Task.sleep(for: .milliseconds(100))
+        try await awaitCondition {
+            let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
+            return discrepancies.count >= 1
+        }
 
         // Assert: Discrepancy was created
         let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
@@ -125,7 +118,7 @@ struct SyncEngineConflictTests {
     @Test("pullRecords with correction from same device does not create Discrepancy")
     @MainActor
     func test_pullRecords_correctionFromSameDevice_noDiscrepancy() async throws {
-        let container = try makeConflictTestContainer()
+        let container = try TestContainerFactory.makeConflictTestContainer()
         let context = container.mainContext
 
         let roundID = UUID()
@@ -158,7 +151,10 @@ struct SyncEngineConflictTests {
 
         // Act
         await engine.pullRecords()
-        try await Task.sleep(for: .milliseconds(100))
+        try await awaitCondition {
+            let events = try context.fetch(FetchDescriptor<ScoreEvent>())
+            return events.contains { $0.id == correctionEvent.id }
+        }
 
         // Assert: no Discrepancy created — same-device correction is not a conflict
         let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
@@ -171,7 +167,7 @@ struct SyncEngineConflictTests {
     @MainActor
     func test_pullRecords_resolutionScoreEvent_doesNotCreateDuplicateDiscrepancy() async throws {
         // Given: an existing Discrepancy for {roundID, playerID, holeNumber=5} that is already resolved
-        let container = try makeConflictTestContainer()
+        let container = try TestContainerFactory.makeConflictTestContainer()
         let context = container.mainContext
 
         let roundID = UUID()
@@ -221,7 +217,10 @@ struct SyncEngineConflictTests {
 
         // When: pull records (simulates remote device receiving resolution event)
         await engine.pullRecords()
-        try await Task.sleep(for: .milliseconds(100))
+        try await awaitCondition {
+            let events = try context.fetch(FetchDescriptor<ScoreEvent>())
+            return events.contains { $0.id == resolutionEvent.id }
+        }
 
         // Then: still only 1 Discrepancy (the existing one) — no duplicate created
         let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
@@ -235,7 +234,7 @@ struct SyncEngineConflictTests {
     @MainActor
     func test_pullRecords_resolutionScoreEvent_updatesLeaderboardSilently() async throws {
         // Given: an existing resolved Discrepancy and three events for the same {player, hole}
-        let container = try makeConflictTestContainer()
+        let container = try TestContainerFactory.makeConflictTestContainer()
         let context = container.mainContext
 
         let roundID = UUID()
@@ -268,7 +267,10 @@ struct SyncEngineConflictTests {
 
         // When
         await engine.pullRecords()
-        try await Task.sleep(for: .milliseconds(100))
+        try await awaitCondition {
+            let events = try context.fetch(FetchDescriptor<ScoreEvent>())
+            return events.contains { $0.id == resolutionEvent.id }
+        }
 
         // Then: no new unresolved discrepancy — deduplication guard prevents duplicate
         let allDiscrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
@@ -282,7 +284,7 @@ struct SyncEngineConflictTests {
     @Test("pullRecords with cross-device supersession creates Discrepancy")
     @MainActor
     func test_pullRecords_crossDeviceSupersession_createsDiscrepancy() async throws {
-        let container = try makeConflictTestContainer()
+        let container = try TestContainerFactory.makeConflictTestContainer()
         let context = container.mainContext
 
         let roundID = UUID()
@@ -314,7 +316,10 @@ struct SyncEngineConflictTests {
 
         // Act
         await engine.pullRecords()
-        try await Task.sleep(for: .milliseconds(100))
+        try await awaitCondition {
+            let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())
+            return discrepancies.count >= 1
+        }
 
         // Assert: Discrepancy was created for cross-device supersession
         let discrepancies = try context.fetch(FetchDescriptor<Discrepancy>())

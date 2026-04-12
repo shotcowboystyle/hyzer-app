@@ -189,7 +189,7 @@ public actor SyncEngine: ModelActor {
             } catch {
                 logger.error("SyncEngine.pushPending: failed to persist .failed status after unexpected error: \(error)")
             }
-            syncState = .error(error)
+            syncState = .error(SyncError.cloudKitFailure(CKError(.internalError)))
             logger.error("SyncEngine.pushPending: unexpected error: \(error)")
         }
     }
@@ -269,7 +269,13 @@ public actor SyncEngine: ModelActor {
 
         // Run conflict detection on newly inserted events (AC5)
         // Pre-fetch existing Discrepancy records to deduplicate (Story 6.1: resolution event guard).
-        let existingDiscrepancies = (try? modelContext.fetch(FetchDescriptor<Discrepancy>())) ?? []
+        let existingDiscrepancies: [Discrepancy]
+        do {
+            existingDiscrepancies = try modelContext.fetch(FetchDescriptor<Discrepancy>())
+        } catch {
+            logger.error("SyncEngine.pullRecords: failed to fetch existing discrepancies — deduplication guard bypassed: \(error)")
+            existingDiscrepancies = []
+        }
 
         let allEvents = existingEvents + newlyInsertedEvents
         let conflictDetector = ConflictDetector()
@@ -332,13 +338,23 @@ public actor SyncEngine: ModelActor {
     /// `#Predicate` with custom enum types (SyncStatus) has unpredictable behavior
     /// on macOS test hosts. Bounded in practice: one entry per sync attempt.
     private func fetchAllMetadata() -> [SyncMetadata] {
-        (try? modelContext.fetch(FetchDescriptor<SyncMetadata>())) ?? []
+        do {
+            return try modelContext.fetch(FetchDescriptor<SyncMetadata>())
+        } catch {
+            logger.error("SyncEngine.fetchAllMetadata failed: \(error)")
+            return []
+        }
     }
 
     /// Fetches all ScoreEvents. Same fetch-all strategy as `fetchAllMetadata()`.
     /// Bounded in practice by round scope (~1,500 events/round peak).
     private func fetchAllScoreEvents() -> [ScoreEvent] {
-        (try? modelContext.fetch(FetchDescriptor<ScoreEvent>())) ?? []
+        do {
+            return try modelContext.fetch(FetchDescriptor<ScoreEvent>())
+        } catch {
+            logger.error("SyncEngine.fetchAllScoreEvents failed: \(error)")
+            return []
+        }
     }
 
     private func isNetworkError(_ error: CKError) -> Bool {
