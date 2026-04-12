@@ -18,6 +18,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>HyzerApp uses the microphone to hear player names and scores for hands-free scoring.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
