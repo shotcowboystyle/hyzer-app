@@ -205,15 +205,13 @@ struct WatchVoiceViewModelTests {
         let result = WatchVoiceResult(result: .success(candidates), holeNumber: holeNumber, roundID: roundID)
         vm.handleVoiceResult(result)
 
-        // Poll for committed state — allow generous budget for CI scheduling variance.
-        var elapsed = 0
-        while elapsed < 40 {
-            if case .committed = vm.state { break }
-            try await Task.sleep(for: .milliseconds(100))
-            elapsed += 1
+        // Use deterministic polling — exits as soon as condition is met, with 4s safety budget.
+        let committed = await awaitCondition(timeout: .seconds(4)) {
+            if case .committed = vm.state { return true }
+            return false
         }
 
-        guard case .committed = vm.state else {
+        guard committed else {
             Issue.record("Expected .committed state after auto-commit timer (4s budget)")
             return
         }

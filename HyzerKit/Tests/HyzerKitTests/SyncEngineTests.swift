@@ -168,6 +168,7 @@ struct SyncEngineTests {
         // Assert: ScoreEvent now exists locally (poll until background save merges)
         let remoteID = remoteEvent.id
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
             return events.contains { $0.id == remoteID }
         }
@@ -202,6 +203,7 @@ struct SyncEngineTests {
         // Poll until background save merges (dedup check)
         let eventID = event.id
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let events = (try? context.fetch(FetchDescriptor<ScoreEvent>())) ?? []
             return !events.isEmpty && events.filter({ $0.id == eventID }).count == 1
         }
