@@ -267,19 +267,33 @@ public actor SyncEngine: ModelActor {
             return
         }
 
-        // Run conflict detection on newly inserted events (AC5)
-        // Pre-fetch existing Discrepancy records to deduplicate (Story 6.1: resolution event guard).
+        detectConflicts(newEvents: newlyInsertedEvents, allExisting: existingEvents)
+
+        // Hop to MainActor to recompute standings for each affected round (AC2)
+        for roundID in affectedRoundIDs {
+            await standingsEngine.recompute(for: roundID, trigger: .remoteSync)
+        }
+        syncState = .idle
+        logger.info("SyncEngine.pullRecords: inserted events for \(affectedRoundIDs.count) round(s)")
+    }
+
+    // MARK: - Conflict detection
+
+    /// Runs conflict detection on newly inserted events and creates Discrepancy records.
+    ///
+    /// Pre-fetches existing Discrepancy records to deduplicate (Story 6.1: resolution event guard).
+    private func detectConflicts(newEvents: [ScoreEvent], allExisting: [ScoreEvent]) {
         let existingDiscrepancies: [Discrepancy]
         do {
             existingDiscrepancies = try modelContext.fetch(FetchDescriptor<Discrepancy>())
         } catch {
-            logger.error("SyncEngine.pullRecords: failed to fetch existing discrepancies — deduplication guard bypassed: \(error)")
-            existingDiscrepancies = []
+            logger.error("SyncEngine: failed to fetch discrepancies — dedup guard bypassed: \(error)")
+            return
         }
 
-        let allEvents = existingEvents + newlyInsertedEvents
+        let allEvents = allExisting + newEvents
         let conflictDetector = ConflictDetector()
-        for newEvent in newlyInsertedEvents {
+        for newEvent in newEvents {
             let groupEvents = allEvents.filter {
                 $0.roundID == newEvent.roundID &&
                 $0.playerID == newEvent.playerID &&
@@ -290,18 +304,17 @@ public actor SyncEngine: ModelActor {
             case .noConflict, .correction:
                 break
             case .silentMerge:
-                logger.debug("SyncEngine.pullRecords: silent merge for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
+                logger.debug("SyncEngine: silent merge for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
             case .discrepancy(let existingID, let incomingID):
-                // Deduplicate: skip if a Discrepancy already exists for {roundID, playerID, holeNumber}.
-                // This prevents the resolution ScoreEvent (supersedesEventID == nil) from creating a
-                // second Discrepancy when pulled by remote devices (Story 6.1 mitigation).
                 let alreadyExists = existingDiscrepancies.contains {
                     $0.roundID == newEvent.roundID &&
                     $0.playerID == newEvent.playerID &&
                     $0.holeNumber == newEvent.holeNumber
                 }
                 guard !alreadyExists else {
-                    logger.debug("SyncEngine.pullRecords: discrepancy already exists for player \(newEvent.playerID) hole \(newEvent.holeNumber) — skipping duplicate")
+                    let pid = newEvent.playerID
+                    let hole = newEvent.holeNumber
+                    logger.debug("SyncEngine: discrepancy exists for player \(pid) hole \(hole) — skip")
                     break
                 }
                 let discrepancy = Discrepancy(
@@ -312,24 +325,17 @@ public actor SyncEngine: ModelActor {
                     eventID2: incomingID
                 )
                 modelContext.insert(discrepancy)
-                logger.info("SyncEngine.pullRecords: discrepancy detected for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
+                logger.info("SyncEngine: discrepancy for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
             }
         }
 
-        if !newlyInsertedEvents.isEmpty {
+        if !newEvents.isEmpty {
             do {
                 try modelContext.save()
             } catch {
-                logger.error("SyncEngine.pullRecords: save discrepancies failed: \(error)")
+                logger.error("SyncEngine: save discrepancies failed: \(error)")
             }
         }
-
-        // Hop to MainActor to recompute standings for each affected round (AC2)
-        for roundID in affectedRoundIDs {
-            await standingsEngine.recompute(for: roundID, trigger: .remoteSync)
-        }
-        syncState = .idle
-        logger.info("SyncEngine.pullRecords: inserted events for \(affectedRoundIDs.count) round(s)")
     }
 
     // MARK: - Private helpers
