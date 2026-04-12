@@ -106,7 +106,7 @@
 /* Begin PBXFileReference section */
 		0271AF96B676CB2280840B30 /* ScorecardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardViewModel.swift; sourceTree = "<group>"; };
 		07389BA2B2E9434AE923CC28 /* WatchStaleIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStaleIndicatorView.swift; sourceTree = "<group>"; };
-		07943A8909080D9EEB547B64 /* HyzerKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = HyzerKit; sourceTree = SOURCE_ROOT; };
+		07943A8909080D9EEB547B64 /* HyzerKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = HyzerKit; path = HyzerKit; sourceTree = SOURCE_ROOT; };
 		0CB3171CF658AC6851293F50 /* VoiceRecognitionServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecognitionServiceProtocol.swift; sourceTree = "<group>"; };
 		0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSetupViewModel.swift; sourceTree = "<group>"; };
 		1AFA4C5EA37270895D500678 /* HyzerWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HyzerWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -143,7 +143,7 @@
 		99BEC27ED6A658066DE3B9F9 /* LiveCloudKitClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveCloudKitClient.swift; sourceTree = "<group>"; };
 		9A189F4C0A73BA714FD8BE50 /* OnboardingViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModelTests.swift; sourceTree = "<group>"; };
 		9CF27AB5613FDD66774D32B9 /* PhoneConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnectivityService.swift; sourceTree = "<group>"; };
-		A0348F5FC211306493C34EDC /* HyzerApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HyzerApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0348F5FC211306493C34EDC /* HyzerApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HyzerApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A11CB2EA23B021251B93ADEE /* LeaderboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewModel.swift; sourceTree = "<group>"; };
 		A3C3F19349A703AA16ABD044 /* PlayerHoleBreakdownViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHoleBreakdownViewModelTests.swift; sourceTree = "<group>"; };
 		AA0179A787B752A224A7B38E /* VoiceOverlayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverlayViewModel.swift; sourceTree = "<group>"; };
@@ -554,6 +554,8 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
 			};
 			buildConfigurationList = 7695FBD39CF0233934147071 /* Build configuration list for PBXProject "HyzerApp" */;
 			developmentRegion = en;
@@ -724,7 +726,6 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerApp/App/HyzerApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S4729REPN5;
 				INFOPLIST_FILE = HyzerApp/App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -762,15 +763,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S4729REPN5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.shotcowboystyle.hyzerapp;
 				INFOPLIST_KEY_WKWatchKitApp = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp.watchkitapp;
 				SDKROOT = watchos;
@@ -868,15 +865,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = HyzerWatch/App/HyzerWatch.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S4729REPN5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleIconName = AppIcon;
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.shotcowboystyle.hyzerapp;
 				INFOPLIST_KEY_WKWatchKitApp = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks @executable_path/../../Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shotcowboystyle.hyzerapp.watchkitapp;
 				SDKROOT = watchos;
@@ -894,7 +887,6 @@
 				CODE_SIGN_ENTITLEMENTS = HyzerApp/App/HyzerApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = S4729REPN5;
 				INFOPLIST_FILE = HyzerApp/App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
