@@ -3,9 +3,33 @@
 ## Layer Boundaries
 ```
 HyzerApp  (Views + ViewModels only)
-  └── HyzerKit  (Models, Design System, Service protocols)
-HyzerWatch  (Views only)
+  └── HyzerKit  (Models, Design System, Service protocols, Domain logic)
+HyzerWatch  (Views + WatchConnectivityService)
   └── HyzerKit
+```
+
+## Key Directories
+```
+HyzerApp/
+  App/           → AppServices.swift (DI root), HyzerApp.swift (entry point), entitlements, Info.plist
+  ViewModels/    → 10 ViewModels (Onboarding, CourseEditor, RoundSetup, Scorecard, Leaderboard, etc.)
+  Views/         → Grouped by feature: Scoring/, Courses/, History/, Leaderboard/, Discrepancy/, Onboarding/, Rounds/
+  Services/      → Live implementations: CloudKitClient, NetworkMonitor, VoiceRecognition, PhoneConnectivity
+  Protocols/     → VoiceRecognitionServiceProtocol
+
+HyzerKit/Sources/HyzerKit/
+  Models/        → SwiftData @Model: Player, Round, Course, Hole, ScoreEvent, Discrepancy
+  Domain/        → ScoringService, StandingsEngine, ConflictDetector, ScoreResolution, CourseSeeder, RoundLifecycleManager, HoleScore
+  Design/        → ColorTokens, TypographyTokens, SpacingTokens, AnimationTokens, AnimationCoordinator
+  Voice/         → VoiceParser, TokenClassifier, FuzzyNameMatcher, VoiceParseResult/Error
+  Communication/ → WatchConnectivityClient (protocol), WatchMessage, WatchScoringVM, WatchLeaderboardVM, WatchVoiceVM, WatchCacheManager
+  Sync/          → SyncEngine, SyncScheduler, CloudKitClient (protocol), NetworkMonitor (protocol), SyncMetadata, SyncState, SyncError, ICloudIdentityProvider
+  Sync/DTOs/     → ScoreEventRecord, RoundRecord, PlayerRecord, CourseRecord
+
+HyzerWatch/
+  App/           → HyzerWatchApp.swift, entitlements
+  Views/         → WatchScoringView, WatchLeaderboardView, WatchVoiceOverlayView, WatchStaleIndicatorView
+  Services/      → WatchConnectivityService
 ```
 
 ## Dependency Injection
