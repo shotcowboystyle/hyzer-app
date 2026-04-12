@@ -74,6 +74,7 @@ struct LiveCloudKitClient: CloudKitClient, Sendable {
         let subscription = CKQuerySubscription(
             recordType: recordType,
             predicate: predicate,
+            subscriptionID: "\(recordType)-creation",
             options: [.firesOnRecordCreation]
         )
         let info = CKSubscription.NotificationInfo()
