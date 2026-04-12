@@ -34,6 +34,12 @@ public final class VoiceRecognitionService: VoiceRecognitionServiceProtocol {
             throw VoiceParseError.recognitionUnavailable
         }
 
+        do {
+            try configureAudioSession()
+        } catch {
+            throw VoiceParseError.recognitionUnavailable
+        }
+
         return try await withCheckedThrowingContinuation { continuation in
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.requiresOnDeviceRecognition = true
@@ -49,6 +55,7 @@ public final class VoiceRecognitionService: VoiceRecognitionServiceProtocol {
             do {
                 try audioEngine.start()
             } catch {
+                deactivateAudioSession()
                 continuation.resume(throwing: VoiceParseError.recognitionUnavailable)
                 return
             }
@@ -94,6 +101,19 @@ public final class VoiceRecognitionService: VoiceRecognitionServiceProtocol {
         audioEngine.inputNode.removeTap(onBus: 0)
         recognitionTask?.cancel()
         recognitionTask = nil
+        deactivateAudioSession()
+    }
+
+    private func configureAudioSession() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.record, mode: .measurement, options: .duckOthers)
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+    }
+
+    private func deactivateAudioSession() {
+        // Safe to ignore: deactivation failure is non-fatal — the system reclaims
+        // the session automatically when no audio routes are active.
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     // MARK: - Permissions
