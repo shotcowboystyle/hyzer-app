@@ -11,7 +11,7 @@ extension Color {
         let r = Double((int >> 16) & 0xFF) / 255
         let g = Double((int >> 8) & 0xFF) / 255
         let b = Double(int & 0xFF) / 255
-        self.init(red: r, green: g, blue: b)
+        self.init(.sRGB, red: r, green: g, blue: b, opacity: 1)
     }
 }
 

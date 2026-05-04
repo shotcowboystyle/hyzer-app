@@ -9,10 +9,13 @@ struct ContentView: View {
     @Query(sort: \Player.createdAt) private var players: [Player]
 
     var body: some View {
-        if let player = players.first {
-            HomeView(player: player)
-        } else {
-            OnboardingView()
+        Group {
+            if let player = players.first {
+                HomeView(player: player)
+            } else {
+                OnboardingView()
+            }
         }
+        .preferredColorScheme(.dark)
     }
 }
