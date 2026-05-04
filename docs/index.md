@@ -17,11 +17,11 @@
 
 ## Quick Reference
 
-**Build:** `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17' build`
+**Build:** `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build`
 
 **Test (fast):** `swift test --package-path HyzerKit`
 
-**Test (full):** `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17'`
+**Test (full):** `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'`
 
 **Regenerate project:** `xcodegen generate`
 

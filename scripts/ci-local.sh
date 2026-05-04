@@ -54,7 +54,7 @@ if [ "$KIT_ONLY" = false ]; then
   xcodebuild test \
     -project HyzerApp.xcodeproj \
     -scheme HyzerApp \
-    -destination 'platform=iOS Simulator,name=iPhone 17' \
+    -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' \
     -enableCodeCoverage YES \
     CODE_SIGN_IDENTITY="" \
     CODE_SIGNING_REQUIRED=NO \
