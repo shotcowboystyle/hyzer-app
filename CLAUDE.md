@@ -15,15 +15,15 @@ xcodegen generate
 
 **Build (CLI):**
 ```sh
-xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17' build
+xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build
 ```
 
 **Run all tests:**
 ```sh
-xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17'
+xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'
 ```
 
-> **Note (Xcode 26 + macOS 15):** iOS 26 Simulator requires macOS 26 (Tahoe) to launch apps. On macOS 15, the simulator build compiles but cannot run. Use `swift test --package-path HyzerKit` for all HyzerKit/domain tests during development.
+> **Note:** The paired simulator `iPhone 17 with Watch` enables testing both the iOS app and watchOS companion in a single session.
 
 **Run HyzerKit tests only (faster, no simulator needed):**
 ```sh

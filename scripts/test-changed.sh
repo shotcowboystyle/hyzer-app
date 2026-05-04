@@ -71,7 +71,7 @@ if [ "$RUN_APP" = true ]; then
   xcodebuild test \
     -project HyzerApp.xcodeproj \
     -scheme HyzerApp \
-    -destination 'platform=iOS Simulator,name=iPhone 17' \
+    -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' \
     CODE_SIGN_IDENTITY="" \
     CODE_SIGNING_REQUIRED=NO \
     CODE_SIGNING_ALLOWED=NO \

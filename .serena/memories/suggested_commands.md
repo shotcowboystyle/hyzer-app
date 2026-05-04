@@ -9,7 +9,7 @@ scripts/install-hooks.sh   # Install git hooks (conventional commits, branch nam
 ## Build
 ```sh
 xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp \
-  -destination 'platform=iOS Simulator,name=iPhone 17' build
+  -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build
 ```
 
 ## Test
@@ -19,7 +19,7 @@ swift test --package-path HyzerKit
 
 # Full test suite — requires iOS Simulator
 xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp \
-  -destination 'platform=iOS Simulator,name=iPhone 17'
+  -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'
 ```
 
 ## Lint

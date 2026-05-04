@@ -42,7 +42,7 @@ Select the `HyzerApp` scheme for iOS development or `HyzerWatch` for watchOS.
 
 ```sh
 xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp \
-  -destination 'platform=iOS Simulator,name=iPhone 17' build
+  -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build
 ```
 
 ### watchOS App
@@ -66,7 +66,7 @@ swift build --package-path HyzerKit
 
 ```sh
 xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp \
-  -destination 'platform=iOS Simulator,name=iPhone 17'
+  -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'
 ```
 
 ### HyzerKit Tests Only (No Simulator — Fastest)
