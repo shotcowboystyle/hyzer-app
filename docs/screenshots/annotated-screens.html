@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HyzerApp — Annotated Screens</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0A0A0C;
+      color: #e8e8ea;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      padding: 48px 32px 80px;
+      line-height: 1.5;
+    }
+
+    header {
+      max-width: 1280px;
+      margin: 0 auto 56px;
+      border-bottom: 1px solid #1e1e22;
+      padding-bottom: 32px;
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    header p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    header .tag {
+      display: inline-block;
+      background: #1a1a1e;
+      border: 1px solid #2a2a30;
+      color: #3dd6c4;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    .screens-grid {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(580px, 1fr));
+      gap: 56px 48px;
+    }
+
+    .screen-section {}
+
+    .screen-header {
+      margin-bottom: 16px;
+    }
+    .screen-header .label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #3dd6c4;
+      margin-bottom: 4px;
+    }
+    .screen-header h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .screen-header p {
+      font-size: 0.82rem;
+      color: #555;
+    }
+
+    .screen-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    /* Phone frame + screenshot */
+    .phone-wrapper {
+      position: relative;
+      flex-shrink: 0;
+      width: 260px;
+    }
+    .phone-wrapper img {
+      width: 260px;
+      border-radius: 32px;
+      display: block;
+      border: 1px solid #222;
+      box-shadow:
+        0 0 0 6px #111,
+        0 0 0 7px #222,
+        0 24px 64px rgba(0,0,0,0.6);
+    }
+
+    /* Callout bubble */
+    .c {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3dd6c4;
+      color: #060a0a;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      box-shadow:
+        0 0 0 1.5px rgba(0,0,0,0.7),
+        0 0 0 3px rgba(61,214,196,0.25),
+        0 2px 8px rgba(0,0,0,0.5);
+      cursor: default;
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    /* Legend */
+    .annotations {
+      list-style: none;
+      padding: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .annotations li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 11px;
+    }
+    .annotations li:last-child { margin-bottom: 0; }
+
+    .ann-num {
+      flex-shrink: 0;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      background: #3dd6c4;
+      color: #060a0a;
+      font-size: 9.5px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .ann-text {
+      font-size: 0.8rem;
+      color: #999;
+      line-height: 1.45;
+    }
+    .ann-text strong {
+      color: #e8e8ea;
+      font-weight: 600;
+    }
+    .ann-text .tag-pill {
+      display: inline-block;
+      background: #1a1a1e;
+      border: 1px solid #2a2a30;
+      border-radius: 4px;
+      padding: 0 5px;
+      font-size: 0.72rem;
+      color: #3dd6c4;
+      font-family: 'SF Mono', 'Menlo', monospace;
+      margin-left: 3px;
+      vertical-align: middle;
+    }
+
+    .divider {
+      max-width: 1280px;
+      margin: 0 auto;
+      border: none;
+      border-top: 1px solid #141418;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="tag">UI Reference</div>
+  <h1>HyzerApp — Annotated Screens</h1>
+  <p>All primary iOS screens with interactive element annotations. Teal numbered markers identify buttons, controls, and functional areas.</p>
+</header>
+
+<div class="screens-grid">
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 1. SCORING — EMPTY STATE                   -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">Scoring</div>
+      <h2>Empty State</h2>
+      <p>Shown when no round is currently in progress</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="Scoring-1.jpeg" alt="Scoring empty state" />
+        <!-- 1: Scoring title -->
+        <div class="c" style="top:8%; left:16%">1</div>
+        <!-- 2: Empty state message -->
+        <div class="c" style="top:49%; left:50%">2</div>
+        <!-- 3: Start Round button -->
+        <div class="c" style="top:54.5%; left:50%">3</div>
+        <!-- 4: Scoring tab -->
+        <div class="c" style="top:94.5%; left:27%">4</div>
+        <!-- 5: History tab -->
+        <div class="c" style="top:94.5%; left:50%">5</div>
+        <!-- 6: Courses tab -->
+        <div class="c" style="top:94.5%; left:73%">6</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Scoring heading</strong> — current tab title; large display weight, dark-first background</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>Empty state message</strong> — "No round in progress." shown when there is no active round</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Start Round button</strong> — primary CTA; teal pill button; tap to begin course/player selection flow and start a new round</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Scoring tab</strong> (active) — disc golf basket icon + "Scoring" label; highlighted teal with background pill</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>History tab</strong> — clock icon; navigate to list of past rounds</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Courses tab</strong> — map icon; navigate to course management</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 2. SCORING — ACTIVE ROUND                  -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">Scoring</div>
+      <h2>Active Round</h2>
+      <p>Live hole-by-hole scoring view during an in-progress round</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="Scoring-2.jpeg" alt="Scoring active round" />
+        <!-- 1: CloudKit sync warning -->
+        <div class="c" style="top:6.5%; left:9%">1</div>
+        <!-- 2: Voice / mic button -->
+        <div class="c" style="top:6.5%; left:79%">2</div>
+        <!-- 3: More options ••• -->
+        <div class="c" style="top:6.5%; left:90%">3</div>
+        <!-- 4: Hole indicator -->
+        <div class="c" style="top:19%; left:50%">4</div>
+        <!-- 5: Par & course subtitle -->
+        <div class="c" style="top:22.5%; left:50%">5</div>
+        <!-- 6: Player name -->
+        <div class="c" style="top:29%; left:20%">6</div>
+        <!-- 7: Score stepper -->
+        <div class="c" style="top:29%; left:83%">7</div>
+        <!-- 8: Pagination dots -->
+        <div class="c" style="top:86.5%; left:50%">8</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Sync status icon</strong> — orange cloud with exclamation; indicates a CloudKit sync conflict or connectivity issue; tap to view discrepancy details</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>Voice input button</strong> — microphone icon (teal); tap to dictate a score ("Curtis got a 3") via speech recognition</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>More options (•••)</strong> — access round settings, end/abandon round, or manually resolve score discrepancies</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Hole indicator</strong> — "Hole 1" shows the current hole being scored</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>Par &amp; course</strong> — "Par 3 · James Island County Park" provides context for each hole</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Player name</strong> — "Curtis"; each player gets their own row; multiple players stack vertically within the hole card</span>
+        </li>
+        <li>
+          <span class="ann-num">7</span>
+          <span class="ann-text"><strong>Score entry (—)</strong> — dash means no score recorded yet; tap <span class="tag-pill">+</span> / <span class="tag-pill">−</span> to enter stroke count; updates in real-time and syncs to Watch</span>
+        </li>
+        <li>
+          <span class="ann-num">8</span>
+          <span class="ann-text"><strong>Hole pagination dots</strong> — 10 dots visible (scrollable); swipe the card left/right to advance to the next or previous hole</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 3. HISTORY — ROUND LIST                    -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">History</div>
+      <h2>Round List</h2>
+      <p>Chronological list of all completed rounds</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="History-1.jpeg" alt="History round list" />
+        <!-- 1: History heading -->
+        <div class="c" style="top:8%; left:20%">1</div>
+        <!-- 2: Round card (first) -->
+        <div class="c" style="top:19%; left:23%">2</div>
+        <!-- 3: Date & player count -->
+        <div class="c" style="top:25%; left:40%">3</div>
+        <!-- 4: Winner summary -->
+        <div class="c" style="top:28.5%; left:35%">4</div>
+        <!-- 5: Your finish -->
+        <div class="c" style="top:32.5%; left:40%">5</div>
+        <!-- 6: Detail chevron -->
+        <div class="c" style="top:26%; left:88%">6</div>
+        <!-- 7: History tab active -->
+        <div class="c" style="top:94.5%; left:50%">7</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>History heading</strong> — current tab title</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>Course name</strong> — "Maple Hill" identifies which course was played</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Date &amp; player count</strong> — "May 9, 2026 · 1 players" for quick context; player count reflects all scorecards in the round</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Winner line</strong> — "Curtis won at E" (even par); shows the overall round winner and their final score relative to par</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>Your result</strong> — "You finished 1st at E" is a personalised summary of your standing in that round</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Detail chevron</strong> — tap anywhere on the card to navigate to the full Round Summary for that round</span>
+        </li>
+        <li>
+          <span class="ann-num">7</span>
+          <span class="ann-text"><strong>History tab</strong> (active) — clock icon highlighted in teal</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 4. HISTORY — ROUND SUMMARY                 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">History</div>
+      <h2>Round Summary</h2>
+      <p>Full results detail for a single completed round</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="History-2.jpeg" alt="Round summary" />
+        <!-- 1: Back button -->
+        <div class="c" style="top:6.5%; left:9%">1</div>
+        <!-- 2: Round Summary nav title -->
+        <div class="c" style="top:6.5%; left:50%">2</div>
+        <!-- 3: Course name -->
+        <div class="c" style="top:14.5%; left:50%">3</div>
+        <!-- 4: Round date -->
+        <div class="c" style="top:17.5%; left:50%">4</div>
+        <!-- 5: Medal + player name -->
+        <div class="c" style="top:26%; left:18%">5</div>
+        <!-- 6: Score to par "E" -->
+        <div class="c" style="top:24.5%; left:84%">6</div>
+        <!-- 7: Raw stroke count -->
+        <div class="c" style="top:29%; left:84%">7</div>
+        <!-- 8: Tap for breakdown -->
+        <div class="c" style="top:26.5%; left:92%">8</div>
+        <!-- 9: Round metadata -->
+        <div class="c" style="top:41%; left:50%">9</div>
+        <!-- 10: Share Results button -->
+        <div class="c" style="top:89.5%; left:50%">10</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Back button</strong> — returns to the History round list</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>"Round Summary" nav title</strong> — navigation bar label for this detail screen</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Course name</strong> — "Maple Hill" displayed as the primary heading</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Round date</strong> — "May 9, 2026"</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>🥇 Player row</strong> — gold medal emoji + "Curtis" indicates 1st place finisher</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Score to par</strong> — "E" means even par (also expressed as 0); displayed prominently as the primary score</span>
+        </li>
+        <li>
+          <span class="ann-num">7</span>
+          <span class="ann-text"><strong>Total strokes</strong> — "3 strokes" is the raw stroke count for the round</span>
+        </li>
+        <li>
+          <span class="ann-num">8</span>
+          <span class="ann-text"><strong>Hole breakdown chevron</strong> — tap the player row to drill into per-hole score breakdown for that player</span>
+        </li>
+        <li>
+          <span class="ann-num">9</span>
+          <span class="ann-text"><strong>Round metadata</strong> — "Holes played: 18" and "Organizer: Curtis" (the player who started the round)</span>
+        </li>
+        <li>
+          <span class="ann-num">10</span>
+          <span class="ann-text"><strong>Share Results button</strong> — full-width teal primary button; opens the iOS share sheet to export or send the round summary</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 5. COURSES — LIST                          -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">Courses</div>
+      <h2>Course List</h2>
+      <p>All saved disc golf courses; tap any to view hole configuration</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="Courses-1.jpeg" alt="Courses list" />
+        <!-- 1: Add (+) button -->
+        <div class="c" style="top:7%; left:89%">1</div>
+        <!-- 2: Courses heading -->
+        <div class="c" style="top:11.5%; left:23%">2</div>
+        <!-- 3: Course name row (DeLaveaga) -->
+        <div class="c" style="top:21.5%; left:20%">3</div>
+        <!-- 4: Hole count subtitle -->
+        <div class="c" style="top:25%; left:14%">4</div>
+        <!-- 5: Detail chevron -->
+        <div class="c" style="top:23%; left:88%">5</div>
+        <!-- 6: Courses tab active -->
+        <div class="c" style="top:94.5%; left:73%">6</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Add Course (+)</strong> — top-right; opens the New Course modal sheet to create a custom course from scratch</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>Courses heading</strong> — current tab title</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Course name</strong> — e.g., "DeLaveaga"; courses are sorted alphabetically</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Hole count</strong> — "18 holes" (or "9 holes") shown as secondary metadata for quick scanning</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>Detail chevron</strong> — tap the row to navigate to the Course Detail screen showing per-hole par breakdown</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Courses tab</strong> (active) — map icon highlighted in teal with pill background</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 6. COURSES — COURSE DETAIL                 -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">Courses</div>
+      <h2>Course Detail</h2>
+      <p>Hole-by-hole par breakdown for a saved course; scroll to see all 18 holes</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="Course-History-1.jpeg" alt="Course detail hole list" />
+        <!-- 1: Back button -->
+        <div class="c" style="top:6.5%; left:9%">1</div>
+        <!-- 2: Edit (pencil) button -->
+        <div class="c" style="top:6.5%; left:89%">2</div>
+        <!-- 3: Course title -->
+        <div class="c" style="top:11.5%; left:30%">3</div>
+        <!-- 4: Hole name (Hole 1) -->
+        <div class="c" style="top:19.5%; left:15%">4</div>
+        <!-- 5: Par value (Par 3) -->
+        <div class="c" style="top:19.5%; left:88%">5</div>
+        <!-- 6: Scroll indicator (more holes below) -->
+        <div class="c" style="top:78%; left:50%">6</div>
+        <!-- 7: Courses tab -->
+        <div class="c" style="top:94.5%; left:73%">7</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Back button</strong> — returns to the Courses list</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>Edit button (pencil)</strong> — opens the Edit Course modal to change the course name or any hole's par value</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Course title</strong> — "DeLaveaga" as the screen heading</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Hole label</strong> — sequential hole number (Hole 1 through Hole 18); read-only in this view</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>Par value</strong> — "Par 3" (or Par 4 / Par 5) for each hole; grey secondary text, right-aligned</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Scrollable list</strong> — scroll down to see all 18 holes; Hole 7 on DeLaveaga is Par 4 (visible when scrolled)</span>
+        </li>
+        <li>
+          <span class="ann-num">7</span>
+          <span class="ann-text"><strong>Courses tab</strong> (active)</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 7. COURSES — NEW COURSE                    -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">Courses</div>
+      <h2>New Course</h2>
+      <p>Modal sheet to create a disc golf course from scratch</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="New-Course-1.jpeg" alt="New course form" />
+        <!-- 1: Cancel -->
+        <div class="c" style="top:8%; left:13%">1</div>
+        <!-- 2: New Course nav title -->
+        <div class="c" style="top:8%; left:50%">2</div>
+        <!-- 3: Save (disabled) -->
+        <div class="c" style="top:8%; left:87%">3</div>
+        <!-- 4: Course Info section header -->
+        <div class="c" style="top:15%; left:18%">4</div>
+        <!-- 5: Course Name text field -->
+        <div class="c" style="top:22%; left:38%">5</div>
+        <!-- 6: 9 / 18 segmented toggle -->
+        <div class="c" style="top:28%; left:50%">6</div>
+        <!-- 7: Par Per Hole section header -->
+        <div class="c" style="top:37%; left:18%">7</div>
+        <!-- 8: Per-hole par stepper -->
+        <div class="c" style="top:43.5%; left:89%">8</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Cancel</strong> — dismisses the sheet without saving; discards any unsaved input</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>"New Course" nav title</strong> — modal navigation bar label confirms create mode</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Save (disabled)</strong> — greyed-out until a course name is entered; becomes teal when the form is valid</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>"Course Info" section</strong> — groups the course name field and hole count toggle</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>Course Name field</strong> — required text input; placeholder "Course Name"; keyboard appears on tap</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>9 / 18 hole toggle</strong> — segmented control; "18" selected by default; choosing "9" hides holes 10–18 from the par list</span>
+        </li>
+        <li>
+          <span class="ann-num">7</span>
+          <span class="ann-text"><strong>"Par Per Hole" section</strong> — one row per hole, scroll to see all 18</span>
+        </li>
+        <li>
+          <span class="ann-num">8</span>
+          <span class="ann-text"><strong>Par stepper</strong> — teal <span class="tag-pill">∧</span><span class="tag-pill">∨</span> arrows; default Par 3 for all holes; adjustable per hole (typically 3–5 for disc golf)</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ─────────────────────────────────────────── -->
+  <!-- 8. COURSES — EDIT COURSE                   -->
+  <!-- ─────────────────────────────────────────── -->
+  <div class="screen-section">
+    <div class="screen-header">
+      <div class="label">Courses</div>
+      <h2>Edit Course</h2>
+      <p>Modal sheet to modify an existing course's name or per-hole par values</p>
+    </div>
+    <div class="screen-layout">
+      <div class="phone-wrapper">
+        <img src="Edit-Course-History-1.jpeg" alt="Edit course form" />
+        <!-- 1: Cancel -->
+        <div class="c" style="top:8%; left:13%">1</div>
+        <!-- 2: Edit Course nav title -->
+        <div class="c" style="top:8%; left:50%">2</div>
+        <!-- 3: Save (active / teal) -->
+        <div class="c" style="top:8%; left:87%">3</div>
+        <!-- 4: Pre-filled course name -->
+        <div class="c" style="top:22%; left:32%">4</div>
+        <!-- 5: 18 selected in toggle -->
+        <div class="c" style="top:28%; left:67%">5</div>
+        <!-- 6: Hole 7 Par 4 (non-default) -->
+        <div class="c" style="top:62%; left:89%">6</div>
+      </div>
+
+      <ol class="annotations">
+        <li>
+          <span class="ann-num">1</span>
+          <span class="ann-text"><strong>Cancel</strong> — dismisses without persisting any changes to the course record</span>
+        </li>
+        <li>
+          <span class="ann-num">2</span>
+          <span class="ann-text"><strong>"Edit Course" nav title</strong> — distinguishes this modal from "New Course" to prevent user confusion</span>
+        </li>
+        <li>
+          <span class="ann-num">3</span>
+          <span class="ann-text"><strong>Save (active)</strong> — teal because the form already has a valid name; tap to persist changes to the local SwiftData store and sync to CloudKit</span>
+        </li>
+        <li>
+          <span class="ann-num">4</span>
+          <span class="ann-text"><strong>Pre-filled course name</strong> — "DeLaveaga" loaded from the existing course record; editable inline</span>
+        </li>
+        <li>
+          <span class="ann-num">5</span>
+          <span class="ann-text"><strong>18 holes selected</strong> — reflects the saved configuration; toggling to 9 would hide the lower holes</span>
+        </li>
+        <li>
+          <span class="ann-num">6</span>
+          <span class="ann-text"><strong>Hole 7 Par 4</strong> — non-default par value (all others are Par 3); illustrates that individual holes can have unique par values; stepper arrows allow further editing</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+</div><!-- /screens-grid -->
+
+</body>
+</html>

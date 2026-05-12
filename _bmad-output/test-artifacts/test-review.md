@@ -1,19 +1,23 @@
 ---
 stepsCompleted: ['step-01-load-context', 'step-02-discover-tests', 'step-03-quality-evaluation', 'step-03f-aggregate-scores', 'step-04-generate-report']
 lastStep: 'step-04-generate-report'
-lastSaved: '2026-04-12'
+lastSaved: '2026-05-04'
 workflowType: 'testarch-test-review'
 inputDocuments:
-  - CLAUDE.md
-  - _bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md
-  - HyzerKit/Tests/HyzerKitTests/**/*.swift
-  - HyzerAppTests/**/*.swift
+  - 'CLAUDE.md'
+  - 'HyzerKit/Tests/HyzerKitTests/**/*.swift'
+  - 'HyzerAppTests/**/*.swift'
+  - 'resources/knowledge/test-quality.md'
+  - 'resources/knowledge/test-levels-framework.md'
+  - 'resources/knowledge/test-healing-patterns.md'
+  - 'resources/knowledge/data-factories.md'
+  - 'resources/knowledge/test-priorities-matrix.md'
 ---
 
-# Test Quality Review: Full Suite
+# Test Quality Review: HyzerApp Full Suite
 
-**Quality Score**: 88/100 (B+ - Good)
-**Review Date**: 2026-04-12
+**Quality Score**: 83/100 (B - Good)
+**Review Date**: 2026-05-04
 **Review Scope**: suite (all tests)
 **Reviewer**: Murat (TEA Agent)
 
@@ -30,213 +34,148 @@ Coverage mapping and coverage gates are out of scope here. Use `trace` for cover
 
 ### Key Strengths
 
-- Consistent Swift Testing framework adoption (`@Suite`, `@Test`, `#expect`) across all 269 tests with zero XCTest mixing
-- Excellent fixture factory pattern — 6 model fixtures with sensible defaults, centralized `TestContainerFactory` for SwiftData containers
-- Deterministic async testing via `awaitCondition()` polling helper (replacing flaky `Task.sleep` in most places)
+- Excellent test isolation — in-memory SwiftData, protocol-based mocks, no shared state between suites
+- Consistent fixture factory pattern (`.fixture(overrides:)`) across all 6 domain models
+- Clean architectural separation — domain tests in HyzerKit (fast, no simulator), ViewModel tests in HyzerApp
+- Swift Testing framework used correctly throughout (`@Suite`, `@Test`, `#expect`) — zero XCTest
+- No hard waits (`Task.sleep`) in test assertions — the flaky timing issue from epics 1-8 retro has been resolved
 
 ### Key Weaknesses
 
-- `TestPolling.swift` duplicated across HyzerKitTests and HyzerAppTests with divergent signatures
-- 6 instances of silent `try?` without required justification comments (violates project coding standards)
-- 1 remaining flaky `Task.sleep(for: .milliseconds(100))` timing loop in WatchVoiceViewModelTests
+- 12 of 39 test files exceed the 300-line limit (6 files >400 lines, worst: 544 lines)
+- Silent `try?` pattern in 8 locations across Sync tests masks potential SwiftData configuration failures
+- `TestPolling` utility (`awaitCondition`) duplicated verbatim across two test targets
 
 ### Summary
 
-The test suite is in strong shape for a project completing 8 epics with 269 tests. Architecture follows clean boundaries: HyzerKitTests covers domain models and services, HyzerAppTests covers ViewModels. Fixtures use extension-based factories with override parameters, mocks implement full protocol contracts with call tracking and error simulation. The main risks are the duplicated `TestPolling` helper (diverging over time), silent `try?` patterns that violate the project's own coding standards, and one flaky timing test that's already documented as tech debt.
+HyzerApp's 413-test suite demonstrates strong engineering discipline in isolation and determinism — the two most impactful quality dimensions. The fixture factory pattern and centralized `TestContainerFactory` show deliberate design. Mock protocols for `CloudKitClient`, `NetworkMonitor`, and `WatchConnectivityClient` enable reliable, fast tests without external dependencies.
+
+The primary concern is maintainability: 12 test files exceed 300 lines, with `VoiceOverlayViewModelTests` at 544 lines being the worst offender. These files are well-structured with descriptive names, but carry maintenance burden and slower failure diagnosis. The `try?` pattern in Sync tests is a correctness risk — if SwiftData fetch fails during refactoring, tests pass with wrong assertions instead of failing loudly.
+
+Score dropped from 88 (April review) to 83 primarily because the test count grew from 269 to 413 (+54%) while file-splitting didn't keep pace, pushing more files past the 300-line threshold.
 
 ---
 
 ## Quality Criteria Assessment
 
 | Criterion | Status | Violations | Notes |
-|---|---|---|---|
-| Swift Testing Framework | PASS | 0 | All tests use @Suite/@Test, zero XCTest |
-| Test Naming Convention | PASS | 0 | `test_subject_scenario_expectedResult` consistently |
-| In-Memory Data Stores | PASS | 0 | All SwiftData tests use `isStoredInMemoryOnly: true` |
-| Hard Waits (Task.sleep) | WARN | 1 | WatchVoiceViewModelTests.swift:212 |
-| Determinism (no conditionals) | PASS | 0 | Tests use deterministic assertions |
-| Isolation (cleanup, no shared state) | PASS | 0 | Each test creates own container/context |
+|-----------|--------|------------|-------|
+| Swift Testing Framework | PASS | 0 | All 413 tests use @Suite/@Test, zero XCTest |
+| Test Naming Convention | PASS | 0 | Consistent `test_action_expectedResult` pattern |
+| Priority Markers (P0-P3) | WARN | 413 | No priority tags — all tests unmarked |
+| Hard Waits (Task.sleep) | PASS | 0 | Polling uses bounded `awaitCondition` |
+| Determinism (no conditionals) | PASS | 0 | No conditional flow, no random data |
+| Isolation (cleanup, no shared state) | PASS | 0 | In-memory stores, protocol mocks, proper cleanup |
 | Fixture Patterns | PASS | 0 | 6 model fixtures + TestContainerFactory |
-| Mock Protocol Conformance | PASS | 0 | 4 mocks all implement full protocol surface |
-| Silent try? (project standard) | FAIL | 6 | Missing required justification comments |
-| Test Helper Duplication | WARN | 1 | TestPolling.swift in 2 locations |
-| File Length (<=300 lines) | WARN | 4 | See details below |
-| Assertions per Test | PASS | 0 | Avg 3-5 assertions per test (healthy) |
-| Design Token Testing | WARN | 1 | PlayerTests hardcodes token values |
+| Data Factories | PASS | 0 | `.fixture(overrides:)` on all domain models |
+| Silent Error Swallowing | FAIL | 8 | `try?` without justification in Sync tests |
+| Explicit Assertions | PASS | 0 | All `#expect` visible in test bodies |
+| Test Length (<=300 lines) | FAIL | 12 files | 6 files >400 lines, 6 files 300-400 |
+| Flakiness Patterns | PASS | 0 | No `Task.sleep` hard waits, bounded polling |
 
-**Total Violations**: 1 Critical, 2 High, 3 Medium, 1 Low
+**Total Violations**: 0 Critical, 6 High, 9 Medium, 3 Low
 
 ---
 
 ## Quality Score Breakdown
 
-```
-Weighted Dimension Scores (parallel evaluation):
-  Determinism (30%):     93 x 0.30 = 27.9
-  Isolation (30%):       95 x 0.30 = 28.5
-  Maintainability (25%): 72 x 0.25 = 18.0
-  Performance (15%):     90 x 0.15 = 13.5
-                         --------
-  Raw Weighted Total:    87.9 → 88
-
-Final Score:             88/100
-Grade:                   B+
-```
+| Dimension | Score | Grade | Weight | Weighted |
+|-----------|-------|-------|--------|----------|
+| Determinism | 88 | B+ | 30% | 26.4 |
+| Isolation | 92 | A- | 30% | 27.6 |
+| Maintainability | 62 | D | 25% | 15.5 |
+| Performance | 90 | A- | 15% | 13.5 |
+| **Overall** | **83** | **B** | **100%** | **83.0** |
 
 ---
 
 ## Critical Issues (Must Fix)
 
-### 1. TestPolling.swift Duplicated Across Test Targets
-
-**Severity**: P0 (Critical)
-**Location**: `HyzerKit/Tests/HyzerKitTests/Fixtures/TestPolling.swift` AND `HyzerAppTests/Fixtures/TestPolling.swift`
-**Criterion**: Test Helper Duplication
-
-**Issue Description**:
-Identical `awaitCondition()` helper exists in two locations with a diverging signature — HyzerKitTests uses `@MainActor` closure, HyzerAppTests uses `@Sendable`. This will drift over time and is already a source of confusion. Known tech debt from the Epics 1-8 retrospective.
-
-**Current Code**:
-
-```swift
-// HyzerKitTests version (28 lines)
-func awaitCondition(
-    timeout: Duration = .seconds(2),
-    pollInterval: Duration = .milliseconds(10),
-    condition: @MainActor () async -> Bool
-) async -> Bool { ... }
-
-// HyzerAppTests version (27 lines) — different signature
-func awaitCondition(
-    timeout: Duration = .seconds(2),
-    pollInterval: Duration = .milliseconds(10),
-    condition: @Sendable () async -> Bool
-) async -> Bool { ... }
-```
-
-**Recommended Fix**:
-Move to a single shared location in `HyzerKit/Tests/HyzerKitTests/Fixtures/TestPolling.swift` with `@MainActor @Sendable` closure parameter. HyzerAppTests should import from that location or the helper should live in a shared test support target.
-
-**Why This Matters**:
-Divergent implementations mean a bug fix in one copy won't reach the other. This is the #1 tech debt item from the retrospective.
+No critical (P0) issues detected.
 
 ---
 
 ## Recommendations (Should Fix)
 
-### 2. Silent `try?` Without Justification Comments
+### 1. Add Justification Comments to Silent `try?` in Sync Tests — FIXED
+
+**Severity**: P1 (High) — **RESOLVED**
+**Locations**: `SyncEngineTests.swift:66,246,282` (3 locations missing comments)
+**Criterion**: Determinism — coding standard compliance
+
+**Issue Description**:
+All 8 `try?` locations are inside `awaitCondition` polling closures, where `try?` is the correct pattern — a failed fetch means "condition not yet met, retry." However, 3 locations in SyncEngineTests were missing the required justification comment per CLAUDE.md. The other 5 (SyncRecoveryTests, SyncSchedulerTests, SyncEngineTests pull tests) already had proper comments.
+
+**Fix Applied**:
+Added justification comment `// Safe: fetch failure in polling means condition not yet met; empty fallback retries` to the 3 missing locations in SyncEngineTests.
+
+---
+
+### 2. Split VoiceOverlayViewModelTests (544 Lines)
+
+**Severity**: P1 (High)
+**Location**: `HyzerAppTests/VoiceOverlayViewModelTests.swift`
+**Criterion**: Maintainability — test length
+
+**Issue Description**:
+At 544 lines and 17 tests, this file covers 6+ distinct voice states (listening, confirming, correcting, cancelling, partial, failed, error). Each state cluster is logically independent and can be split without shared setup.
+
+**Recommended Split**:
+
+| New File | Tests | Approx Lines |
+|----------|-------|-------------|
+| `VoiceOverlay_ListeningConfirmingTests.swift` | 3 | ~120 |
+| `VoiceOverlay_PartialRecognitionTests.swift` | 6 | ~180 |
+| `VoiceOverlay_CommitCancelTests.swift` | 5 | ~140 |
+| `VoiceOverlay_ErrorRetryTests.swift` | 3 | ~100 |
+
+---
+
+### 3. Split Remaining 5 Files Over 400 Lines
 
 **Severity**: P1 (High)
 **Locations**:
-- `SyncEngineTests.swift:171`
-- `SyncEngineTests.swift:205`
-- `SyncRecoveryTests.swift:137`
-- `SyncRecoveryTests.swift:171`
-- `SyncRecoveryTests.swift:215`
-- `SyncSchedulerTests.swift:151`
-**Criterion**: Project Coding Standard (No silent try?)
+
+| File | Lines | Suggested Split |
+|------|-------|----------------|
+| `RoundLifecycleManagerTests.swift` | 414 | By lifecycle phase (setup/active/finalize) |
+| `HistoryListViewModelTests.swift` | 413 | Card derivation vs SwiftData integration |
+| `CourseEditorViewModelTests.swift` | 410 | Create/Edit/Delete operations |
+| `DiscrepancyViewModelTests.swift` | 404 | Load vs Resolve workflows |
+| `PlayerHoleBreakdownViewModelTests.swift` | 396 | Score calculation vs color logic |
+
+---
+
+### 4. Eliminate TestPolling Duplication
+
+**Severity**: P2 (Medium)
+**Location**: `HyzerKit/Tests/.../Fixtures/TestPolling.swift` AND `HyzerAppTests/Fixtures/TestPolling.swift`
+**Criterion**: Maintainability — DRY
 
 **Issue Description**:
-The project's CLAUDE.md explicitly states: "every `try?` must have a comment explaining why it's safe." These 6 instances use `(try? context.fetch(...))` with nil coalescing but lack the required comment.
+`awaitCondition` is duplicated verbatim (same signature, same implementation) across two test targets. While structurally necessary (separate targets can't share test helpers), this creates drift risk. The April review noted diverging signatures — they appear to have been re-aligned since then.
 
-**Current Code**:
+**Recommended Fix**: Create a shared test support target or move to `HyzerKit` proper with `#if DEBUG` guard.
 
-```swift
-// SyncEngineTests.swift:171
-let entries = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
-```
+---
+
+### 5. Add `try?` Justification Comments to WatchCacheManager
+
+**Severity**: P3 (Low)
+**Location**: `WatchCacheManagerTests.swift:37,50,63,89,98`
+**Criterion**: Coding standard compliance
+
+**Issue Description**:
+Five `defer { try? FileManager.default.removeItem(at: url) }` calls in cleanup blocks. These are safe — cleanup failure in a temp directory doesn't affect test correctness — but per CLAUDE.md they need a justifying comment.
 
 **Recommended Fix**:
 
 ```swift
-// Safe: fetch failure means no entries to check; empty array is correct fallback
-let entries = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
-```
-
-**Priority**: High — this is a team coding standard violation caught repeatedly across 8 epics.
-
----
-
-### 3. Flaky Task.sleep Timing Pattern
-
-**Severity**: P1 (High)
-**Location**: `HyzerKit/Tests/HyzerKitTests/Communication/WatchVoiceViewModelTests.swift:212`
-**Criterion**: Hard Waits / Flakiness
-
-**Issue Description**:
-Uses `Task.sleep(for: .milliseconds(100))` in a 40-iteration polling loop to test the auto-commit timer. This is the exact pattern identified in the retrospective as flaky.
-
-**Current Code**:
-
-```swift
-// WatchVoiceViewModelTests.swift — auto-commit timer test
-for _ in 0..<40 {
-    try await Task.sleep(for: .milliseconds(100))
-    if case .committed = vm.state { break }
+defer {
+    // Safe to ignore: temp file cleanup, failure doesn't affect test correctness
+    try? FileManager.default.removeItem(at: url)
 }
 ```
-
-**Recommended Fix**:
-
-```swift
-// Use the existing awaitCondition() helper
-let committed = await awaitCondition(timeout: .seconds(4)) {
-    if case .committed = vm.state { return true }
-    return false
-}
-#expect(committed, "Auto-commit timer should fire within 4 seconds")
-```
-
-**Why This Matters**:
-CI environments under load can miss the 100ms window, causing intermittent failures. `awaitCondition()` already exists for exactly this purpose.
-
----
-
-### 4. Long Test Files Exceeding 300 Lines
-
-**Severity**: P2 (Medium)
-**Locations**:
-- `VoiceOverlayViewModelTests.swift` — 545 lines
-- `CourseEditorViewModelTests.swift` — 411 lines
-- `HistoryListViewModelTests.swift` — 414 lines
-- `DiscrepancyViewModelTests.swift` — 405 lines
-**Criterion**: Test Length
-
-**Issue Description**:
-Four test files exceed 300 lines. While not inherently problematic for Swift test files (which are more verbose than JS), files over 400 lines become harder to navigate.
-
-**Recommended Improvement**:
-Consider splitting `VoiceOverlayViewModelTests.swift` (545 lines) into two suites: one for voice recognition states, one for score commitment/correction. The other three are borderline and can remain as-is.
-
----
-
-### 5. Design Token Tests Hardcode Expected Values
-
-**Severity**: P2 (Medium)
-**Location**: `HyzerKit/Tests/HyzerKitTests/Domain/PlayerTests.swift:81-109`
-**Criterion**: Maintainability
-
-**Issue Description**:
-Token tests assert against magic numbers (`48`, `4`, `8`, `0.2`) rather than testing structural properties (e.g., "hero is larger than title"). If token values change, tests break without indicating whether the change was intentional.
-
-**Current Code**:
-
-```swift
-#expect(TypographyTokens.heroBaseSize == 48)
-#expect(SpacingTokens.xs == 4)
-#expect(AnimationTokens.springStiffDuration == 0.2)
-```
-
-**Recommended Improvement**:
-
-```swift
-// Test relationships rather than absolute values
-#expect(TypographyTokens.heroBaseSize > TypographyTokens.titleBaseSize)
-#expect(SpacingTokens.xl > SpacingTokens.lg)
-#expect(AnimationTokens.springStiffDuration < AnimationTokens.springGentleDuration)
-```
-
-Keep a small number of absolute value tests for critical tokens (e.g., `minimumTouchTarget >= 44` for accessibility).
 
 ---
 
@@ -245,124 +184,105 @@ Keep a small number of absolute value tests for critical tokens (e.g., `minimumT
 ### 1. Extension-Based Fixture Factories
 
 **Location**: `HyzerKit/Tests/HyzerKitTests/Fixtures/*.swift`
-**Pattern**: Model Factory with Defaults
+**Pattern**: Model factory with sensible defaults and override parameters
 
-**Why This Is Good**:
-Every domain model has a `static func fixture(...)` extension with sensible defaults and overridable parameters. This is the gold standard for Swift test fixtures — minimal boilerplate, maximum flexibility.
-
-**Code Example**:
-
-```swift
-extension ScoreEvent {
-    static func fixture(
-        roundID: UUID = UUID(),
-        holeNumber: Int = 1,
-        playerID: String = UUID().uuidString,
-        strokeCount: Int = 3,
-        reportedByPlayerID: String? = nil,
-        deviceID: String = "test-device"
-    ) -> ScoreEvent { ... }
-}
-```
-
-**Use as Reference**: All new models should follow this pattern.
-
----
+Every domain model has a `static func fixture(...)` extension. Test intent is clear from overrides: `Player.fixture(displayName: "Eagle Ed")`. New required properties only need updating in one place. Gold standard for Swift test fixtures.
 
 ### 2. TestContainerFactory Centralization
 
 **Location**: `HyzerKit/Tests/HyzerKitTests/Fixtures/TestContainerFactory.swift`
-**Pattern**: Centralized Container Setup
+**Pattern**: Centralized in-memory container creation
 
-**Why This Is Good**:
-Single source of truth for SwiftData model container configuration in tests. Two factory methods (`makeSyncContainer()`, `makeConflictTestContainer()`) handle different model sets. Eliminates copy-paste of `ModelConfiguration(isStoredInMemoryOnly: true)`.
+Single source of truth for SwiftData model container configuration. Two factory methods handle different model sets. Eliminates copy-paste of `ModelConfiguration(isStoredInMemoryOnly: true)`.
 
----
+### 3. Protocol-Based Mock Architecture
 
-### 3. MockCloudKitClient — Comprehensive Test Double
+**Locations**: `MockCloudKitClient.swift`, `MockNetworkMonitor.swift`, `MockWatchConnectivityClient.swift`, `MockVoiceRecognitionService.swift`
+**Pattern**: Full protocol conformance with configurable behavior
 
-**Location**: `HyzerKit/Tests/HyzerKitTests/Mocks/MockCloudKitClient.swift`
-**Pattern**: Full Protocol Mock with Call Tracking
+Mocks implement production protocols with: call counting, error injection, latency simulation, state seeding, and state inspection. Enables comprehensive testing without external dependencies.
 
-**Why This Is Good**:
-Implements the complete `CloudKitClient` protocol with: call counting (`fetchCallCount`), error simulation (`shouldSimulateError`), latency simulation (`simulatedLatency`), state seeding (`seed()`), and state inspection (`savedRecords`). This enables testing sync state machines without touching real CloudKit.
-
----
-
-### 4. awaitCondition() Deterministic Polling
-
-**Location**: `HyzerKit/Tests/HyzerKitTests/Fixtures/TestPolling.swift`
-**Pattern**: Deterministic Async Wait
-
-**Why This Is Good**:
-Replaces flaky `Task.sleep` patterns with a configurable polling loop that checks a condition every 10ms with a 2s timeout. This is the correct pattern for testing async state transitions in Swift concurrency.
-
----
-
-### 5. ValueCollector Actor for Stream Testing
+### 4. ValueCollector Actor for Async Observation
 
 **Location**: `HyzerKit/Tests/HyzerKitTests/Fixtures/ValueCollector.swift`
-**Pattern**: Thread-Safe Async Collection
+**Pattern**: Thread-safe value collection via Swift actor
 
-**Why This Is Good**:
-Generic actor that safely collects values emitted by `AsyncSequence`s. Eliminates data races when testing stream-based APIs like `syncStateStream` and `pathUpdates`.
+Correct concurrency-safe approach for Swift 6 strict concurrency. Safely collects values from `AsyncSequence` observation in tests.
+
+### 5. awaitCondition() Deterministic Polling
+
+**Location**: `HyzerKit/Tests/HyzerKitTests/Fixtures/TestPolling.swift`
+**Pattern**: Bounded polling with configurable timeout
+
+Replaces flaky `Task.sleep` patterns with a condition-checking loop (10ms poll, 2s timeout). Correct pattern for testing async state transitions.
 
 ---
 
 ## Test File Analysis
 
-### File Metadata
+### Suite Overview
 
-| Target | Files | Lines | Suites | Tests |
-|--------|-------|-------|--------|-------|
-| HyzerKitTests/Domain | 9 | ~1,800 | 9 | ~95 |
-| HyzerKitTests/Sync | 9 | ~1,700 | 9 | ~65 |
-| HyzerKitTests/Communication | 5 | ~1,110 | 6 | ~73 |
-| HyzerKitTests/Voice | 4 | ~653 | 4 | ~48 |
-| HyzerKitTests/Integration | 1 | 188 | 1 | 2 |
-| HyzerAppTests | 11 | ~3,660 | 11 | ~125 |
-| **Total** | **39** | **~9,111** | **40** | **~269** (verified via `swift test`) |
+| Target | Test Files | @Test Count | Support Files | Lines |
+|--------|-----------|-------------|---------------|-------|
+| HyzerKitTests | 28 | 277 | 12 (fixtures + mocks) | 5,761 |
+| HyzerAppTests | 11 | 136 | 2 (mock + fixture) | 3,013 |
+| **Total** | **39** | **413** | **14** | **8,774** |
 
 ### Test Framework
-- **Framework**: Swift Testing (100%)
-- **Language**: Swift 6 (strict concurrency)
 
-### Infrastructure
-- **Fixtures**: 6 model factories + TestContainerFactory
-- **Mocks**: 4 protocol-conforming mocks
-- **Helpers**: TestPolling (awaitCondition), ValueCollector
+- **Framework**: Swift Testing (`@Suite`, `@Test`, `#expect`) — 100%
+- **Language**: Swift 6 (strict concurrency, `SWIFT_STRICT_CONCURRENCY = complete`)
+- **Data**: SwiftData with `ModelConfiguration(isStoredInMemoryOnly: true)`
+- **No XCTest**: Fully migrated to Swift Testing macros
+
+### Files Exceeding 300-Line Limit
+
+| File | Lines | Severity |
+|------|-------|----------|
+| VoiceOverlayViewModelTests.swift | 544 | HIGH |
+| RoundLifecycleManagerTests.swift | 414 | HIGH |
+| HistoryListViewModelTests.swift | 413 | HIGH |
+| CourseEditorViewModelTests.swift | 410 | HIGH |
+| DiscrepancyViewModelTests.swift | 404 | HIGH |
+| PlayerHoleBreakdownViewModelTests.swift | 396 | HIGH |
+| StandingsEngineTests.swift | 373 | MEDIUM |
+| SyncEngineTests.swift | 358 | MEDIUM |
+| ScorecardViewModelTests.swift | 344 | MEDIUM |
+| SyncEngineConflictTests.swift | 333 | MEDIUM |
+| RoundSummaryViewModelTests.swift | 332 | MEDIUM |
+| WatchVoiceViewModelTests.swift | 310 | MEDIUM |
 
 ---
 
 ## Next Steps
 
-### Immediate Actions (Before Next Feature Work)
+### Immediate Actions
 
-1. **Consolidate TestPolling.swift** — Remove HyzerAppTests duplicate, use single shared version
-   - Priority: P0
-   - Estimated Effort: 15 minutes
-
-2. **Add `try?` justification comments** — 6 locations in sync test files
+1. **Fix silent `try?` in Sync tests** — Replace with `try` in 8 locations
    - Priority: P1
-   - Estimated Effort: 10 minutes
+   - Effort: Small (mechanical find-and-replace)
 
-3. **Replace flaky Task.sleep in WatchVoiceViewModelTests** — Use existing `awaitCondition()`
-   - Priority: P1
-   - Estimated Effort: 10 minutes
+2. **Add `try?` justification comments** — 5 locations in WatchCacheManagerTests
+   - Priority: P3
+   - Effort: Trivial
 
 ### Follow-up Actions (Future PRs)
 
-1. **Split VoiceOverlayViewModelTests.swift** — 545 lines, split into voice-state and score-commit suites
-   - Priority: P2
+1. **Split 6 test files >400 lines** — Start with VoiceOverlayViewModelTests (544 lines)
+   - Priority: P1
    - Target: Next stabilization sprint
 
-2. **Refactor design token tests** — Test relationships rather than absolute values
-   - Priority: P3
+2. **Reduce 6 test files in 300-400 range**
+   - Priority: P2
+   - Target: Backlog
+
+3. **Consolidate TestPolling** — Eliminate duplication between targets
+   - Priority: P2
    - Target: Backlog
 
 ### Re-Review Needed?
 
-No re-review needed after P0/P1 fixes — approve as-is with comments. The fixes are mechanical and low-risk.
+No re-review needed for the `try?` fix. Re-review recommended after file-splitting work to verify test count preserved.
 
 ---
 
@@ -370,15 +290,25 @@ No re-review needed after P0/P1 fixes — approve as-is with comments. The fixes
 
 **Recommendation**: Approve with Comments
 
-**Rationale**:
-Test quality is good at 88/100. The suite demonstrates strong architectural discipline — clean separation between domain and ViewModel tests, consistent fixture patterns, proper mock usage, and correct Swift Testing adoption. The three actionable issues (TestPolling duplication, silent `try?`, flaky sleep) are all mechanical fixes that don't require architectural changes. The test suite provides solid regression protection for the 8 completed epics and 407 tests worth of functionality.
+Test quality is good at 83/100. The suite demonstrates strong discipline in the highest-impact areas (isolation: 92, determinism: 88) with clean fixture patterns and proper mock architecture. The 8 silent `try?` locations should be fixed promptly as they pose a correctness risk during refactoring. The file length violations are a maintainability concern but don't affect test reliability. No blockers for continued development.
+
+**Next recommended workflow**: `trace` — to map test coverage against acceptance criteria and validate quality gates.
+
+---
+
+## Quality Trends
+
+| Review Date | Score | Grade | Key Change |
+|-------------|-------|-------|-----------|
+| 2026-04-12 | 88/100 | B+ | Initial full-suite review (269 tests) |
+| 2026-05-04 | 83/100 | B | -5 pts: +144 tests but 12 files now >300 lines; `Task.sleep` flake fixed |
 
 ---
 
 ## Review Metadata
 
 **Generated By**: Murat / BMad TEA Agent (Test Architect)
-**Workflow**: testarch-test-review v5.0
-**Review ID**: test-review-full-suite-20260412
-**Timestamp**: 2026-04-12
-**Version**: 1.0
+**Workflow**: testarch-test-review
+**Review ID**: test-review-full-suite-20260504
+**Timestamp**: 2026-05-04
+**Version**: 2.0
