@@ -321,6 +321,7 @@ struct VoiceOverlayView: View {
         let descriptions = candidates.map { "\($0.displayName), \($0.strokeCount)" }.joined(separator: ". ")
         let announcement = "Voice scores confirmed. \(descriptions). Tap any score to correct."
         Task { @MainActor in
+            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
         }
@@ -332,6 +333,7 @@ struct VoiceOverlayView: View {
             "\(unresolvedCount) unresolved. " +
             "Tap the highlighted names to select the correct player."
         Task { @MainActor in
+            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
         }
@@ -340,6 +342,7 @@ struct VoiceOverlayView: View {
     private func announceFailure() {
         let announcement = "Couldn't understand. Double-tap Try Again to retry, or Cancel to return to scoring."
         Task { @MainActor in
+            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
         }

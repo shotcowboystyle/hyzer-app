@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import os.log
 import HyzerKit
 
 /// View-ready data for one history round card.
@@ -34,6 +35,7 @@ final class HistoryListViewModel {
     private let modelContext: ModelContext
     private let standingsEngine: StandingsEngine
     private let dateFormatter: DateFormatter
+    private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "HistoryListViewModel")
     let currentPlayerID: String
 
     /// Cached card data keyed by round ID. Populated lazily as cards appear on screen.
@@ -67,7 +69,13 @@ final class HistoryListViewModel {
 
         let courseIDLocal = round.courseID
         let descriptor = FetchDescriptor<Course>(predicate: #Predicate { $0.id == courseIDLocal })
-        let courseName = (try? modelContext.fetch(descriptor))?.first?.name ?? "Unknown Course"
+        let courseName: String
+        do {
+            courseName = try modelContext.fetch(descriptor).first?.name ?? "Unknown Course"
+        } catch {
+            logger.error("HistoryListViewModel: course fetch failed for round \(round.id): \(error)")
+            courseName = "Unknown Course"
+        }
 
         let formattedDate = dateFormatter.string(from: round.completedAt ?? Date())
 

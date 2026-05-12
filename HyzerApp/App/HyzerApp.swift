@@ -11,6 +11,7 @@ struct HyzerApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
     init() {
+        MetricKitObserver.shared.register()
         let container = Self.makeModelContainer()
         let networkMonitor = LiveNetworkMonitor()
         appServices = AppServices(
@@ -117,6 +118,8 @@ struct HyzerApp: App {
         let walURL = storeURL.appendingPathExtension("wal")
         let shmURL = storeURL.appendingPathExtension("shm")
         for url in [storeURL, walURL, shmURL] {
+            // Safe to ignore: files may not exist (WAL/SHM are only present in WAL mode).
+            // Cleanup failure is non-fatal — makeModelContainer retries on next launch.
             try? fm.removeItem(at: url)
         }
     }

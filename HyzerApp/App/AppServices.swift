@@ -73,8 +73,13 @@ final class AppServices {
     private static func resolveLocalPlayerID(from context: ModelContext) -> UUID? {
         var descriptor = FetchDescriptor<Player>()
         descriptor.fetchLimit = 1
-        let players = try? context.fetch(descriptor)
-        return players?.first?.id
+        do {
+            return try context.fetch(descriptor).first?.id
+        } catch {
+            Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices")
+                .error("resolveLocalPlayerID failed: \(error)")
+            return nil
+        }
     }
 
     // MARK: - Sync

@@ -231,6 +231,7 @@ final class VoiceOverlayViewModel {
         timerTask?.cancel()
         timerResetCount += 1
         timerTask = Task { [weak self] in
+            // CancellationError is the normal cancellation signal from timerTask?.cancel(); isCancelled guard below handles it.
             try? await Task.sleep(for: .seconds(AnimationTokens.autoCommitDuration))
             guard !Task.isCancelled else { return }
             self?.commitScores()

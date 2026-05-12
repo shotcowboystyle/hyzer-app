@@ -133,6 +133,7 @@ public final class WatchVoiceViewModel {
     private func startAutoCommitTimer() {
         timerTask?.cancel()
         timerTask = Task { [weak self] in
+            // CancellationError is the normal cancellation signal from timerTask?.cancel(); isCancelled guard below handles it.
             try? await Task.sleep(for: .seconds(1.5))
             guard !Task.isCancelled else { return }
             self?.confirmScores()

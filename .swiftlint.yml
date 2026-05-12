@@ -68,3 +68,9 @@ custom_rules:
     regex: 'duration\s*:\s*0\.\d+'
     message: "Use AnimationTokens presets (springStiff, springGentle) or explicit constants instead of hardcoded durations"
     severity: warning
+
+  unbounded_fetch_descriptor:
+    name: "Unbounded FetchDescriptor"
+    regex: 'FetchDescriptor<[A-Za-z]+>\(\s*\)'
+    message: "FetchDescriptor with no arguments fetches the entire table and grows unbounded with data. Add fetchLimit or a predicate. If the full scan is intentional (e.g. fetch-all-and-filter workaround), add a comment explaining why."
+    severity: warning
