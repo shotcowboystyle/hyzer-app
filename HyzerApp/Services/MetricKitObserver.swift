@@ -9,7 +9,7 @@ import os.log
 ///
 /// Usage: call `MetricKitObserver.shared.register()` once at app startup.
 final class MetricKitObserver: NSObject, MXMetricManagerSubscriber {
-    static let shared = MetricKitObserver()
+  @MainActor static let shared = MetricKitObserver()
 
     private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "MetricKit")
 
