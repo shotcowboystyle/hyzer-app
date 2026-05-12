@@ -63,6 +63,7 @@ struct SyncEngineTests {
         // Poll until background context save merges into main context
         let eventID = event.id.uuidString
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
             return allMeta.contains { $0.recordID == eventID && $0.syncStatus == .synced }
         }
@@ -243,6 +244,7 @@ struct SyncEngineTests {
         #expect(mockCK.savedRecords.count == 1)
         let eventID = event.id.uuidString
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
             return allMeta.contains { $0.recordID == eventID && $0.syncStatus == .synced }
         }
@@ -279,6 +281,7 @@ struct SyncEngineTests {
         // Verify metadata transitioned to .failed
         let eventID = event.id.uuidString
         await awaitCondition {
+            // Safe: fetch failure in polling means condition not yet met; empty fallback retries
             let allMeta = (try? context.fetch(FetchDescriptor<SyncMetadata>())) ?? []
             return allMeta.contains { $0.recordID == eventID && $0.syncStatus == .failed }
         }

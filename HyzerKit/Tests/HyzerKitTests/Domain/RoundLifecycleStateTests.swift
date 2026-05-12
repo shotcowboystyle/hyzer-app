@@ -3,9 +3,9 @@ import Foundation
 import SwiftData
 @testable import HyzerKit
 
-@Suite("RoundLifecycleManager")
+@Suite("RoundLifecycleManager — State Transitions")
 @MainActor
-struct RoundLifecycleManagerTests {
+struct RoundLifecycleStateTests {
 
     // MARK: - Helpers
 
@@ -54,137 +54,6 @@ struct RoundLifecycleManagerTests {
                 )
             }
         }
-    }
-
-    // MARK: - 11.1: checkCompletion returns .incomplete when scores are missing
-
-    @Test("checkCompletion returns .incomplete when scores are missing")
-    func test_checkCompletion_incomplete_whenScoresMissing() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let round = try insertActiveRound(context: context, playerIDs: ["p1", "p2"], holeCount: 3)
-
-        // Score only 1 of 3 holes for p1, none for p2
-        let service = ScoringService(modelContext: context, deviceID: "d")
-        try service.createScoreEvent(roundID: round.id, holeNumber: 1, playerID: "p1", strokeCount: 3, reportedByPlayerID: UUID())
-
-        let result = try manager.checkCompletion(roundID: round.id)
-
-        if case .incomplete(let missing) = result {
-            #expect(missing > 0)
-        } else {
-            Issue.record("Expected .incomplete, got .nowAwaitingFinalization")
-        }
-        #expect(round.isActive) // round should still be active
-    }
-
-    // MARK: - 11.2: checkCompletion returns .nowAwaitingFinalization when all holes scored
-
-    @Test("checkCompletion returns .nowAwaitingFinalization when all holes scored for all players")
-    func test_checkCompletion_nowAwaitingFinalization_whenAllScored() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let playerIDs = ["p1", "p2"]
-        let round = try insertActiveRound(context: context, playerIDs: playerIDs, holeCount: 2)
-        let service = ScoringService(modelContext: context, deviceID: "d")
-        try insertScoreEvents(context: context, service: service, roundID: round.id, playerIDs: playerIDs, holeCount: 2)
-
-        let result = try manager.checkCompletion(roundID: round.id)
-
-        if case .nowAwaitingFinalization = result {
-            // OK
-        } else {
-            Issue.record("Expected .nowAwaitingFinalization")
-        }
-        #expect(round.isAwaitingFinalization)
-        #expect(round.status == "awaitingFinalization")
-    }
-
-    // MARK: - 11.3: checkCompletion handles corrections correctly
-
-    @Test("checkCompletion handles corrections — superseded scores don't count as missing")
-    func test_checkCompletion_handlesCorrections() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let round = try insertActiveRound(context: context, playerIDs: ["p1"], holeCount: 1)
-        let service = ScoringService(modelContext: context, deviceID: "d")
-
-        // Score then correct hole 1 for p1
-        let original = try service.createScoreEvent(roundID: round.id, holeNumber: 1, playerID: "p1", strokeCount: 5, reportedByPlayerID: UUID())
-        try service.correctScore(previousEventID: original.id, roundID: round.id, holeNumber: 1, playerID: "p1", strokeCount: 3, reportedByPlayerID: UUID())
-
-        let result = try manager.checkCompletion(roundID: round.id)
-
-        // Correction should not make hole count as "missing" — the leaf node still exists
-        if case .nowAwaitingFinalization = result {
-            // OK
-        } else {
-            Issue.record("Expected .nowAwaitingFinalization after correction completes score")
-        }
-    }
-
-    // MARK: - 11.4: finishRound with force=false returns .hasMissingScores when incomplete
-
-    @Test("finishRound(force:false) returns .hasMissingScores when scores are missing")
-    func test_finishRound_noForce_returnsMissingScores_whenIncomplete() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let round = try insertActiveRound(context: context, playerIDs: ["p1"], holeCount: 3)
-
-        // Score only hole 1; holes 2 and 3 are missing
-        let service = ScoringService(modelContext: context, deviceID: "d")
-        try service.createScoreEvent(roundID: round.id, holeNumber: 1, playerID: "p1", strokeCount: 3, reportedByPlayerID: UUID())
-
-        let result = try manager.finishRound(roundID: round.id, force: false)
-
-        if case .hasMissingScores(let count) = result {
-            #expect(count == 2)
-        } else {
-            Issue.record("Expected .hasMissingScores(count: 2)")
-        }
-        #expect(round.isActive) // round should not have completed
-    }
-
-    // MARK: - 11.5: finishRound with force=true completes round even with missing scores
-
-    @Test("finishRound(force:true) completes round even with missing scores")
-    func test_finishRound_force_completesRound_withMissingScores() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let round = try insertActiveRound(context: context, playerIDs: ["p1"], holeCount: 3)
-        // No scores inserted
-
-        let result = try manager.finishRound(roundID: round.id, force: true)
-
-        if case .completed = result {
-            // OK
-        } else {
-            Issue.record("Expected .completed")
-        }
-        #expect(round.isCompleted)
-        #expect(round.completedAt != nil)
-    }
-
-    // MARK: - 11.6: finalizeRound transitions awaitingFinalization → completed
-
-    @Test("finalizeRound transitions awaitingFinalization to completed")
-    func test_finalizeRound_transitionsToCompleted() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let playerIDs = ["p1"]
-        let round = try insertActiveRound(context: context, playerIDs: playerIDs, holeCount: 1)
-        let service = ScoringService(modelContext: context, deviceID: "d")
-        try insertScoreEvents(context: context, service: service, roundID: round.id, playerIDs: playerIDs, holeCount: 1)
-
-        // First bring to awaitingFinalization
-        _ = try manager.checkCompletion(roundID: round.id)
-        #expect(round.isAwaitingFinalization)
-
-        // Finalize
-        try manager.finalizeRound(roundID: round.id)
-
-        #expect(round.isCompleted)
-        #expect(round.completedAt != nil)
     }
 
     // MARK: - 11.7: validatePlayerMutation throws for non-setup rounds
@@ -306,42 +175,6 @@ struct RoundLifecycleManagerTests {
         let activeRound = Round.fixture()
         activeRound.start()
         #expect(!activeRound.isFinished)
-    }
-
-    // MARK: - checkCompletion is a no-op for already-finished rounds
-
-    @Test("checkCompletion is a no-op when round is already awaitingFinalization")
-    func test_checkCompletion_noopWhenAlreadyAwaitingFinalization() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let playerIDs = ["p1"]
-        let round = try insertActiveRound(context: context, playerIDs: playerIDs, holeCount: 1)
-        let service = ScoringService(modelContext: context, deviceID: "d")
-        try insertScoreEvents(context: context, service: service, roundID: round.id, playerIDs: playerIDs, holeCount: 1)
-        _ = try manager.checkCompletion(roundID: round.id)
-        #expect(round.isAwaitingFinalization)
-
-        // Calling checkCompletion again should not crash or transition further
-        let result = try manager.checkCompletion(roundID: round.id)
-        if case .incomplete = result {
-            // OK — no-op, round stays in awaitingFinalization
-        } else {
-            Issue.record("Expected .incomplete(0) no-op for already-awaiting round")
-        }
-        #expect(round.isAwaitingFinalization) // unchanged
-    }
-
-    // MARK: - roundNotFound error
-
-    @Test("checkCompletion throws roundNotFound for unknown roundID")
-    func test_checkCompletion_throwsRoundNotFound() throws {
-        let (_, context) = try makeContext()
-        let manager = RoundLifecycleManager(modelContext: context)
-        let fakeID = UUID()
-
-        #expect(throws: RoundLifecycleError.roundNotFound(fakeID)) {
-            try manager.checkCompletion(roundID: fakeID)
-        }
     }
 
     // MARK: - State validation: finishRound on invalid states (L2 fix)

@@ -6,6 +6,10 @@ import Foundation
 /// polling loop that terminates as soon as the condition is met — faster on fast machines,
 /// still reliable on slow CI.
 ///
+/// NOTE: A mirror copy lives in HyzerAppTests/Fixtures/TestPolling.swift.
+/// Both targets need their own copy because test targets cannot share source files
+/// across module boundaries. Keep both copies in sync.
+///
 /// - Parameters:
 ///   - timeout: Maximum time to wait before returning `false`. Default 2 seconds.
 ///   - pollInterval: Time between polls. Default 10ms.
