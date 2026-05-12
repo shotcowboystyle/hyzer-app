@@ -44,10 +44,7 @@ struct RoundSummaryView: View {
         }
         .sheet(isPresented: $isShareSheetPresented) {
             if let image = shareImage {
-                ShareSheet(items: [
-                    image,
-                    shareText
-                ])
+                ShareSheetRepresentable(items: [image, shareText])
             }
         }
         .accessibilityElement(children: .contain)
@@ -190,18 +187,6 @@ private struct PlayerSummaryRow: View {
         default: return "\(position)"
         }
     }
-}
-
-// MARK: - ShareSheet
-
-private struct ShareSheet: UIViewControllerRepresentable {
-    let items: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - SummaryCardSnapshotView

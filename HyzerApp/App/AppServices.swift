@@ -51,7 +51,8 @@ final class AppServices {
         self.syncScheduler = SyncScheduler(
             syncEngine: syncEngine,
             cloudKitClient: cloudKitClient,
-            networkMonitor: networkMonitor
+            networkMonitor: networkMonitor,
+            userDefaults: UserDefaults.standard
         )
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         let scoring = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
