@@ -117,8 +117,13 @@ public actor SyncEngine: ModelActor {
         }
         guard !pendingEntries.isEmpty else { return }
 
-        // Hoist event fetch outside loop and build O(1) lookup dictionary
-        let allEvents = fetchAllScoreEvents()
+        // Scope event fetch to only ScoreEvent IDs referenced by pending entries
+        let pendingEventIDs = Set(
+            pendingEntries
+                .filter { $0.recordType == ScoreEventRecord.recordType }
+                .compactMap { UUID(uuidString: $0.recordID) }
+        )
+        let allEvents = fetchScoreEvents(withIDs: pendingEventIDs)
         let eventsByID = Dictionary(uniqueKeysWithValues: allEvents.map { ($0.id, $0) })
 
         // Build batch FIRST to identify which entries can actually be pushed.
@@ -220,13 +225,20 @@ public actor SyncEngine: ModelActor {
             return
         }
 
-        let existingEvents = fetchAllScoreEvents()
+        // Parse all CKRecords up front to scope the local event fetch to affected rounds
+        let dtos = fetched.compactMap { ScoreEventRecord(from: $0) }
+        guard !dtos.isEmpty else {
+            syncState = .idle
+            return
+        }
+
+        let incomingRoundIDs = Set(dtos.map(\.roundID))
+        let existingEvents = fetchScoreEvents(forRoundIDs: incomingRoundIDs)
         let existingIDs = Set(existingEvents.map(\.id))
         var affectedRoundIDs: Set<UUID> = []
         var newlyInsertedEvents: [ScoreEvent] = []
 
-        for ckRecord in fetched {
-            guard let dto = ScoreEventRecord(from: ckRecord) else { continue }
+        for dto in dtos {
             guard !existingIDs.contains(dto.id) else { continue }   // deduplicate
 
             let event = ScoreEvent(
@@ -283,9 +295,13 @@ public actor SyncEngine: ModelActor {
     ///
     /// Pre-fetches existing Discrepancy records to deduplicate (Story 6.1: resolution event guard).
     private func detectConflicts(newEvents: [ScoreEvent], allExisting: [ScoreEvent]) {
+        let affectedRoundIDArray = Array(Set(newEvents.map(\.roundID)))
         let existingDiscrepancies: [Discrepancy]
         do {
-            existingDiscrepancies = try modelContext.fetch(FetchDescriptor<Discrepancy>())
+            let descriptor = FetchDescriptor<Discrepancy>(
+                predicate: #Predicate { affectedRoundIDArray.contains($0.roundID) }
+            )
+            existingDiscrepancies = try modelContext.fetch(descriptor)
         } catch {
             logger.error("SyncEngine: failed to fetch discrepancies — dedup guard bypassed: \(error)")
             return
@@ -345,6 +361,7 @@ public actor SyncEngine: ModelActor {
     /// on macOS test hosts. Bounded in practice: one entry per sync attempt.
     private func fetchAllMetadata() -> [SyncMetadata] {
         do {
+            // swiftlint:disable:next unbounded_fetch_descriptor
             return try modelContext.fetch(FetchDescriptor<SyncMetadata>())
         } catch {
             logger.error("SyncEngine.fetchAllMetadata failed: \(error)")
@@ -352,13 +369,31 @@ public actor SyncEngine: ModelActor {
         }
     }
 
-    /// Fetches all ScoreEvents. Same fetch-all strategy as `fetchAllMetadata()`.
-    /// Bounded in practice by round scope (~1,500 events/round peak).
-    private func fetchAllScoreEvents() -> [ScoreEvent] {
+    /// Fetches ScoreEvents whose IDs are in `ids`. Used by the push pipeline to look up
+    /// only the events referenced by pending SyncMetadata entries.
+    private func fetchScoreEvents(withIDs ids: Set<UUID>) -> [ScoreEvent] {
+        guard !ids.isEmpty else { return [] }
+        let idArray = Array(ids)
+        var descriptor = FetchDescriptor<ScoreEvent>(predicate: #Predicate { idArray.contains($0.id) })
+        descriptor.fetchLimit = idArray.count
         do {
-            return try modelContext.fetch(FetchDescriptor<ScoreEvent>())
+            return try modelContext.fetch(descriptor)
         } catch {
-            logger.error("SyncEngine.fetchAllScoreEvents failed: \(error)")
+            logger.error("SyncEngine.fetchScoreEvents(withIDs:) failed: \(error)")
+            return []
+        }
+    }
+
+    /// Fetches ScoreEvents scoped to the given round IDs. Used by the pull pipeline and
+    /// conflict detection to avoid full-table scans on the event-sourced table.
+    private func fetchScoreEvents(forRoundIDs roundIDs: Set<UUID>) -> [ScoreEvent] {
+        guard !roundIDs.isEmpty else { return [] }
+        let roundIDArray = Array(roundIDs)
+        let descriptor = FetchDescriptor<ScoreEvent>(predicate: #Predicate { roundIDArray.contains($0.roundID) })
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            logger.error("SyncEngine.fetchScoreEvents(forRoundIDs:) failed: \(error)")
             return []
         }
     }
