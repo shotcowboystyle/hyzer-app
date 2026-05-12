@@ -3,7 +3,7 @@ import HyzerKit
 
 /// A unified player row model combining registered players and guests.
 struct ScorecardPlayer: Identifiable {
-    /// Player.id.uuidString for registered players; "guest:{name}" for guests.
+    /// Player.id.uuidString for registered players; opaque `"guest:<uuid>"` for guests.
     let id: String
     let displayName: String
     let isGuest: Bool

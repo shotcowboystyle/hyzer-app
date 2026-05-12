@@ -35,7 +35,12 @@ public final class Round {
     public var organizerID: UUID = UUID()
     /// Player.id UUIDs stored as strings for future CloudKit discovery (FR16b, Epic 4).
     public var playerIDs: [String] = []
-    /// Round-scoped guest labels — no persistent Player identity (FR12b).
+    /// Opaque guest identifiers used in ScoreEvent.playerID (format `"guest:<uuid>"`).
+    /// Index-aligned with `guestNames`. Created via `GuestIdentifier.makeID()` at setup time.
+    /// Guest *names* never appear in synced records — only these UUIDs do.
+    public var guestIDs: [String] = []
+    /// Round-scoped guest display names (local-only, never synced to CloudKit).
+    /// Index-aligned with `guestIDs` (FR12b).
     public var guestNames: [String] = []
     /// Lifecycle: "setup" | "active" | "awaitingFinalization" | "completed".
     /// Stored as String for CloudKit compatibility (CloudKit doesn't support Swift enums).
@@ -54,12 +59,17 @@ public final class Round {
         organizerID: UUID,
         playerIDs: [String],
         guestNames: [String],
-        holeCount: Int
+        holeCount: Int,
+        guestIDs: [String]? = nil
     ) {
         self.courseID = courseID
         self.organizerID = organizerID
         self.playerIDs = playerIDs
         self.guestNames = guestNames
+        // If the caller did not supply IDs, generate one per name so the parallel
+        // arrays stay aligned. New rounds never have to think about this; legacy
+        // callers can pass an explicit list when migrating fixtures.
+        self.guestIDs = guestIDs ?? guestNames.map { _ in GuestIdentifier.makeID() }
         self.holeCount = holeCount
     }
 

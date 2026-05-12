@@ -309,4 +309,143 @@ struct ScoringServiceTests {
         #expect(leaf?.id == eventC.id)
         #expect(leaf?.strokeCount == 3)
     }
+
+    // MARK: - validateExternalScore (Watch payload validation, P0-3)
+
+    @Test("validateExternalScore accepts a registered player who is in the round")
+    func test_validateExternalScore_acceptsRegisteredMember() throws {
+        let (_, context) = try makeContext()
+        let service = ScoringService(modelContext: context, deviceID: "phone")
+        let memberID = UUID()
+        let round = Round(
+            courseID: UUID(), organizerID: memberID,
+            playerIDs: [memberID.uuidString], guestNames: [], holeCount: 9
+        )
+        context.insert(round)
+        round.start()
+        try context.save()
+
+        try service.validateExternalScore(roundID: round.id, playerID: memberID.uuidString, holeNumber: 1)
+    }
+
+    @Test("validateExternalScore accepts a guest playerID present in round.guestIDs")
+    func test_validateExternalScore_acceptsGuestMember() throws {
+        let (_, context) = try makeContext()
+        let service = ScoringService(modelContext: context, deviceID: "phone")
+        let organizerID = UUID()
+        let round = Round(
+            courseID: UUID(), organizerID: organizerID,
+            playerIDs: [organizerID.uuidString], guestNames: ["Dave"], holeCount: 9
+        )
+        context.insert(round)
+        round.start()
+        try context.save()
+
+        let guestID = round.guestIDs[0]
+        try service.validateExternalScore(roundID: round.id, playerID: guestID, holeNumber: 1)
+    }
+
+    @Test("validateExternalScore rejects a player not in the round")
+    func test_validateExternalScore_rejectsNonMember() throws {
+        let (_, context) = try makeContext()
+        let service = ScoringService(modelContext: context, deviceID: "phone")
+        let organizerID = UUID()
+        let strangerID = UUID()
+        let round = Round(
+            courseID: UUID(), organizerID: organizerID,
+            playerIDs: [organizerID.uuidString], guestNames: [], holeCount: 9
+        )
+        context.insert(round)
+        round.start()
+        try context.save()
+
+        #expect(throws: ScoringServiceError.playerNotInRound(playerID: strangerID.uuidString, roundID: round.id)) {
+            try service.validateExternalScore(roundID: round.id, playerID: strangerID.uuidString, holeNumber: 1)
+        }
+    }
+
+    @Test("validateExternalScore rejects a hole number above holeCount")
+    func test_validateExternalScore_rejectsHoleOutOfRange() throws {
+        let (_, context) = try makeContext()
+        let service = ScoringService(modelContext: context, deviceID: "phone")
+        let memberID = UUID()
+        let round = Round(
+            courseID: UUID(), organizerID: memberID,
+            playerIDs: [memberID.uuidString], guestNames: [], holeCount: 9
+        )
+        context.insert(round)
+        round.start()
+        try context.save()
+
+        #expect(throws: ScoringServiceError.holeOutOfRange(hole: 10, holeCount: 9)) {
+            try service.validateExternalScore(roundID: round.id, playerID: memberID.uuidString, holeNumber: 10)
+        }
+        #expect(throws: ScoringServiceError.holeOutOfRange(hole: 0, holeCount: 9)) {
+            try service.validateExternalScore(roundID: round.id, playerID: memberID.uuidString, holeNumber: 0)
+        }
+    }
+
+    @Test("validateExternalScore rejects scores against an unknown round")
+    func test_validateExternalScore_rejectsUnknownRound() throws {
+        let (_, context) = try makeContext()
+        let service = ScoringService(modelContext: context, deviceID: "phone")
+        let unknownRoundID = UUID()
+        #expect(throws: ScoringServiceError.roundNotFound(unknownRoundID)) {
+            try service.validateExternalScore(roundID: unknownRoundID, playerID: UUID().uuidString, holeNumber: 1)
+        }
+    }
+
+    @Test("validateExternalScore rejects scores against a finished round")
+    func test_validateExternalScore_rejectsFinishedRound() throws {
+        let (_, context) = try makeContext()
+        let service = ScoringService(modelContext: context, deviceID: "phone")
+        let memberID = UUID()
+        let round = Round(
+            courseID: UUID(), organizerID: memberID,
+            playerIDs: [memberID.uuidString], guestNames: [], holeCount: 9
+        )
+        context.insert(round)
+        round.start()
+        round.awaitFinalization()
+        round.complete()
+        try context.save()
+
+        #expect(throws: ScoringServiceError.roundNotActive(status: "completed")) {
+            try service.validateExternalScore(roundID: round.id, playerID: memberID.uuidString, holeNumber: 1)
+        }
+    }
+
+    // MARK: - GuestIdentifier guarantees (P0-1)
+
+    @Test("Round.init generates one opaque guestID per guestName")
+    func test_round_generatesOpaqueGuestIDs() {
+        let round = Round(
+            courseID: UUID(), organizerID: UUID(),
+            playerIDs: [], guestNames: ["Dave", "Eve"], holeCount: 9
+        )
+        #expect(round.guestIDs.count == 2)
+        for id in round.guestIDs {
+            #expect(GuestIdentifier.isGuest(id))
+            let suffix = String(id.dropFirst(GuestIdentifier.prefix.count))
+            #expect(UUID(uuidString: suffix) != nil, "guestID suffix must be a UUID, not a name (got \(suffix))")
+        }
+        // Names must NOT appear inside the synced identifier.
+        let joined = round.guestIDs.joined(separator: " ")
+        #expect(!joined.contains("Dave"))
+        #expect(!joined.contains("Eve"))
+    }
+
+    @Test("GuestIdentifier.displayName resolves UUID-form IDs via parallel arrays")
+    func test_guestIdentifier_displayName_uuidForm() {
+        let id = GuestIdentifier.makeID()
+        let name = GuestIdentifier.displayName(for: id, guestIDs: [id], guestNames: ["Dave"])
+        #expect(name == "Dave")
+    }
+
+    @Test("GuestIdentifier.displayName falls back for legacy name-form IDs")
+    func test_guestIdentifier_displayName_legacyFallback() {
+        let legacy = "guest:Dave"
+        let name = GuestIdentifier.displayName(for: legacy, guestIDs: [], guestNames: [])
+        #expect(name == "Dave")
+    }
 }

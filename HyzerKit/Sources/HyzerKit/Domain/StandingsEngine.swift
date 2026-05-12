@@ -86,15 +86,15 @@ public final class StandingsEngine {
         let allPlayers = try modelContext.fetch(playerDescriptor)
         let playersByIDString = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.id.uuidString, $0) })
 
-        // Build unified player list: registered + guests
-        let allPlayerIDs = round.playerIDs + round.guestNames.map { "guest:\($0)" }
+        // Build unified player list: registered + guests (use opaque guest IDs, never names)
+        let allPlayerIDs = round.playerIDs + round.guestIDs
 
         // Pre-group events by playerID for O(1) lookup instead of O(P*E) filter-per-player
         let eventsByPlayer = Dictionary(grouping: allEvents, by: \.playerID)
 
         // Compute raw totals per player
         var unsortedStandings: [Standing] = allPlayerIDs.compactMap { playerID in
-            let playerName = resolvePlayerName(playerID: playerID, playersByIDString: playersByIDString)
+            let playerName = resolvePlayerName(playerID: playerID, playersByIDString: playersByIDString, round: round)
             let playerEvents = eventsByPlayer[playerID] ?? []
             let scoredHoles = Set(playerEvents.map(\.holeNumber))
             var totalStrokes = 0
@@ -145,11 +145,17 @@ public final class StandingsEngine {
         return result
     }
 
-    private static let guestPrefix = "guest:"
-
-    private func resolvePlayerName(playerID: String, playersByIDString: [String: Player]) -> String {
-        if playerID.hasPrefix(Self.guestPrefix) {
-            return String(playerID.dropFirst(Self.guestPrefix.count))
+    private func resolvePlayerName(
+        playerID: String,
+        playersByIDString: [String: Player],
+        round: Round
+    ) -> String {
+        if let guestName = GuestIdentifier.displayName(
+            for: playerID,
+            guestIDs: round.guestIDs,
+            guestNames: round.guestNames
+        ) {
+            return guestName
         }
         return playersByIDString[playerID]?.displayName ?? playerID
     }
