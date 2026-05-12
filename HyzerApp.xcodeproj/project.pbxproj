@@ -24,6 +24,7 @@
 		42CF8E0631A83A8D502FE1D9 /* PlayerHoleBreakdownViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4804F2B7A8D14716181BBCED /* PlayerHoleBreakdownViewModel.swift */; };
 		4355F22606C5C352805D9DE6 /* LeaderboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11CB2EA23B021251B93ADEE /* LeaderboardViewModel.swift */; };
 		43AA274D5D9454EBF1D658F2 /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */; };
+		47C4A3442BBC7CE9DCFA5A7D /* MetricKitObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3155F75FB2C622BF915D9898 /* MetricKitObserver.swift */; };
 		50C17EC7DBFF7B4F6F7C3FE2 /* WatchVoiceOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EB09CCB4D01B9EF25459980 /* WatchVoiceOverlayView.swift */; };
 		5105D60E9D7E55AB98453D0C /* CourseListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D567388ADB189B6F28DF15C2 /* CourseListView.swift */; };
 		5537A2C938E1825E0FF939E8 /* PlayerHoleBreakdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711AA43585D959E6B35DC045 /* PlayerHoleBreakdownView.swift */; };
@@ -125,6 +126,7 @@
 		2CC2A9F18AFB9B84DAD30F16 /* HyzerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HyzerApp.swift; sourceTree = "<group>"; };
 		2D7D740D79452CC43CCAA46F /* DiscrepancyLoadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyLoadTests.swift; sourceTree = "<group>"; };
 		2F15A3320EA3B193B04FB19E /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
+		3155F75FB2C622BF915D9898 /* MetricKitObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricKitObserver.swift; sourceTree = "<group>"; };
 		39EF3E5C7FF81BCA34D9DC08 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncIndicatorView.swift; sourceTree = "<group>"; };
 		3EB09CCB4D01B9EF25459980 /* WatchVoiceOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchVoiceOverlayView.swift; sourceTree = "<group>"; };
@@ -450,6 +452,7 @@
 				99BEC27ED6A658066DE3B9F9 /* LiveCloudKitClient.swift */,
 				41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */,
 				D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */,
+				3155F75FB2C622BF915D9898 /* MetricKitObserver.swift */,
 				9CF27AB5613FDD66774D32B9 /* PhoneConnectivityService.swift */,
 				751B4A4FAE27078A43BE3A3F /* VoiceRecognitionService.swift */,
 			);
@@ -697,6 +700,7 @@
 				7823F1D6F90939B940EFAD1F /* LiveCloudKitClient.swift in Sources */,
 				A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */,
 				689356B498827861015A14A4 /* LiveNetworkMonitor.swift in Sources */,
+				47C4A3442BBC7CE9DCFA5A7D /* MetricKitObserver.swift in Sources */,
 				A85DE61AD542BF166999182B /* OnboardingView.swift in Sources */,
 				AB7ECE958B351A749ED816BB /* OnboardingViewModel.swift in Sources */,
 				915770F21BA9C30CDAC86B2B /* PhoneConnectivityService.swift in Sources */,
