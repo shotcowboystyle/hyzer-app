@@ -13,7 +13,9 @@ import SwiftData
 /// non-nil `supersedesEventID` pointing to the replaced event (Story 3.3).
 ///
 /// Guest players: `playerID` is a Player.id UUID string for registered players,
-/// or `"guest:{name}"` for guest players (e.g., `"guest:Dave"`).
+/// or an opaque guest ID of the form `"guest:<uuid>"` for guests. The guest's display
+/// name lives only in `Round.guestNames` (local-only); it never appears in this
+/// synced field. Use `GuestIdentifier` for construction and name resolution.
 @Model
 public final class ScoreEvent {
     public var id: UUID = UUID()
@@ -21,7 +23,8 @@ public final class ScoreEvent {
     public var roundID: UUID = UUID()
     /// 1-based hole number.
     public var holeNumber: Int = 1
-    /// Player.id.uuidString for registered players; "guest:{name}" for guests.
+    /// Player.id.uuidString for registered players; opaque `"guest:<uuid>"` for guests
+    /// (resolved to a display name via `GuestIdentifier` + the owning `Round`).
     public var playerID: String = ""
     /// The stroke count (1-10).
     public var strokeCount: Int = 0

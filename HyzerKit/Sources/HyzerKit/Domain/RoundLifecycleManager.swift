@@ -177,7 +177,7 @@ public final class RoundLifecycleManager {
         let descriptor = FetchDescriptor<ScoreEvent>(predicate: #Predicate { $0.roundID == id })
         let allEvents = try modelContext.fetch(descriptor)
 
-        let allPlayerIDs = round.playerIDs + round.guestNames.map { "guest:\($0)" }
+        let allPlayerIDs = round.playerIDs + round.guestIDs
         var missing = 0
         for playerID in allPlayerIDs {
             for holeNumber in 1...max(1, round.holeCount) {

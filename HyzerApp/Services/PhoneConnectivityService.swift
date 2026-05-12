@@ -215,6 +215,20 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             logger.warning("scoreEvent received but localPlayerID not set — ignoring")
             return
         }
+        guard (1...10).contains(payload.strokeCount) else {
+            logger.warning("Rejecting Watch payload: strokeCount \(payload.strokeCount) out of range")
+            return
+        }
+        do {
+            try scoringService.validateExternalScore(
+                roundID: payload.roundID,
+                playerID: payload.playerID,
+                holeNumber: payload.holeNumber
+            )
+        } catch {
+            logger.warning("Rejecting Watch payload: \(error)")
+            return
+        }
         do {
             try scoringService.createScoreEvent(
                 roundID: payload.roundID,

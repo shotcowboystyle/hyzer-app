@@ -4,6 +4,10 @@ import SwiftData
 /// Typed error for ScoringService operations.
 public enum ScoringServiceError: Error, Sendable, Equatable {
     case previousEventNotFound(UUID)
+    case roundNotFound(UUID)
+    case playerNotInRound(playerID: String, roundID: UUID)
+    case holeOutOfRange(hole: Int, holeCount: Int)
+    case roundNotActive(status: String)
 }
 
 /// Creates immutable ScoreEvents in the domain SwiftData store.
@@ -24,7 +28,7 @@ public final class ScoringService {
     /// - Parameters:
     ///   - roundID: The UUID of the round being scored.
     ///   - holeNumber: 1-based hole number.
-    ///   - playerID: Player.id.uuidString or "guest:{name}" for guests.
+    ///   - playerID: Player.id.uuidString or opaque `"guest:<uuid>"` for guests.
     ///   - strokeCount: The score (1-10).
     ///   - reportedByPlayerID: The Player.id of whoever is entering this score.
     /// - Returns: The created `ScoreEvent`.
@@ -61,7 +65,7 @@ public final class ScoringService {
     ///   - previousEventID: The UUID of the event being corrected.
     ///   - roundID: The UUID of the round being scored.
     ///   - holeNumber: 1-based hole number.
-    ///   - playerID: Player.id.uuidString or "guest:{name}" for guests.
+    ///   - playerID: Player.id.uuidString or opaque `"guest:<uuid>"` for guests.
     ///   - strokeCount: The corrected score (1-10).
     ///   - reportedByPlayerID: The Player.id of whoever is entering this correction.
     /// - Returns: The created correction `ScoreEvent`.
@@ -99,5 +103,37 @@ public final class ScoringService {
         modelContext.insert(event)
         try modelContext.save()
         return event
+    }
+
+    /// Validates that a cross-device score payload (typically from the paired Watch)
+    /// refers to a known active round, a player who is actually in that round, and a
+    /// hole within the course's hole count. Use this before persisting any score that
+    /// originated outside the phone process.
+    ///
+    /// - Throws: `ScoringServiceError.roundNotFound` if the round does not exist locally.
+    ///           `ScoringServiceError.roundNotActive` if the round is finished.
+    ///           `ScoringServiceError.playerNotInRound` if the playerID is not a member.
+    ///           `ScoringServiceError.holeOutOfRange` if the hole is outside `[1, holeCount]`.
+    public func validateExternalScore(
+        roundID: UUID,
+        playerID: String,
+        holeNumber: Int
+    ) throws {
+        let id = roundID
+        var descriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == id })
+        descriptor.fetchLimit = 1
+        guard let round = try modelContext.fetch(descriptor).first else {
+            throw ScoringServiceError.roundNotFound(roundID)
+        }
+        guard !round.isFinished else {
+            throw ScoringServiceError.roundNotActive(status: round.status)
+        }
+        guard holeNumber >= 1, holeNumber <= round.holeCount else {
+            throw ScoringServiceError.holeOutOfRange(hole: holeNumber, holeCount: round.holeCount)
+        }
+        let isMember = round.playerIDs.contains(playerID) || round.guestIDs.contains(playerID)
+        guard isMember else {
+            throw ScoringServiceError.playerNotInRound(playerID: playerID, roundID: roundID)
+        }
     }
 }

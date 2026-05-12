@@ -40,7 +40,7 @@ final class ScorecardViewModel {
     /// Records a score for a player on a specific hole.
     ///
     /// - Parameters:
-    ///   - playerID: Player.id.uuidString or "guest:{name}" for guests.
+    ///   - playerID: Player.id.uuidString or opaque `"guest:<uuid>"` for guests.
     ///   - holeNumber: 1-based hole number.
     ///   - strokeCount: The score (1-10).
     func enterScore(playerID: String, holeNumber: Int, strokeCount: Int, isRoundFinished: Bool) throws {
@@ -61,7 +61,7 @@ final class ScorecardViewModel {
     ///
     /// - Parameters:
     ///   - previousEventID: The UUID of the event being corrected.
-    ///   - playerID: Player.id.uuidString or "guest:{name}" for guests.
+    ///   - playerID: Player.id.uuidString or opaque `"guest:<uuid>"` for guests.
     ///   - holeNumber: 1-based hole number.
     ///   - strokeCount: The corrected score (1-10).
     func correctScore(previousEventID: UUID, playerID: String, holeNumber: Int, strokeCount: Int, isRoundFinished: Bool) throws {

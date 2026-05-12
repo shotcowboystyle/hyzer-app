@@ -70,8 +70,8 @@ struct ScorecardContainerView: View {
             guard let player = allPlayers.first(where: { $0.id.uuidString == playerID }) else { return nil }
             return ScorecardPlayer(id: playerID, displayName: player.displayName, isGuest: false)
         }
-        let guests = round.guestNames.map { name in
-            ScorecardPlayer(id: "guest:\(name)", displayName: name, isGuest: true)
+        let guests = zip(round.guestIDs, round.guestNames).map { id, name in
+            ScorecardPlayer(id: id, displayName: name, isGuest: true)
         }
         return registered + guests
     }
