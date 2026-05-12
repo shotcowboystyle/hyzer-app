@@ -51,6 +51,7 @@
 		93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBF7E3B49360BEFE78202833 /* HyzerKit */; };
 		953A5AFD53D6DB75925EF04B /* DiscrepancyResolveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186E9E3D3F028244D0C5A241 /* DiscrepancyResolveTests.swift */; };
 		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		98858E89E1915B90C68829CB /* ShareSheetRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB2B4647E81F997607BBDE3 /* ShareSheetRepresentable.swift */; };
 		9A959DB668F32D68C80D7E24 /* DiscrepancyLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D7D740D79452CC43CCAA46F /* DiscrepancyLoadTests.swift */; };
 		9DEF4DF4CD1156899DCAD968 /* TestPolling.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4139B302C98F9C9D8B834E7 /* TestPolling.swift */; };
 		A42D386C8B0A344A48653392 /* LiveICloudIdentityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41F4A3FDA72AE73321E44E1B /* LiveICloudIdentityProvider.swift */; };
@@ -116,6 +117,7 @@
 		07389BA2B2E9434AE923CC28 /* WatchStaleIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStaleIndicatorView.swift; sourceTree = "<group>"; };
 		07943A8909080D9EEB547B64 /* HyzerKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = HyzerKit; path = HyzerKit; sourceTree = SOURCE_ROOT; };
 		0CB3171CF658AC6851293F50 /* VoiceRecognitionServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecognitionServiceProtocol.swift; sourceTree = "<group>"; };
+		0DB2B4647E81F997607BBDE3 /* ShareSheetRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetRepresentable.swift; sourceTree = "<group>"; };
 		0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSetupViewModel.swift; sourceTree = "<group>"; };
 		186E9E3D3F028244D0C5A241 /* DiscrepancyResolveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyResolveTests.swift; sourceTree = "<group>"; };
 		1AFA4C5EA37270895D500678 /* HyzerWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HyzerWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -288,6 +290,7 @@
 		8FC692C15A07F650EB7E475A /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				0DB2B4647E81F997607BBDE3 /* ShareSheetRepresentable.swift */,
 				3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */,
 			);
 			path = Components;
@@ -713,6 +716,7 @@
 				6D665492C05385E1FB50E3B0 /* ScoreInputView.swift in Sources */,
 				079960697F1DB732A0FE5870 /* ScorecardContainerView.swift in Sources */,
 				264848715C0438CE283A1429 /* ScorecardViewModel.swift in Sources */,
+				98858E89E1915B90C68829CB /* ShareSheetRepresentable.swift in Sources */,
 				64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */,
 				145858141B65FCC7F119CC25 /* VoiceOverlayView.swift in Sources */,
 				5D8E4A77A4DDD95955B5F8D7 /* VoiceOverlayViewModel.swift in Sources */,

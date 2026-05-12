@@ -33,7 +33,7 @@ public actor SyncScheduler {
     private let syncEngine: SyncEngine
     private let cloudKitClient: any CloudKitClient
     private let networkMonitor: any NetworkMonitor
-    private let userDefaults: UserDefaults
+    private let userDefaults: any UserDefaultsStorage
 
     /// Active polling task; non-nil while a round is in progress.
     private var pollingTask: Task<Void, Never>?
@@ -50,7 +50,7 @@ public actor SyncScheduler {
         syncEngine: SyncEngine,
         cloudKitClient: any CloudKitClient,
         networkMonitor: any NetworkMonitor,
-        userDefaults: UserDefaults = .standard
+        userDefaults: any UserDefaultsStorage = UserDefaults.standard
     ) {
         self.syncEngine = syncEngine
         self.cloudKitClient = cloudKitClient
@@ -166,7 +166,7 @@ public actor SyncScheduler {
                     to: recordType,
                     predicate: NSPredicate(value: true)
                 )
-                userDefaults.set(subID, forKey: defaultsKey)
+                userDefaults.setString(subID, forKey: defaultsKey)
                 logger.info("SyncScheduler: registered CKSubscription \(subID) for \(recordType)")
             } catch {
                 logger.error("SyncScheduler: failed to subscribe to \(recordType): \(error)")

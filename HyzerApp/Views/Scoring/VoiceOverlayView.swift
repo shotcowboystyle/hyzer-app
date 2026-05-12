@@ -4,8 +4,8 @@ import UIKit
 
 /// Translucent overlay shown after voice recognition completes.
 ///
-/// Displays parsed player-score pairs with a 1.5-second auto-commit progress indicator.
-/// Supports inline correction via an expanded score picker (same `ScoreInputView` pattern).
+/// Delegates to state-specific subviews:
+/// `VoiceListeningView`, `VoiceConfirmingView`, `VoicePartialView`, `VoiceFailedView`.
 /// Presented as a `.overlay()` on `ScorecardContainerView` — not a sheet or fullScreenCover.
 struct VoiceOverlayView: View {
     @Bindable var viewModel: VoiceOverlayViewModel
@@ -13,31 +13,38 @@ struct VoiceOverlayView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var progress: Double = 0
-    @State private var progressAnimation: Animation? = nil
-    @State private var correctionIndex: Int? = nil
-    @State private var unresolvedIndex: Int? = nil
-
     var body: some View {
         Group {
             switch viewModel.state {
             case .listening:
-                listeningView
+                VoiceListeningView()
             case .confirming(let candidates):
-                confirmingView(candidates: candidates)
+                VoiceConfirmingView(
+                    viewModel: viewModel,
+                    candidates: candidates,
+                    par: par,
+                    reduceMotion: reduceMotion
+                )
             case .partial(let recognized, let unresolved):
-                partialView(recognized: recognized, unresolved: unresolved)
+                VoicePartialView(
+                    viewModel: viewModel,
+                    recognized: recognized,
+                    unresolved: unresolved,
+                    par: par
+                )
             case .failed:
-                failedView
+                VoiceFailedView(viewModel: viewModel)
             default:
                 EmptyView()
             }
         }
     }
+}
 
-    // MARK: - Listening state
+// MARK: - VoiceListeningView
 
-    private var listeningView: some View {
+private struct VoiceListeningView: View {
+    var body: some View {
         VStack(spacing: SpacingTokens.md) {
             Image(systemName: "waveform.circle.fill")
                 .font(TypographyTokens.hero)
@@ -54,10 +61,21 @@ struct VoiceOverlayView: View {
         .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusCard))
         .padding(.horizontal, SpacingTokens.md)
     }
+}
 
-    // MARK: - Confirming state
+// MARK: - VoiceConfirmingView
 
-    private func confirmingView(candidates: [ScoreCandidate]) -> some View {
+private struct VoiceConfirmingView: View {
+    @Bindable var viewModel: VoiceOverlayViewModel
+    let candidates: [ScoreCandidate]
+    let par: Int
+    let reduceMotion: Bool
+
+    @State private var correctionIndex: Int? = nil
+    @State private var progress: Double = 0
+    @State private var progressAnimation: Animation? = nil
+
+    var body: some View {
         VStack(alignment: .leading, spacing: SpacingTokens.sm) {
             Text("Scores heard")
                 .font(TypographyTokens.caption)
@@ -78,7 +96,7 @@ struct VoiceOverlayView: View {
                     )
                     .padding(.horizontal, SpacingTokens.sm)
                 } else {
-                    playerScoreRow(candidate: candidate, index: index, par: par)
+                    playerScoreRow(candidate: candidate, index: index)
                 }
             }
 
@@ -118,18 +136,14 @@ struct VoiceOverlayView: View {
         .accessibilityAddTraits(.isModal)
     }
 
-    // MARK: - Player row
-
-    private func playerScoreRow(candidate: ScoreCandidate, index: Int, par: Int, interactive: Bool = true) -> some View {
+    private func playerScoreRow(candidate: ScoreCandidate, index: Int) -> some View {
         let rowContent = HStack(alignment: .center, spacing: SpacingTokens.xs) {
             Text(candidate.displayName)
                 .font(TypographyTokens.h2)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
-
             DottedLeader()
                 .accessibilityHidden(true)
-
             Text("\(candidate.strokeCount)")
                 .font(TypographyTokens.scoreLarge)
                 .foregroundStyle(Color.scoreColor(strokes: candidate.strokeCount, par: par))
@@ -138,20 +152,12 @@ struct VoiceOverlayView: View {
         .frame(minHeight: 56)
         .padding(.horizontal, SpacingTokens.md)
 
-        return Group {
-            if interactive {
-                Button(action: { correctionIndex = index }) { rowContent }
-                    .buttonStyle(.plain)
-                    .accessibilityHint("Double-tap to correct")
-            } else {
-                rowContent
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel(for: candidate, par: par))
+        return Button(action: { correctionIndex = index }) { rowContent }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel(for: candidate))
+            .accessibilityHint("Double-tap to correct")
     }
-
-    // MARK: - Progress bar
 
     private var progressBar: some View {
         GeometryReader { geo in
@@ -171,17 +177,62 @@ struct VoiceOverlayView: View {
         .onAppear { startProgress() }
     }
 
-    // MARK: - Partial state
+    private func startProgress() {
+        progressAnimation = nil
+        progress = 0
+        Task { @MainActor in
+            if reduceMotion {
+                progress = 1
+            } else {
+                progressAnimation = .linear(duration: AnimationTokens.autoCommitDuration)
+                progress = 1
+            }
+        }
+    }
 
-    private func partialView(recognized: [ScoreCandidate], unresolved: [UnresolvedCandidate]) -> some View {
+    private func announceScores(_ candidates: [ScoreCandidate]) {
+        let descriptions = candidates.map { "\($0.displayName), \($0.strokeCount)" }.joined(separator: ". ")
+        let announcement = "Voice scores confirmed. \(descriptions). Tap any score to correct."
+        Task { @MainActor in
+            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
+            try? await Task.sleep(for: .milliseconds(500))
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+    }
+
+    private func accessibilityLabel(for candidate: ScoreCandidate) -> String {
+        let delta = candidate.strokeCount - par
+        let parDescription: String
+        switch delta {
+        case ..<(-1): parDescription = "\(abs(delta)) under par"
+        case -1:      parDescription = "birdie"
+        case 0:       parDescription = "par"
+        case 1:       parDescription = "bogey"
+        default:      parDescription = "\(delta) over par"
+        }
+        return "\(candidate.displayName), \(candidate.strokeCount), \(parDescription)"
+    }
+}
+
+// MARK: - VoicePartialView
+
+private struct VoicePartialView: View {
+    @Bindable var viewModel: VoiceOverlayViewModel
+    let recognized: [ScoreCandidate]
+    let unresolved: [UnresolvedCandidate]
+    let par: Int
+
+    @State private var unresolvedIndex: Int? = nil
+
+    var body: some View {
         VStack(alignment: .leading, spacing: SpacingTokens.sm) {
             Text("Partial recognition")
                 .font(TypographyTokens.caption)
                 .foregroundStyle(Color.textSecondary)
                 .padding(.horizontal, SpacingTokens.md)
 
-            ForEach(Array(recognized.enumerated()), id: \.offset) { index, candidate in
-                playerScoreRow(candidate: candidate, index: index, par: par, interactive: false)
+            ForEach(Array(recognized.enumerated()), id: \.offset) { _, candidate in
+                staticPlayerScoreRow(candidate: candidate)
             }
 
             ForEach(Array(unresolved.enumerated()), id: \.offset) { index, entry in
@@ -229,6 +280,25 @@ struct VoiceOverlayView: View {
         .accessibilityAddTraits(.isModal)
     }
 
+    private func staticPlayerScoreRow(candidate: ScoreCandidate) -> some View {
+        HStack(alignment: .center, spacing: SpacingTokens.xs) {
+            Text(candidate.displayName)
+                .font(TypographyTokens.h2)
+                .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+            DottedLeader()
+                .accessibilityHidden(true)
+            Text("\(candidate.strokeCount)")
+                .font(TypographyTokens.scoreLarge)
+                .foregroundStyle(Color.scoreColor(strokes: candidate.strokeCount, par: par))
+                .monospacedDigit()
+        }
+        .frame(minHeight: 56)
+        .padding(.horizontal, SpacingTokens.md)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(candidate.displayName), \(candidate.strokeCount)")
+    }
+
     private func unresolvedRow(entry: UnresolvedCandidate, index: Int) -> some View {
         Button(action: { unresolvedIndex = index }) {
             HStack(alignment: .center, spacing: SpacingTokens.xs) {
@@ -236,10 +306,8 @@ struct VoiceOverlayView: View {
                     .font(TypographyTokens.h2)
                     .foregroundStyle(Color.textSecondary)
                     .lineLimit(1)
-
                 DottedLeader()
                     .accessibilityHidden(true)
-
                 Text("?")
                     .font(TypographyTokens.scoreLarge)
                     .foregroundStyle(Color.textSecondary)
@@ -255,9 +323,25 @@ struct VoiceOverlayView: View {
         .accessibilityHint("Double-tap to pick the correct player")
     }
 
-    // MARK: - Failed state
+    private func announcePartial(recognizedCount: Int, unresolvedCount: Int) {
+        let announcement = "Partial recognition. " +
+            "\(recognizedCount) scores confirmed, " +
+            "\(unresolvedCount) unresolved. " +
+            "Tap the highlighted names to select the correct player."
+        Task { @MainActor in
+            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
+            try? await Task.sleep(for: .milliseconds(500))
+            AccessibilityNotification.Announcement(announcement).post()
+        }
+    }
+}
 
-    private var failedView: some View {
+// MARK: - VoiceFailedView
+
+private struct VoiceFailedView: View {
+    @Bindable var viewModel: VoiceOverlayViewModel
+
+    var body: some View {
         VStack(spacing: SpacingTokens.md) {
             Text("Couldn't understand")
                 .font(TypographyTokens.h3)
@@ -302,43 +386,6 @@ struct VoiceOverlayView: View {
         .accessibilityAddTraits(.isModal)
     }
 
-    // MARK: - Helpers
-
-    private func startProgress() {
-        progressAnimation = nil
-        progress = 0
-        Task { @MainActor in
-            if reduceMotion {
-                progress = 1
-            } else {
-                progressAnimation = .linear(duration: AnimationTokens.autoCommitDuration)
-                progress = 1
-            }
-        }
-    }
-
-    private func announceScores(_ candidates: [ScoreCandidate]) {
-        let descriptions = candidates.map { "\($0.displayName), \($0.strokeCount)" }.joined(separator: ". ")
-        let announcement = "Voice scores confirmed. \(descriptions). Tap any score to correct."
-        Task { @MainActor in
-            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
-            try? await Task.sleep(for: .milliseconds(500))
-            AccessibilityNotification.Announcement(announcement).post()
-        }
-    }
-
-    private func announcePartial(recognizedCount: Int, unresolvedCount: Int) {
-        let announcement = "Partial recognition. " +
-            "\(recognizedCount) scores confirmed, " +
-            "\(unresolvedCount) unresolved. " +
-            "Tap the highlighted names to select the correct player."
-        Task { @MainActor in
-            // Delay lets the UI settle before VoiceOver speaks; CancellationError is harmless if Task is deallocated.
-            try? await Task.sleep(for: .milliseconds(500))
-            AccessibilityNotification.Announcement(announcement).post()
-        }
-    }
-
     private func announceFailure() {
         let announcement = "Couldn't understand. Double-tap Try Again to retry, or Cancel to return to scoring."
         Task { @MainActor in
@@ -346,19 +393,6 @@ struct VoiceOverlayView: View {
             try? await Task.sleep(for: .milliseconds(500))
             AccessibilityNotification.Announcement(announcement).post()
         }
-    }
-
-    private func accessibilityLabel(for candidate: ScoreCandidate, par: Int) -> String {
-        let delta = candidate.strokeCount - par
-        let parDescription: String
-        switch delta {
-        case ..<(-1): parDescription = "\(abs(delta)) under par"
-        case -1:      parDescription = "birdie"
-        case 0:       parDescription = "par"
-        case 1:       parDescription = "bogey"
-        default:      parDescription = "\(delta) over par"
-        }
-        return "\(candidate.displayName), \(candidate.strokeCount), \(parDescription)"
     }
 }
 

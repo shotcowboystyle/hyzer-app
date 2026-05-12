@@ -8,7 +8,7 @@ import SwiftData
 /// - `.correction` — `supersedesEventID` set, target event has same `deviceID`
 /// - `.silentMerge` — different device, same `strokeCount`, both `supersedesEventID == nil`
 /// - `.discrepancy` — different device with different `strokeCount`, or cross-device supersession
-public enum ConflictResult: Sendable {
+public enum ConflictResult: Sendable, Equatable {
     /// No other event exists for this {player, hole} — first score recorded.
     case noConflict
     /// Same-device correction: `newEvent.supersedesEventID` points to an event from the same device.
