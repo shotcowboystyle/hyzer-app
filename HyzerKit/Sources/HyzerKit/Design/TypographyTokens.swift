@@ -14,9 +14,9 @@ public enum TypographyTokens {
     public static let h2:      Font = .system(.title2,     design: .rounded, weight: .semibold)
     public static let h3:      Font = .system(.headline,   design: .rounded, weight: .semibold)
     public static let body:    Font = .system(.body,       design: .rounded, weight: .regular)
-    public static let caption: Font = .system(.caption,    design: .rounded, weight: .regular)
+    public static let caption: Font = .system(.footnote,   design: .rounded, weight: .regular)
 
     // SF Mono — for score display
     public static let score:      Font = .system(.title2,  design: .monospaced, weight: .bold)
-    public static let scoreLarge: Font = .system(.title,   design: .monospaced, weight: .bold)
+    public static let scoreLarge: Font = .system(.largeTitle, design: .monospaced, weight: .bold)
 }

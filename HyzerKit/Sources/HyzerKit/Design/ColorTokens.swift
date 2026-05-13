@@ -32,6 +32,7 @@ public extension Color {
 
     // Accent
     static let accentPrimary = Color(hex: "#30D5C8")
+    static let accentInk     = Color(hex: "#0A0A0C")  // Text/icon over teal fills
 
     // Score states
     static let scoreUnderPar = Color(hex: "#34C759")  // Birdie / under par
@@ -44,6 +45,12 @@ public extension Color {
 
     // Destructive actions only
     static let destructive = Color(hex: "#FF3B30")
+
+    // Hairlines / Overlays
+    static let hairline      = Color(.sRGB, red: 0.961, green: 0.961, blue: 0.969, opacity: 0.08)
+    static let border        = Color.hairline  // Divider token — same as hairline
+    static let rowBackground = Color(.sRGB, red: 0.039, green: 0.039, blue: 0.047, opacity: 0.50)
+    static let pillGlass     = Color(.sRGB, red: 0.110, green: 0.110, blue: 0.118, opacity: 0.50)
 
     /// 4-tier score colour based on strokes relative to par.
     ///
