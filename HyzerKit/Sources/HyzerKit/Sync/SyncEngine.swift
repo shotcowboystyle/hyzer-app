@@ -361,8 +361,13 @@ public actor SyncEngine: ModelActor {
     /// on macOS test hosts. Bounded in practice: one entry per sync attempt.
     private func fetchAllMetadata() -> [SyncMetadata] {
         do {
-            // swiftlint:disable:next unbounded_fetch_descriptor
-            return try modelContext.fetch(FetchDescriptor<SyncMetadata>())
+            var descriptor = FetchDescriptor<SyncMetadata>()
+            descriptor.fetchLimit = 1000
+            let entries = try modelContext.fetch(descriptor)
+            if entries.count == 1000 {
+                logger.error("SyncEngine.fetchAllMetadata hit fetchLimit — SyncMetadata table may be growing unboundedly")
+            }
+            return entries
         } catch {
             logger.error("SyncEngine.fetchAllMetadata failed: \(error)")
             return []

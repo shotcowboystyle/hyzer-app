@@ -12,7 +12,7 @@ final class CourseEditorViewModel {
     private(set) var existingCourse: Course?
     var courseName: String = ""
     var holeCount: Int = 18
-    var holePars: [Int] = Array(repeating: 3, count: 18)
+    var holePars: [Int] = Array(repeating: Hole.defaultPar, count: 18)
 
     var canSave: Bool {
         !courseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -38,7 +38,7 @@ final class CourseEditorViewModel {
         guard count == 9 || count == 18 else { return }
         let old = holePars
         holePars = (0..<count).map { i in
-            i < old.count ? old[i] : 3
+            i < old.count ? old[i] : Hole.defaultPar
         }
         holeCount = count
     }
