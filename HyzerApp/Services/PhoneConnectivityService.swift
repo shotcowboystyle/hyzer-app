@@ -29,7 +29,10 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     private let delegate: SessionDelegate
     private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "PhoneConnectivity")
 
-    /// The active round ID used when building standings snapshots. Set by `AppServices` when a round starts.
+    /// The active round ID used when building standings snapshots.
+    /// Set by `ScorecardContainerView` when scoring begins; cleared by `AppServices.roundDidEnd()`.
+    /// While `nil`, `sendStandings(engine:)` is a no-op — this gates the Watch leaderboard
+    /// off the empty "Waiting for round" state.
     var activeRoundID: UUID?
     /// Current 1-based hole number used when building standings snapshots. Set by scoring views.
     var activeHole: Int = 1
