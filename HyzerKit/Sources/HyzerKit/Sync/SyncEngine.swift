@@ -320,7 +320,7 @@ public actor SyncEngine: ModelActor {
             case .noConflict, .correction:
                 break
             case .silentMerge:
-                logger.debug("SyncEngine: silent merge for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
+                logger.debug("SyncEngine: silent merge for player \(newEvent.playerID, privacy: .private) hole \(newEvent.holeNumber)")
             case .discrepancy(let existingID, let incomingID):
                 let alreadyExists = existingDiscrepancies.contains {
                     $0.roundID == newEvent.roundID &&
@@ -330,7 +330,7 @@ public actor SyncEngine: ModelActor {
                 guard !alreadyExists else {
                     let pid = newEvent.playerID
                     let hole = newEvent.holeNumber
-                    logger.debug("SyncEngine: discrepancy exists for player \(pid) hole \(hole) — skip")
+                    logger.debug("SyncEngine: discrepancy exists for player \(pid, privacy: .private) hole \(hole) — skip")
                     break
                 }
                 let discrepancy = Discrepancy(
@@ -341,7 +341,7 @@ public actor SyncEngine: ModelActor {
                     eventID2: incomingID
                 )
                 modelContext.insert(discrepancy)
-                logger.info("SyncEngine: discrepancy for player \(newEvent.playerID) hole \(newEvent.holeNumber)")
+                logger.info("SyncEngine: discrepancy for player \(newEvent.playerID, privacy: .private) hole \(newEvent.holeNumber)")
             }
         }
 

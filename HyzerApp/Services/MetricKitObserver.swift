@@ -54,12 +54,38 @@ final class MetricKitObserver: NSObject, MXMetricManagerSubscriber {
         let logsDir = dir.appendingPathComponent("MetricKitLogs", isDirectory: true)
         do {
             try FileManager.default.createDirectory(at: logsDir, withIntermediateDirectories: true)
+            pruneOldPayloads(in: logsDir, prefix: prefix)
             let timestamp = Int(Date().timeIntervalSince1970)
             let fileURL = logsDir.appendingPathComponent("\(prefix)-\(timestamp).json")
             try data.write(to: fileURL)
             logger.info("MetricKit payload written to \(fileURL.lastPathComponent)")
         } catch {
             logger.error("MetricKit: failed to write payload: \(error)")
+        }
+    }
+
+    /// Removes files older than 7 days and keeps at most 20 per prefix, newest first.
+    private func pruneOldPayloads(in dir: URL, prefix: String) {
+        let cutoff = Date().addingTimeInterval(-7 * 24 * 3_600)
+        let fm = FileManager.default
+        guard let contents = try? fm.contentsOfDirectory(
+            at: dir,
+            includingPropertiesForKeys: [.creationDateKey],
+            options: .skipsHiddenFiles
+        ) else { return }
+
+        let matching = contents
+            .filter { $0.lastPathComponent.hasPrefix(prefix) }
+            .compactMap { url -> (URL, Date)? in
+                let date = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? .distantPast
+                return (url, date)
+            }
+            .sorted { $0.1 > $1.1 } // newest first
+
+        for (index, (url, creationDate)) in matching.enumerated() {
+            if creationDate < cutoff || index >= 20 {
+                try? fm.removeItem(at: url)
+            }
         }
     }
 }
