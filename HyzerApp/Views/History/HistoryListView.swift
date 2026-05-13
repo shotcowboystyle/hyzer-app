@@ -55,7 +55,7 @@ struct HistoryListView: View {
     private func roundList(vm: HistoryListViewModel) -> some View {
         ScrollView {
             LazyVStack(spacing: SpacingTokens.md) {
-                ForEach(completedRounds) { round in
+                ForEach(completedRounds, id: \.id) { round in
                     NavigationLink {
                         HistoryRoundDetailView(round: round, currentPlayerID: currentPlayerID)
                     } label: {

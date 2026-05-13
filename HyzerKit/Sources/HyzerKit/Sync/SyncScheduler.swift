@@ -75,16 +75,17 @@ public actor SyncScheduler {
     public func startActiveRoundPolling() {
         guard pollingTask == nil else { return }
         logger.info("SyncScheduler: starting active round polling (45s interval)")
-        pollingTask = Task { [weak self] in
+        let engine = syncEngine
+        pollingTask = Task {
             while !Task.isCancelled {
                 do {
                     try await Task.sleep(for: .seconds(45))
                 } catch {
                     break  // Task was cancelled during sleep
                 }
-                guard let self, !Task.isCancelled else { break }
-                await self.syncEngine.pushPending()
-                await self.syncEngine.pullRecords()
+                guard !Task.isCancelled else { break }
+                await engine.pushPending()
+                await engine.pullRecords()
             }
         }
     }

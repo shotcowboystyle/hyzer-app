@@ -138,7 +138,8 @@ struct WatchVoiceOverlayView: View {
                 .font(TypographyTokens.body)
                 .foregroundStyle(Color.scoreOverPar)
             if !transcript.isEmpty {
-                Text(transcript)
+                // Cap to 500 chars — defense against a malformed payload from a stale phone build
+                Text(String(transcript.prefix(500)))
                     .font(TypographyTokens.caption)
                     .foregroundStyle(Color.textSecondary)
                     .lineLimit(2)

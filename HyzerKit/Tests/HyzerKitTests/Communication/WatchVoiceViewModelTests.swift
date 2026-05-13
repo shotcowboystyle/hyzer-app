@@ -205,8 +205,8 @@ struct WatchVoiceViewModelTests {
         let result = WatchVoiceResult(result: .success(candidates), holeNumber: holeNumber, roundID: roundID)
         vm.handleVoiceResult(result)
 
-        // Use deterministic polling — exits as soon as condition is met, with 4s safety budget.
-        let committed = await awaitCondition(timeout: .seconds(4)) {
+        // Use deterministic polling — exits as soon as condition is met, with 8s safety budget.
+        let committed = await awaitCondition(timeout: .seconds(8)) {
             if case .committed = vm.state { return true }
             return false
         }

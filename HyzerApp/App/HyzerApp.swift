@@ -29,9 +29,12 @@ struct HyzerApp: App {
             ContentView()
                 .environment(appServices)
                 .modelContainer(appServices.modelContainer)
-                .task { await appServices.resolveICloudIdentity() }
-                .task { await appServices.seedCoursesIfNeeded() }
-                .task { await appServices.startSync() }
+                .task {
+                    // Sequential: identity must resolve before seeds, seeds before sync
+                    await appServices.resolveICloudIdentity()
+                    await appServices.seedCoursesIfNeeded()
+                    await appServices.startSync()
+                }
                 .onChange(of: scenePhase) { _, newPhase in
                     switch newPhase {
                     case .active:

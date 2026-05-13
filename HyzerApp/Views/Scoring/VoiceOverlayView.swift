@@ -75,6 +75,10 @@ private struct VoiceConfirmingView: View {
     @State private var progress: Double = 0
     @State private var progressAnimation: Animation? = nil
 
+    private enum Layout {
+        static let progressBarHeight: CGFloat = 4
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingTokens.sm) {
             Text("Scores heard")
@@ -164,14 +168,14 @@ private struct VoiceConfirmingView: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(Color.backgroundTertiary)
-                    .frame(height: 4)
+                    .frame(height: Layout.progressBarHeight)
                 Capsule()
                     .fill(Color.accentPrimary)
-                    .frame(width: geo.size.width * progress, height: 4)
+                    .frame(width: geo.size.width * progress, height: Layout.progressBarHeight)
                     .animation(progressAnimation, value: progress)
             }
         }
-        .frame(height: 4)
+        .frame(height: Layout.progressBarHeight)
         .padding(.horizontal, SpacingTokens.md)
         .accessibilityHidden(true)
         .onAppear { startProgress() }

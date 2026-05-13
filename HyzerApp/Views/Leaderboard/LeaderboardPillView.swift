@@ -20,6 +20,10 @@ struct LeaderboardPillView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private enum Layout {
+        static let pillHeight: CGFloat = 32
+    }
+
     var body: some View {
         ZStack(alignment: .topTrailing) {
             ScrollViewReader { proxy in
@@ -32,7 +36,7 @@ struct LeaderboardPillView: View {
                     }
                     .padding(.horizontal, SpacingTokens.sm)
                 }
-                .frame(height: 32)
+                .frame(height: Layout.pillHeight)
                 .background(.ultraThinMaterial)
                 .background(Color.backgroundElevated.opacity(0.5))
                 .clipShape(Capsule())
