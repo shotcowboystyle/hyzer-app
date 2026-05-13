@@ -27,3 +27,5 @@ build/
 
 # SwiftLint
 .swiftlint.cache
+
+hyzer-design-system
