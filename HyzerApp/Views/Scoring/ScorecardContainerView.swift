@@ -107,7 +107,13 @@ struct ScorecardContainerView: View {
                 discrepancySheetContent
             }
             .onAppear { initializeViewModels() }
-            .onChange(of: currentHole) { autoAdvanceTask?.cancel() }
+            .onChange(of: currentHole) { _, newHole in
+                autoAdvanceTask?.cancel()
+                appServices.phoneConnectivityService.activeHole = newHole
+                appServices.phoneConnectivityService.activeHolePar = par(forHole: newHole)
+                // Push the new hole context to the Watch even when no score was entered.
+                appServices.phoneConnectivityService.sendStandings(engine: appServices.standingsEngine)
+            }
             .task {
                 guard !round.isFinished else { return }
                 await appServices.roundDidStart()
@@ -214,6 +220,12 @@ struct ScorecardContainerView: View {
 
     private func initializeViewModels() {
         guard viewModel == nil else { return }
+        // Watch-sync context: must be set BEFORE the initial `recompute` below so the
+        // standings-observation loop in `PhoneConnectivityService` builds a snapshot with
+        // a non-nil roundID and pushes it to the Watch.
+        appServices.phoneConnectivityService.activeRoundID = round.id
+        appServices.phoneConnectivityService.activeHole = currentHole
+        appServices.phoneConnectivityService.activeHolePar = par(forHole: currentHole)
         guard let organizer = roundPlayers.first(where: { $0.id.uuidString == round.playerIDs.first }) else {
             viewModel = ScorecardViewModel(
                 scoringService: appServices.scoringService,

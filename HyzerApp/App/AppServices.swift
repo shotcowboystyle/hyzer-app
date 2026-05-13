@@ -105,8 +105,10 @@ final class AppServices {
         await syncScheduler.startActiveRoundPolling()
     }
 
-    /// Notifies the scheduler that a round ended — stops periodic polling.
+    /// Notifies the scheduler that a round ended — stops periodic polling and clears
+    /// the Watch-sync round context so stale standings aren't pushed for a finished round.
     func roundDidEnd() async {
+        phoneConnectivityService.activeRoundID = nil
         await syncScheduler.stopActiveRoundPolling()
     }
 
