@@ -4,9 +4,8 @@ import HyzerKit
 
 /// A horizontal card stack showing one hole card per hole in the round.
 ///
-/// Receives a `Round` object; queries ScoreEvents, Holes, and Players via `@Query`.
-/// Client-side filtering keeps relevant data per hole — the dataset is small
-/// (max ~108 ScoreEvents, 18 Holes, ~6 Players per round).
+/// Receives a `Round` object and uses round/course-scoped `@Query` predicates so only
+/// relevant records are fetched — not the entire database.
 ///
 /// `@Query` lives in the View per the architecture rule — the ViewModel only handles actions.
 struct ScorecardContainerView: View {
@@ -17,11 +16,11 @@ struct ScorecardContainerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
-    @Query private var allScoreEvents: [ScoreEvent]
-    @Query(sort: \Hole.number) private var allHoles: [Hole]
-    @Query(sort: \Player.displayName) private var allPlayers: [Player]
-    @Query(sort: \Course.name) private var allCourses: [Course]
-    @Query private var allDiscrepancies: [Discrepancy]
+    @Query private var roundScoreEvents: [ScoreEvent]
+    @Query private var courseHoles: [Hole]
+    @Query private var roundPlayers: [Player]
+    @Query private var roundCourse: [Course]
+    @Query private var roundDiscrepancies: [Discrepancy]
 
     @State private var currentHole: Int = 1
     @State private var viewModel: ScorecardViewModel?
@@ -44,30 +43,41 @@ struct ScorecardContainerView: View {
     @State private var isShowingSummary = false
     @State private var summaryViewModel: RoundSummaryViewModel?
 
-    // MARK: - Client-side filters
+    init(round: Round) {
+        self.round = round
+        let roundID = round.id
+        let courseID = round.courseID
+        let participantUUIDs = round.playerIDs.compactMap { UUID(uuidString: $0) }
 
-    private var roundScoreEvents: [ScoreEvent] {
-        allScoreEvents.filter { $0.roundID == round.id }
+        _roundScoreEvents = Query(filter: #Predicate { $0.roundID == roundID })
+        _courseHoles = Query(
+            filter: #Predicate { $0.courseID == courseID },
+            sort: \Hole.number
+        )
+        _roundPlayers = Query(
+            filter: #Predicate { participantUUIDs.contains($0.id) },
+            sort: \Player.displayName
+        )
+        _roundCourse = Query(filter: #Predicate { $0.id == courseID })
+        _roundDiscrepancies = Query(filter: #Predicate { $0.roundID == roundID })
     }
+
+    // MARK: - Client-side filters
 
     /// Unresolved discrepancies for the current round (organizer-only — AC1).
     private var unresolvedDiscrepancies: [Discrepancy] {
-        allDiscrepancies.filter { $0.roundID == round.id && $0.status == .unresolved }
+        roundDiscrepancies.filter { $0.status == .unresolved }
     }
 
     /// Quick lookup of player displayName by playerID string (for discrepancy UI).
     private var playerNamesByID: [String: String] {
-        Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.id.uuidString, $0.displayName) })
-    }
-
-    private var courseHoles: [Hole] {
-        allHoles.filter { $0.courseID == round.courseID }
+        Dictionary(uniqueKeysWithValues: roundPlayers.map { ($0.id.uuidString, $0.displayName) })
     }
 
     /// Unified player row list: registered players + guests, ordered as they were added.
     private var scorecardPlayers: [ScorecardPlayer] {
         let registered = round.playerIDs.compactMap { playerID -> ScorecardPlayer? in
-            guard let player = allPlayers.first(where: { $0.id.uuidString == playerID }) else { return nil }
+            guard let player = roundPlayers.first(where: { $0.id.uuidString == playerID }) else { return nil }
             return ScorecardPlayer(id: playerID, displayName: player.displayName, isGuest: false)
         }
         let guests = zip(round.guestIDs, round.guestNames).map { id, name in
@@ -79,7 +89,7 @@ struct ScorecardContainerView: View {
     /// Registered (non-guest) players in the round, converted to the voice parser boundary type.
     /// Guest players cannot be voice-scored — they have no aliases in the name-matching system.
     private var voicePlayerEntries: [VoicePlayerEntry] {
-        allPlayers
+        roundPlayers
             .filter { round.playerIDs.contains($0.id.uuidString) }
             .map { VoicePlayerEntry(playerID: $0.id.uuidString, displayName: $0.displayName, aliases: $0.aliases) }
     }
@@ -204,7 +214,7 @@ struct ScorecardContainerView: View {
 
     private func initializeViewModels() {
         guard viewModel == nil else { return }
-        guard let organizer = allPlayers.first(where: { $0.id.uuidString == round.playerIDs.first }) else {
+        guard let organizer = roundPlayers.first(where: { $0.id.uuidString == round.playerIDs.first }) else {
             viewModel = ScorecardViewModel(
                 scoringService: appServices.scoringService,
                 lifecycleManager: appServices.roundLifecycleManager,
@@ -432,7 +442,7 @@ struct ScorecardContainerView: View {
 
         autoAdvanceTask?.cancel()
         autoAdvanceTask = Task { @MainActor in
-            // Safe to ignore: CancellationError is expected when user swipes manually; handled by isCancelled check below
+            // Safe to ignore: CancellationError is expected when user swipes manually
             try? await Task.sleep(for: .milliseconds(750))
             guard !Task.isCancelled else { return }
             withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
@@ -453,7 +463,7 @@ struct ScorecardContainerView: View {
     }
 
     private var courseName: String {
-        allCourses.first { $0.id == round.courseID }?.name ?? "Unknown Course"
+        roundCourse.first?.name ?? "Unknown Course"
     }
 
     private var showingScoreErrorBinding: Binding<Bool> {

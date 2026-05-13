@@ -80,9 +80,12 @@ public final class StandingsEngine {
         let holes = try modelContext.fetch(holeDescriptor)
         let parByHole = Dictionary(uniqueKeysWithValues: holes.map { ($0.number, $0.par) })
 
-        // Fetch registered players for name resolution, bounded to round participants
-        var playerDescriptor = FetchDescriptor<Player>()
-        playerDescriptor.fetchLimit = 100
+        // Fetch only the registered players who are actually in this round
+        let participantUUIDs = round.playerIDs.compactMap { UUID(uuidString: $0) }
+        var playerDescriptor = FetchDescriptor<Player>(
+            predicate: #Predicate { participantUUIDs.contains($0.id) }
+        )
+        playerDescriptor.fetchLimit = participantUUIDs.count
         let allPlayers = try modelContext.fetch(playerDescriptor)
         let playersByIDString = Dictionary(uniqueKeysWithValues: allPlayers.map { ($0.id.uuidString, $0) })
 
