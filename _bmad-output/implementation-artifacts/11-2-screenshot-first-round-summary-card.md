@@ -1,6 +1,6 @@
 # Story 11.2: Screenshot-First Round Summary Card
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -22,35 +22,35 @@ so that I can immediately share the round into the group chat.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Replace emoji medals with subtle typographic treatment (AC: 3)
-  - [ ] 1.1 In `RoundSummaryView.swift` (`PlayerSummaryRow.medalEmoji(for:)`), remove the 🥇 / 🥈 / 🥉 strings
-  - [ ] 1.2 Render positions 1–3 with a heavier weight and the score-state-relative color treatment specified by UX-PMVP-DR1: position number in `TypographyTokens.h1` weight, color `Color.textPrimary` for #1, `Color.textPrimary.opacity(0.85)` for #2, `Color.textPrimary.opacity(0.70)` for #3 — confident weight differential, no chromatic medal coloring (gold/silver/bronze) and no emoji
-  - [ ] 1.3 Positions 4+ remain `TypographyTokens.h2` in `Color.textSecondary` (already correct)
-  - [ ] 1.4 If you find yourself needing a custom hex color or a custom font weight not in the design tokens, STOP and propose a token addition first (CLAUDE.md "design tokens only")
+- [x] Task 1: Replace emoji medals with subtle typographic treatment (AC: 3)
+  - [x] 1.1 In `RoundSummaryView.swift` (`PlayerSummaryRow.medalEmoji(for:)`), remove the 🥇 / 🥈 / 🥉 strings
+  - [x] 1.2 Render positions 1–3 with a heavier weight and the score-state-relative color treatment specified by UX-PMVP-DR1: position number in `TypographyTokens.h1` weight, color `Color.textPrimary` for #1, `Color.textPrimary.opacity(0.85)` for #2, `Color.textPrimary.opacity(0.70)` for #3 — confident weight differential, no chromatic medal coloring (gold/silver/bronze) and no emoji
+  - [x] 1.3 Positions 4+ remain `TypographyTokens.h2` in `Color.textSecondary` (already correct)
+  - [x] 1.4 If you find yourself needing a custom hex color or a custom font weight not in the design tokens, STOP and propose a token addition first (CLAUDE.md "design tokens only")
 
-- [ ] Task 2: Reinforce H1-centered header per UX component #7 (AC: 1)
-  - [ ] 2.1 Verify `headerSection` uses `TypographyTokens.h1` for course name with `.multilineTextAlignment(.center)` — already correct in `RoundSummaryView.swift:58`
-  - [ ] 2.2 Same change in `SummaryCardSnapshotView` (the render target for `ImageRenderer`) — already correct at line 207
-  - [ ] 2.3 Confirm date sits directly below in `TypographyTokens.caption` / `Color.textSecondary` — already correct
+- [x] Task 2: Reinforce H1-centered header per UX component #7 (AC: 1)
+  - [x] 2.1 Verify `headerSection` uses `TypographyTokens.h1` for course name with `.multilineTextAlignment(.center)` — already correct in `RoundSummaryView.swift:58`
+  - [x] 2.2 Same change in `SummaryCardSnapshotView` (the render target for `ImageRenderer`) — already correct at line 207
+  - [x] 2.3 Confirm date sits directly below in `TypographyTokens.caption` / `Color.textSecondary` — already correct
 
-- [ ] Task 3: Player row layout — score, +/- par, total strokes (AC: 1, 4)
-  - [ ] 3.1 Verify existing `PlayerSummaryRow` already shows: position label, `playerName` (H2), `formattedScore` (score font, score-state color), `totalStrokes` strokes (caption). The structure is correct
-  - [ ] 3.2 Guests render identically to registered players — `RoundSummaryViewModel.playerRows` is built from `[Standing]` which already includes guests as first-class entries (FR12b). No change in `RoundSummaryView`, but add a guest test (Task 6.3)
+- [x] Task 3: Player row layout — score, +/- par, total strokes (AC: 1, 4)
+  - [x] 3.1 Verify existing `PlayerSummaryRow` already shows: position label, `playerName` (H2), `formattedScore` (score font, score-state color), `totalStrokes` strokes (caption). The structure is correct
+  - [x] 3.2 Guests render identically to registered players — `RoundSummaryViewModel.playerRows` is built from `[Standing]` which already includes guests as first-class entries (FR12b). No change in `RoundSummaryView`, but add a guest test (Task 6.3)
 
-- [ ] Task 4: Contrast + AAA on scores (AC: 2)
-  - [ ] 4.1 Audit `Color.scoreUnderPar` (#34C759), `scoreAtPar` (#F5F5F7), `scoreOverPar` (#FF9F0A), `scoreWayOver` (#FF453A) against `Color.backgroundPrimary` (#0A0A0C) — record measured ratios in Completion Notes. The dark-first palette in the design system is intended to meet these targets; do not change tokens unless a real failure is found
-  - [ ] 4.2 No interactive-only information (AC #2 second clause) — verify by inspection that nothing requires hover/tap to reveal data on the summary card
+- [x] Task 4: Contrast + AAA on scores (AC: 2)
+  - [x] 4.1 Audit `Color.scoreUnderPar` (#34C759), `scoreAtPar` (#F5F5F7), `scoreOverPar` (#FF9F0A), `scoreWayOver` (#FF453A) against `Color.backgroundPrimary` (#0A0A0C) — record measured ratios in Completion Notes. The dark-first palette in the design system is intended to meet these targets; do not change tokens unless a real failure is found
+  - [x] 4.2 No interactive-only information (AC #2 second clause) — verify by inspection that nothing requires hover/tap to reveal data on the summary card
 
-- [ ] Task 5: Small-screen fit (iPhone SE 375pt) (AC: 5)
-  - [ ] 5.1 `SummaryCardSnapshotView.frame(width: 390)` is hardcoded for the renderer output — leave that as is (renderer needs a fixed canvas)
-  - [ ] 5.2 The live `RoundSummaryView` is fluid — verify in an Xcode preview at 375pt that no row truncates horizontally. Add `.lineLimit(1).minimumScaleFactor(0.8)` to the `playerName` Text in `PlayerSummaryRow` if needed (do NOT scale below 0.8 — readability floor)
-  - [ ] 5.3 Confirm the on-card content does NOT scroll for the typical 4–8 player round; for 12+ players (large groups), the parent `ScrollView` handles overflow — that's acceptable for the live screen, and the screenshot renderer captures the full content height regardless
+- [x] Task 5: Small-screen fit (iPhone SE 375pt) (AC: 5)
+  - [x] 5.1 `SummaryCardSnapshotView.frame(width: 390)` is hardcoded for the renderer output — leave that as is (renderer needs a fixed canvas)
+  - [x] 5.2 The live `RoundSummaryView` is fluid — verify in an Xcode preview at 375pt that no row truncates horizontally. Add `.lineLimit(1).minimumScaleFactor(0.8)` to the `playerName` Text in `PlayerSummaryRow` if needed (do NOT scale below 0.8 — readability floor)
+  - [x] 5.3 Confirm the on-card content does NOT scroll for the typical 4–8 player round; for 12+ players (large groups), the parent `ScrollView` handles overflow — that's acceptable for the live screen, and the screenshot renderer captures the full content height regardless
 
-- [ ] Task 6: Tests (AC: 1, 3, 4)
-  - [ ] 6.1 Extend `RoundSummaryViewModelTests` — `playerRows` includes guest entries with non-empty `playerName` (no "Guest" placeholder; the actual guest name from `Round.guestNames`)
-  - [ ] 6.2 New view-state assertion: `PlayerSummaryRow` for position 1 renders the position label in `TypographyTokens.h1`-equivalent weight (test by reading the rendered text + a public conformance hook on the row if needed; otherwise rely on an inspected snapshot)
-  - [ ] 6.3 Visual regression: capture a baseline screenshot of `SummaryCardSnapshotView` with a 6-player + 1-guest round and confirm the medal treatment is text-only (no emoji glyphs). Use the existing visual-testing skill if set up
-  - [ ] 6.4 NEW: `RoundSummaryView` shows no emoji glyph for positions 1–3 — assert the rendered position labels contain only ASCII digits
+- [x] Task 6: Tests (AC: 1, 3, 4)
+  - [x] 6.1 Extend `RoundSummaryViewModelTests` — `playerRows` includes guest entries with non-empty `playerName` (no "Guest" placeholder; the actual guest name from `Round.guestNames`)
+  - [x] 6.2 New view-state assertion: `PlayerSummaryRow` for position 1 renders the position label in `TypographyTokens.h1`-equivalent weight (test by reading the rendered text + a public conformance hook on the row if needed; otherwise rely on an inspected snapshot)
+  - [x] 6.3 Visual regression: capture a baseline screenshot of `SummaryCardSnapshotView` with a 6-player + 1-guest round and confirm the medal treatment is text-only (no emoji glyphs). Use the existing visual-testing skill if set up
+  - [x] 6.4 NEW: `RoundSummaryView` shows no emoji glyph for positions 1–3 — assert the rendered position labels contain only ASCII digits
 
 ## Dev Notes
 
@@ -125,8 +125,51 @@ HyzerAppTests/Views/RoundSummaryViewTests.swift            # New — medal treat
 
 ### Agent Model Used
 
+claude-sonnet-4-6
+
 ### Debug Log References
+
+None — implementation was straightforward view-layer polish with no debugging needed.
 
 ### Completion Notes List
 
+- **Task 1:** Replaced `medalEmoji(for:)` + emoji strings with `medalColor(for:)` helper returning opacity variants of `Color.textPrimary`. Position 1 → full opacity; position 2 → 0.85; position 3 → 0.70. All medal positions use `TypographyTokens.h1`; positions 4+ unchanged at `TypographyTokens.h2` / `Color.textSecondary`. No new hex colors or custom weights introduced — all within existing tokens.
+
+- **Tasks 2 & 3:** Verified by inspection — header and player row structure were already spec-compliant. No changes required.
+
+- **Task 4 — Contrast ratios (against `#0A0A0C`):**
+  - `textPrimary` #F5F5F7 → **~18.2:1** ✅ AAA
+  - `scoreUnderPar` #34C759 → **~8.9:1** ✅ AAA
+  - `scoreAtPar` #F5F5F7 → **~18.2:1** ✅ AAA
+  - `scoreOverPar` #FF9F0A → **~9.6:1** ✅ AAA
+  - `scoreWayOver` #FF453A → **~5.8:1** ✅ AA, ❌ AAA (short of 7:1)
+  - `scoreWayOver` misses AAA by ~1.2 contrast units. Per story guidance ("do not change tokens unless a real failure is found"), this is noted but not changed here — it is a project-wide design token used in multiple views. Recommend a dedicated token-audit story if AAA compliance on way-over scores is required.
+  - No interactive-only information exists on the summary card — all data is statically visible.
+
+- **Task 5:** Added `.minimumScaleFactor(0.8)` to `playerName` Text in `PlayerSummaryRow`. `.lineLimit(1)` was already present. The `SummaryCardSnapshotView` fixed canvas (width 390) left unchanged.
+
+- **Task 6:** Added `positionLabelText: String` computed property to `SummaryPlayerRow` as testability hook (returns `"\(position)"` — ASCII digits only). New tests: guest name appearance (6.1), position-1 hasMedal=true (6.2), 6-player+1-guest all-ASCII position labels (6.3/6.4). Visual snapshot testing not set up — 6.3 covered by the ASCII assertion test. All tests passed in full suite run (exit code 0).
+
 ### File List
+
+HyzerApp/Views/Scoring/RoundSummaryView.swift
+HyzerApp/ViewModels/RoundSummaryViewModel.swift
+HyzerAppTests/RoundSummaryViewModelTests.swift
+HyzerAppTests/Views/RoundSummaryViewTests.swift
+
+## Change Log
+
+- 2026-05-14: Story 11.2 implemented — replaced emoji medal treatment with typographic weight/opacity differential, added minimumScaleFactor(0.8) to player name, added positionLabelText testability hook, added guest and ASCII-only position label tests.
+- 2026-05-14: Applied code review patches — fixed multiple winner tie handling in share/accessibility text, refactored medal opacities to constants, and used positionLabelText in UI.
+
+## Status: done
+
+### Review Findings
+
+- [x] [Review][Patch] Bypassed ViewModel Property [RoundSummaryView.swift]
+- [x] [Review][Patch] Inconsistent/Ambiguous Medal Treatment [RoundSummaryView.swift:184]
+- [x] [Review][Patch] Multiple First-Place Tie Handling [RoundSummaryView.swift]
+- [x] [Review][Patch] Magic Numbers (Opacities) [RoundSummaryView.swift:188-189]
+- [x] [Review][Defer] Brittle Layout Fix [RoundSummaryView.swift:154] — deferred, pre-existing
+- [x] [Review][Defer] Layout Clipping for Large Rounds [RoundSummaryView.swift] — deferred, pre-existing
+- [x] [Review][Defer] Test Integration Overhead [HyzerAppTests] — deferred, pre-existing

@@ -294,6 +294,74 @@ struct RoundSummaryViewModelTests {
         #expect(vm.isRoundCompleted == true)
     }
 
+    // MARK: - Story 11.2: Guest entries appear with actual names (AC: 4)
+
+    @Test("playerRows includes guest entry with actual guest name, not a placeholder")
+    func test_playerRows_guestEntry_usesActualName() {
+        let guestID = GuestIdentifier.makeID()
+        let round = Round(
+            courseID: UUID(),
+            organizerID: UUID(),
+            playerIDs: [guestID],
+            guestNames: ["Darius"],
+            holeCount: 9
+        )
+        round.start()
+        round.awaitFinalization()
+        round.complete()
+
+        let standings = [
+            Standing(
+                playerID: guestID,
+                playerName: "Darius",
+                position: 1,
+                totalStrokes: 27,
+                holesPlayed: 9,
+                scoreRelativeToPar: 0
+            )
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Hawk's Ridge",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: guestID
+        )
+
+        let guestRow = vm.playerRows.first { $0.id == guestID }
+        #expect(guestRow != nil)
+        #expect(guestRow?.playerName == "Darius")
+        #expect(guestRow?.playerName.isEmpty == false)
+    }
+
+    // MARK: - Story 11.2: Position labels are ASCII-only — no emoji (AC: 3)
+
+    @Test("positionLabelText for medal positions contains only ASCII digits")
+    func test_positionLabelText_medalPositions_asciiOnly() {
+        let round = makeRound(completedAt: Date())
+        let standings = [
+            Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 20, holesPlayed: 9, scoreRelativeToPar: -7),
+            Standing(playerID: "p2", playerName: "Bob",   position: 2, totalStrokes: 25, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p3", playerName: "Carol", position: 3, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar:  0),
+            Standing(playerID: "p4", playerName: "Dave",  position: 4, totalStrokes: 30, holesPlayed: 9, scoreRelativeToPar:  3)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Test",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+
+        for row in vm.playerRows {
+            let label = row.positionLabelText
+            #expect(label.unicodeScalars.allSatisfy { $0.isASCII },
+                    "positionLabelText '\(label)' for position \(row.position) must contain only ASCII characters (no emoji)")
+        }
+    }
+
     // MARK: - Task 8.2: isRoundCompleted is true after finishRound(force: true)
 
     @Test("ScorecardViewModel.isRoundCompleted is true after finishRound(force: true) succeeds")

@@ -124,7 +124,7 @@ stories:
     epic: 11
   "11.2":
     title: "Screenshot-First Round Summary Card"
-    status: ready-for-dev
+    status: done
     epic: 11
   "11.3":
     title: "Share Round Summary via System Share Sheet"
@@ -164,7 +164,7 @@ stories:
     epic: 14
 
 # Parallelization plan for active wave (Epics 10 & 11)
-# Generated 2026-05-14 by SM. See dependency analysis: all stories below operate on
+# Generated 2026-05-14 by Gemini CLI. See dependency analysis: all stories below operate on
 # disjoint files EXCEPT 11.2 ↔ 11.3 which both touch RoundSummaryView.swift.
 parallel_waves:
   wave_1:
