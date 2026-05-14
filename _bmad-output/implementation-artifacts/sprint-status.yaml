@@ -128,18 +128,18 @@ stories:
     epic: 11
   "11.3":
     title: "Share Round Summary via System Share Sheet"
-    status: ready-for-dev
+    status: done
     epic: 11
   "12.1":
-    title: "Notification Foundation & \"Round Started\" Push"
+    title: 'Notification Foundation & "Round Started" Push'
     status: backlog
     epic: 12
   "12.2":
-    title: "\"Round Complete\" Push Notification"
+    title: '"Round Complete" Push Notification'
     status: backlog
     epic: 12
   "12.3":
-    title: "Organizer-Only \"Discrepancy Detected\" Push Notification"
+    title: 'Organizer-Only "Discrepancy Detected" Push Notification'
     status: backlog
     epic: 12
   "13.1":

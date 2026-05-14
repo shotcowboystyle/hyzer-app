@@ -83,6 +83,35 @@ final class RoundSummaryViewModel {
 
     // MARK: - Share
 
+    /// Text caption attached to the share sheet alongside the PNG render.
+    ///
+    /// Format: "Round at [course] — [winner(s)] won at [score]"
+    /// Falls back to course-only if standings data is inconsistent.
+    var shareText: String {
+        let sanitizedCourse = courseName.replacingOccurrences(of: "\n", with: " ")
+        let winners = playerRows.filter { $0.position == 1 }
+        
+        guard !winners.isEmpty, let score = winners.first?.formattedScore else {
+            return "Round at \(sanitizedCourse)"
+        }
+        
+        let sanitizedWinnerNames = winners.map { $0.playerName.replacingOccurrences(of: "\n", with: " ") }
+        
+        let winnerClause: String
+        if sanitizedWinnerNames.count == 1 {
+            winnerClause = sanitizedWinnerNames[0]
+        } else if sanitizedWinnerNames.count == 2 {
+            winnerClause = "\(sanitizedWinnerNames[0]) and \(sanitizedWinnerNames[1])"
+        } else if sanitizedWinnerNames.count == 3 {
+            winnerClause = "\(sanitizedWinnerNames[0]), \(sanitizedWinnerNames[1]), and \(sanitizedWinnerNames[2])"
+        } else {
+            let othersCount = sanitizedWinnerNames.count - 3
+            winnerClause = "\(sanitizedWinnerNames[0]), \(sanitizedWinnerNames[1]), \(sanitizedWinnerNames[2]), and \(othersCount) others"
+        }
+        
+        return "Round at \(sanitizedCourse) \u{2014} \(winnerClause) won at \(score)"
+    }
+
     /// Renders the summary card to a `UIImage` using `ImageRenderer`.
     func shareSnapshot(displayScale: CGFloat) -> UIImage? {
         let view = SummaryCardSnapshotView(

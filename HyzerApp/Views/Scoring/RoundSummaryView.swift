@@ -44,7 +44,7 @@ struct RoundSummaryView: View {
         }
         .sheet(isPresented: $isShareSheetPresented) {
             if let image = shareImage {
-                ShareSheetRepresentable(items: [image, shareText])
+                ShareSheetRepresentable(items: [image, viewModel.shareText])
             }
         }
         .accessibilityElement(children: .contain)
@@ -131,15 +131,6 @@ struct RoundSummaryView: View {
         return "Round complete at \(viewModel.courseName). \(winnersText) at \(winnerScore). You finished \(myPosition) at \(myScore)."
     }
 
-    // MARK: - Share text
-
-    private var shareText: String {
-        let winners = viewModel.playerRows.filter { $0.position == 1 }
-        let winnerNames = winners.map(\.playerName).joined(separator: ", ")
-        let score = winners.first?.formattedScore ?? ""
-        let winVerb = winners.count > 1 ? "win" : "wins"
-        return "Round at \(viewModel.courseName) -- \(winnerNames) \(winVerb) at \(score)!"
-    }
 }
 
 // MARK: - PlayerSummaryRow

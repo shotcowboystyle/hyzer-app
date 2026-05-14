@@ -80,6 +80,7 @@
 		E37B79F3A1A6C63367339D45 /* CourseEditorCreateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87B101140DDCF2279E45CB94 /* CourseEditorCreateTests.swift */; };
 		E7C9EB065EE96162F3722E3A /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */; };
 		EC918190F5A28016AF3C7294 /* WatchLeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE406E0E4D81D5D657E4758 /* WatchLeaderboardView.swift */; };
+		F9616E8CC59281DC2238B205 /* RoundSummaryViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D259F3BCF0E290494AF21A9D /* RoundSummaryViewTests.swift */; };
 		FA9AF7030053FC4206484C3D /* RoundSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */; };
 		FBBDF98F9A7365CEF7B7D679 /* WatchScoringView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42ABA57D928266A42D535841 /* WatchScoringView.swift */; };
 /* End PBXBuildFile section */
@@ -183,6 +184,7 @@
 		CADE7A42C5BEB81001969149 /* VoiceOverlayPartialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverlayPartialTests.swift; sourceTree = "<group>"; };
 		CB2045C0AF8BAAD5936DEC19 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNetworkMonitor.swift; sourceTree = "<group>"; };
+		D259F3BCF0E290494AF21A9D /* RoundSummaryViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryViewTests.swift; sourceTree = "<group>"; };
 		D409A9A1DA1E58BB604EC7D4 /* PlayerHoleBreakdownScoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHoleBreakdownScoreTests.swift; sourceTree = "<group>"; };
 		D4822CF60B9D57B665F8209C /* HistoryListViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListViewModelTests.swift; sourceTree = "<group>"; };
 		D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
@@ -289,6 +291,7 @@
 			isa = PBXGroup;
 			children = (
 				212D9184FFBFC5CE47523827 /* HoleCardViewTests.swift */,
+				D259F3BCF0E290494AF21A9D /* RoundSummaryViewTests.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -690,6 +693,7 @@
 				6995CC037A2E94E70DA23AD0 /* PlayerHoleBreakdownScoreTests.swift in Sources */,
 				1B216ACD7E371E7C974AA480 /* RoundSetupViewModelTests.swift in Sources */,
 				2D30EA8B327D17A6C16A3310 /* RoundSummaryViewModelTests.swift in Sources */,
+				F9616E8CC59281DC2238B205 /* RoundSummaryViewTests.swift in Sources */,
 				806B440616278187DD30A471 /* ScorecardViewModelTests.swift in Sources */,
 				9DEF4DF4CD1156899DCAD968 /* TestPolling.swift in Sources */,
 				B483D5DD3EEB6F2933881AE3 /* VoiceOverlayErrorTests.swift in Sources */,
