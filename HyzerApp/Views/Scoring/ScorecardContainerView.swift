@@ -167,6 +167,7 @@ struct ScorecardContainerView: View {
                 courseName: courseName,
                 scorecardPlayers: scorecardPlayers,
                 roundScoreEvents: roundScoreEvents,
+                playerNamesByID: playerNamesByID,
                 currentHole: $currentHole,
                 onScore: { playerID, holeNumber, strokeCount in
                     enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
@@ -503,6 +504,7 @@ private struct ScorecardHoleCardStack: View {
     let courseName: String
     let scorecardPlayers: [ScorecardPlayer]
     let roundScoreEvents: [ScoreEvent]
+    let playerNamesByID: [String: String]
     @Binding var currentHole: Int
     let onScore: (String, Int, Int) -> Void
     let onCorrection: (String, UUID, Int, Int) -> Void
@@ -517,6 +519,7 @@ private struct ScorecardHoleCardStack: View {
                     courseName: courseName,
                     players: scorecardPlayers,
                     scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
+                    scorerNamesByID: playerNamesByID,
                     isRoundFinished: round.isFinished,
                     onScore: { playerID, strokeCount in
                         onScore(playerID, holeNumber, strokeCount)

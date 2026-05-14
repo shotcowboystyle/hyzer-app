@@ -312,4 +312,178 @@ struct RoundSetupViewModelTests {
         let rounds = try context.fetch(FetchDescriptor<Round>())
         #expect(rounds[0].holeCount == 9)
     }
+
+    // MARK: - loadPreviousRoundPlayers (Story 10.1)
+
+    private func makeContainer10_1() throws -> ModelContainer {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try ModelContainer(for: Player.self, Course.self, Round.self, configurations: config)
+    }
+
+    private func insertCompletedRound(
+        context: ModelContext,
+        playerIDs: [String],
+        guestNames: [String] = [],
+        completedAt: Date = Date()
+    ) -> Round {
+        let round = Round(
+            courseID: UUID(),
+            organizerID: UUID(),
+            playerIDs: playerIDs,
+            guestNames: guestNames,
+            holeCount: 18
+        )
+        round.start()
+        round.awaitFinalization()
+        round.complete()
+        round.completedAt = completedAt
+        context.insert(round)
+        return round
+    }
+
+    @Test("loadPreviousRoundPlayers: completed round with user populates preview")
+    func test_loadPreviousRoundPlayers_withCompletedRound_populatesPreview() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+
+        let organizer = Player(displayName: "Organizer")
+        let other = Player(displayName: "Other")
+        context.insert(organizer)
+        context.insert(other)
+        _ = insertCompletedRound(
+            context: context,
+            playerIDs: [organizer.id.uuidString, other.id.uuidString]
+        )
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: context)
+
+        #expect(vm.previousRoundPreview != nil)
+        #expect(vm.previousRoundPreview?.registeredPlayers.count == 1)
+        #expect(vm.previousRoundPreview?.registeredPlayers.first?.id == other.id)
+    }
+
+    @Test("loadPreviousRoundPlayers: no completed rounds yields nil preview")
+    func test_loadPreviousRoundPlayers_noCompletedRounds_previewIsNil() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+        let organizer = Player(displayName: "Solo")
+        context.insert(organizer)
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: context)
+
+        #expect(vm.previousRoundPreview == nil)
+    }
+
+    @Test("loadPreviousRoundPlayers: completed round where user is not participant yields nil")
+    func test_loadPreviousRoundPlayers_completedRoundUserNotParticipant_previewIsNil() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+
+        let user = Player(displayName: "User")
+        let other = Player(displayName: "Other")
+        context.insert(user)
+        context.insert(other)
+        // Round does NOT include user
+        _ = insertCompletedRound(context: context, playerIDs: [other.id.uuidString])
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.loadPreviousRoundPlayers(currentUserID: user.id, modelContext: context)
+
+        #expect(vm.previousRoundPreview == nil)
+    }
+
+    @Test("loadPreviousRoundPlayers: picks most recent completed round by completedAt")
+    func test_loadPreviousRoundPlayers_picksMostRecent_byCompletedAtDesc() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+
+        let user = Player(displayName: "User")
+        let playerA = Player(displayName: "Older")
+        let playerB = Player(displayName: "Newer")
+        context.insert(user)
+        context.insert(playerA)
+        context.insert(playerB)
+
+        let older = Date(timeIntervalSinceNow: -7200)
+        let newer = Date(timeIntervalSinceNow: -3600)
+        _ = insertCompletedRound(context: context, playerIDs: [user.id.uuidString, playerA.id.uuidString], completedAt: older)
+        _ = insertCompletedRound(context: context, playerIDs: [user.id.uuidString, playerB.id.uuidString], completedAt: newer)
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.loadPreviousRoundPlayers(currentUserID: user.id, modelContext: context)
+
+        #expect(vm.previousRoundPreview?.registeredPlayers.first?.id == playerB.id)
+    }
+
+    @Test("applyPreviousRoundPlayers: adds registered players (not organizer) and guests")
+    func test_applyPreviousRoundPlayers_appendsRegisteredAndGuestEntries_excludesOrganizer() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+
+        let organizer = Player(displayName: "Org")
+        let player2 = Player(displayName: "P2")
+        let player3 = Player(displayName: "P3")
+        context.insert(organizer)
+        context.insert(player2)
+        context.insert(player3)
+        _ = insertCompletedRound(
+            context: context,
+            playerIDs: [organizer.id.uuidString, player2.id.uuidString, player3.id.uuidString],
+            guestNames: ["GuestA"]
+        )
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: context)
+        vm.applyPreviousRoundPlayers(organizer: organizer)
+
+        #expect(vm.addedPlayers.count == 2)
+        #expect(!vm.addedPlayers.contains(where: { $0.id == organizer.id }))
+        #expect(vm.guestNames == ["GuestA"])
+    }
+
+    @Test("applyPreviousRoundPlayers: does not duplicate already-added players")
+    func test_applyPreviousRoundPlayers_doesNotDuplicateAlreadyAddedPlayers() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+
+        let organizer = Player(displayName: "Org")
+        let player2 = Player(displayName: "P2")
+        context.insert(organizer)
+        context.insert(player2)
+        _ = insertCompletedRound(context: context, playerIDs: [organizer.id.uuidString, player2.id.uuidString])
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.addPlayer(player2)  // manually added before apply
+        vm.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: context)
+        vm.applyPreviousRoundPlayers(organizer: organizer)
+
+        #expect(vm.addedPlayers.filter({ $0.id == player2.id }).count == 1)
+    }
+
+    @Test("applyPreviousRoundPlayers: appends guest names verbatim without deduplication (FR12b)")
+    func test_applyPreviousRoundPlayers_appendsGuestsAsNewEntries_noGuestDeduplication() throws {
+        let container = try makeContainer10_1()
+        let context = ModelContext(container)
+
+        let organizer = Player(displayName: "Org")
+        context.insert(organizer)
+        _ = insertCompletedRound(context: context, playerIDs: [organizer.id.uuidString], guestNames: ["Alice"])
+        try context.save()
+
+        let vm = RoundSetupViewModel()
+        vm.guestNames = ["Alice"]  // already in the list
+        vm.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: context)
+        vm.applyPreviousRoundPlayers(organizer: organizer)
+
+        // FR12b: guests are round-scoped, no cross-round dedup
+        #expect(vm.guestNames == ["Alice", "Alice"])
+    }
 }

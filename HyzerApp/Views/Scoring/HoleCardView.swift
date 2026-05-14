@@ -21,6 +21,8 @@ struct HoleCardView: View {
     let courseName: String
     let players: [ScorecardPlayer]
     let scores: [ScoreEvent]
+    /// Keyed on `Player.id.uuidString`. Used for "Scored by [name]" attribution.
+    let scorerNamesByID: [String: String]
     /// When `true`, score tap targets are disabled — the round is in awaitingFinalization or completed.
     var isRoundFinished: Bool = false
     let onScore: (String, Int) -> Void
@@ -107,22 +109,32 @@ struct HoleCardView: View {
     }
 
     private func playerRow(player: ScorecardPlayer, score: ScoreEvent?) -> some View {
-        HStack {
+        HStack(alignment: .center) {
             Text(player.displayName)
                 .font(TypographyTokens.h3)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
+                .layoutPriority(1)
             Spacer()
             if let score {
-                Text("\(score.strokeCount)")
-                    .font(TypographyTokens.score)
-                    .foregroundStyle(Color.scoreColor(strokes: score.strokeCount, par: par))
-                    .accessibilityLabel("\(player.displayName), score \(score.strokeCount)")
+                let scorerName = scorerNamesByID[score.reportedByPlayerID.uuidString]
+                VStack(alignment: .trailing, spacing: SpacingTokens.xs) {
+                    Text("\(score.strokeCount)")
+                        .font(TypographyTokens.score)
+                        .foregroundStyle(Color.scoreColor(strokes: score.strokeCount, par: par))
+                    if let name = scorerName {
+                        Text("Scored by \(name)")
+                            .font(TypographyTokens.caption)
+                            .foregroundStyle(Color.textSecondary)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.9)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             } else {
                 Text("—")
                     .font(TypographyTokens.score)
                     .foregroundStyle(Color.textSecondary)
-                    .accessibilityLabel("\(player.displayName), no score")
             }
         }
         .padding(.horizontal, SpacingTokens.md)
@@ -140,7 +152,32 @@ struct HoleCardView: View {
         }
         .opacity(isRoundFinished ? 0.6 : 1.0)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(rowAccessibilityLabel(player: player, score: score))
         .accessibilityAddTraits(isRoundFinished ? [] : [.isButton])
+    }
+
+    private func rowAccessibilityLabel(player: ScorecardPlayer, score: ScoreEvent?) -> String {
+        guard let score else {
+            return "\(player.displayName), no score"
+        }
+        let scorerName = scorerNamesByID[score.reportedByPlayerID.uuidString]
+        let parPhrase = relativeToParPhrase(strokes: score.strokeCount, par: par)
+        var label = "\(player.displayName), score \(score.strokeCount), \(parPhrase)"
+        if let name = scorerName {
+            label += ". Scored by \(name)."
+        }
+        return label
+    }
+
+    private func relativeToParPhrase(strokes: Int, par: Int) -> String {
+        let delta = strokes - par
+        switch delta {
+        case ..<(-1): return "\(abs(delta)) under par"
+        case -1:      return "one under par"
+        case 0:       return "even par"
+        case 1:       return "one over par"
+        default:      return "\(delta) over par"
+        }
     }
 
 }

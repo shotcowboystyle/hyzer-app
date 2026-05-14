@@ -22,6 +22,8 @@ struct HistoryRoundCardData {
     let userFormattedScore: String?
     /// Current player's score color derived from Standing.scoreColor.
     let userScoreColor: Color?
+    /// True when the current player is the round winner. Collapses winner + user lines in the card.
+    let userIsWinner: Bool
 }
 
 /// Derives card display data for completed rounds in the history list.
@@ -35,6 +37,7 @@ final class HistoryListViewModel {
     private let modelContext: ModelContext
     private let standingsEngine: StandingsEngine
     private let dateFormatter: DateFormatter
+    private let ordinalFormatter: NumberFormatter
     private let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "HistoryListViewModel")
     let currentPlayerID: String
 
@@ -45,10 +48,14 @@ final class HistoryListViewModel {
         self.modelContext = modelContext
         self.currentPlayerID = currentPlayerID
         self.standingsEngine = StandingsEngine(modelContext: modelContext)
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        self.dateFormatter = formatter
+        let dateFmt = DateFormatter()
+        dateFmt.dateStyle = .medium
+        dateFmt.timeStyle = .none
+        self.dateFormatter = dateFmt
+        let ordFmt = NumberFormatter()
+        ordFmt.numberStyle = .ordinal
+        ordFmt.locale = .autoupdatingCurrent
+        self.ordinalFormatter = ordFmt
     }
 
     /// Computes and caches card data for the given round if not already cached.
@@ -66,6 +73,10 @@ final class HistoryListViewModel {
         let playerCount = round.playerIDs.count + round.guestNames.count
         let winner = standings.first
         let userStanding = standings.first { $0.playerID == currentPlayerID }
+        let userIsWinner = userStanding?.position == 1
+
+        let isTieForFirst = standings.filter { $0.position == 1 }.count > 1
+        let winnerName: String? = (isTieForFirst && !userIsWinner) ? "Tie for 1st" : winner?.playerName
 
         let courseIDLocal = round.courseID
         let descriptor = FetchDescriptor<Course>(predicate: #Predicate { $0.id == courseIDLocal })
@@ -84,28 +95,17 @@ final class HistoryListViewModel {
             courseName: courseName,
             formattedDate: formattedDate,
             playerCount: playerCount,
-            winnerName: winner?.playerName,
+            winnerName: winnerName,
             winnerFormattedScore: winner?.formattedScore,
             winnerScoreColor: winner?.scoreColor,
-            userPosition: userStanding.map { ordinalize($0.position) },
+            userPosition: userStanding.map { ordinal($0.position) },
             userFormattedScore: userStanding?.formattedScore,
-            userScoreColor: userStanding?.scoreColor
+            userScoreColor: userStanding?.scoreColor,
+            userIsWinner: userIsWinner
         )
     }
 
-    private func ordinalize(_ position: Int) -> String {
-        let suffix: String
-        switch position % 100 {
-        case 11, 12, 13:
-            suffix = "th"
-        default:
-            switch position % 10 {
-            case 1: suffix = "st"
-            case 2: suffix = "nd"
-            case 3: suffix = "rd"
-            default: suffix = "th"
-            }
-        }
-        return "\(position)\(suffix)"
+    func ordinal(_ n: Int) -> String {
+        ordinalFormatter.string(from: NSNumber(value: n)) ?? String(n)
     }
 }

@@ -93,10 +93,11 @@ private struct HistoryRoundCard: View {
     }
 
     private func cardContent(data: HistoryRoundCardData) -> some View {
-        VStack(alignment: .leading, spacing: SpacingTokens.sm) {
+        VStack(alignment: .leading, spacing: SpacingTokens.xs) {
             HStack {
                 Text(data.courseName)
                     .font(TypographyTokens.h3)
+                    .fontWeight(.semibold)
                     .foregroundStyle(Color.textPrimary)
                     .lineLimit(1)
                 Spacer()
@@ -117,25 +118,37 @@ private struct HistoryRoundCard: View {
                     .foregroundStyle(Color.textSecondary)
             }
 
-            if let winnerName = data.winnerName, let winnerScore = data.winnerFormattedScore {
-                HStack(spacing: SpacingTokens.xs) {
-                    Text("\(winnerName) won at")
-                        .font(TypographyTokens.body)
-                        .foregroundStyle(Color.textPrimary)
-                    Text(winnerScore)
-                        .font(TypographyTokens.body)
-                        .foregroundStyle(data.winnerScoreColor ?? Color.textPrimary)
+            if data.userIsWinner {
+                if let winnerScore = data.winnerFormattedScore {
+                    HStack(spacing: SpacingTokens.xs) {
+                        Text("You won at")
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(Color.textPrimary)
+                        Text(winnerScore)
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(data.winnerScoreColor ?? Color.textPrimary)
+                    }
                 }
-            }
-
-            if let userPosition = data.userPosition, let userScore = data.userFormattedScore {
-                HStack(spacing: SpacingTokens.xs) {
-                    Text("You finished \(userPosition) at")
-                        .font(TypographyTokens.body)
-                        .foregroundStyle(Color.textPrimary)
-                    Text(userScore)
-                        .font(TypographyTokens.body)
-                        .foregroundStyle(data.userScoreColor ?? Color.textPrimary)
+            } else {
+                if let winnerName = data.winnerName, let winnerScore = data.winnerFormattedScore {
+                    HStack(spacing: SpacingTokens.xs) {
+                        Text("\(winnerName) won at")
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(Color.textPrimary)
+                        Text(winnerScore)
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(data.winnerScoreColor ?? Color.textPrimary)
+                    }
+                }
+                if let userPosition = data.userPosition, let userScore = data.userFormattedScore {
+                    HStack(spacing: SpacingTokens.xs) {
+                        Text("You finished \(userPosition) at")
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(Color.textPrimary)
+                        Text(userScore)
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(data.userScoreColor ?? Color.textPrimary)
+                    }
                 }
             }
         }
@@ -147,12 +160,16 @@ private struct HistoryRoundCard: View {
     }
 
     private func accessibilityLabel(data: HistoryRoundCardData) -> String {
-        var parts: [String] = ["\(data.courseName), \(data.formattedDate)."]
-        if let name = data.winnerName, let score = data.winnerFormattedScore {
-            parts.append("\(name) won at \(score).")
+        if data.userIsWinner {
+            let scoreSuffix = data.winnerFormattedScore.map { " at \($0)" } ?? ""
+            return "\(data.courseName), \(data.formattedDate). You won\(scoreSuffix)."
         }
-        if let position = data.userPosition, let score = data.userFormattedScore {
-            parts.append("You finished \(position) at \(score).")
+        var parts: [String] = ["\(data.courseName), \(data.formattedDate)."]
+        if let name = data.winnerName {
+            parts.append("\(name) won.")
+        }
+        if let position = data.userPosition {
+            parts.append("You finished \(position).")
         }
         return parts.joined(separator: " ")
     }
