@@ -12,6 +12,9 @@ struct SummaryPlayerRow: Identifiable {
     let scoreColor: Color
     /// True for positions 1, 2, and 3.
     let hasMedal: Bool
+
+    /// Text shown in the position column — always an ASCII digit string (no emoji).
+    var positionLabelText: String { "\(position)" }
 }
 
 /// Transforms standings and round data into view-ready rows; handles share snapshot.

@@ -120,20 +120,25 @@ struct RoundSummaryView: View {
     // MARK: - Accessibility
 
     private var accessibilityLabel: String {
-        let winner = viewModel.playerRows.first(where: { $0.position == 1 })
+        let winners = viewModel.playerRows.filter { $0.position == 1 }
+        let winnerNames = winners.map(\.playerName).joined(separator: ", ")
+        let winnerScore = winners.first?.formattedScore ?? ""
         let currentPlayer = viewModel.playerRows.first(where: { $0.id == viewModel.currentPlayerID })
-        let winnerName = winner?.playerName ?? ""
-        let winnerScore = winner?.formattedScore ?? ""
         let myPosition = currentPlayer?.position ?? 0
         let myScore = currentPlayer?.formattedScore ?? ""
-        return "Round complete at \(viewModel.courseName). \(winnerName) finished first at \(winnerScore). You finished \(myPosition) at \(myScore)."
+
+        let winnersText = winners.count > 1 ? "\(winnerNames) tied for first" : "\(winnerNames) finished first"
+        return "Round complete at \(viewModel.courseName). \(winnersText) at \(winnerScore). You finished \(myPosition) at \(myScore)."
     }
 
     // MARK: - Share text
 
     private var shareText: String {
-        let winner = viewModel.playerRows.first(where: { $0.position == 1 })
-        return "Round at \(viewModel.courseName) -- \(winner?.playerName ?? "") wins at \(winner?.formattedScore ?? "")!"
+        let winners = viewModel.playerRows.filter { $0.position == 1 }
+        let winnerNames = winners.map(\.playerName).joined(separator: ", ")
+        let score = winners.first?.formattedScore ?? ""
+        let winVerb = winners.count > 1 ? "win" : "wins"
+        return "Round at \(viewModel.courseName) -- \(winnerNames) \(winVerb) at \(score)!"
     }
 }
 
@@ -141,6 +146,10 @@ struct RoundSummaryView: View {
 
 private struct PlayerSummaryRow: View {
     let row: SummaryPlayerRow
+
+    private let goldOpacity: Double = 1.0
+    private let silverOpacity: Double = 0.85
+    private let bronzeOpacity: Double = 0.80
 
     var body: some View {
         HStack(spacing: SpacingTokens.md) {
@@ -151,6 +160,7 @@ private struct PlayerSummaryRow: View {
                 .font(TypographyTokens.h2)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
 
             Spacer()
 
@@ -169,22 +179,23 @@ private struct PlayerSummaryRow: View {
     private var positionLabel: some View {
         Group {
             if row.hasMedal {
-                Text(medalEmoji(for: row.position))
-                    .font(TypographyTokens.h2)
+                Text(row.positionLabelText)
+                    .font(TypographyTokens.h1)
+                    .foregroundStyle(medalColor(for: row.position))
             } else {
-                Text("\(row.position)")
+                Text(row.positionLabelText)
                     .font(TypographyTokens.h2)
                     .foregroundStyle(Color.textSecondary)
             }
         }
     }
 
-    private func medalEmoji(for position: Int) -> String {
+    private func medalColor(for position: Int) -> Color {
         switch position {
-        case 1: return "🥇"
-        case 2: return "🥈"
-        case 3: return "🥉"
-        default: return "\(position)"
+        case 1: return Color.textPrimary.opacity(goldOpacity)
+        case 2: return Color.textPrimary.opacity(silverOpacity)
+        case 3: return Color.textPrimary.opacity(bronzeOpacity)
+        default: return Color.textPrimary
         }
     }
 }
