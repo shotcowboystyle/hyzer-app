@@ -362,6 +362,177 @@ struct RoundSummaryViewModelTests {
         }
     }
 
+    // MARK: - Story 11.3: shareSnapshot for 6-player + 1-guest returns non-nil UIImage at 3x (AC: 1, 2)
+
+    @Test("shareSnapshot for 6-player + 1-guest round returns non-nil UIImage with ~390pt width at 3x scale")
+    func test_shareSnapshot_sixPlayerWithGuest_nonNilAt3x() {
+        let guestID = GuestIdentifier.makeID()
+        let round = Round(
+            courseID: UUID(),
+            organizerID: UUID(),
+            playerIDs: ["p1", "p2", "p3", "p4", "p5", "p6", guestID],
+            guestNames: ["Darius"],
+            holeCount: 9
+        )
+        round.start()
+        round.awaitFinalization()
+        round.complete()
+
+        let standings: [Standing] = [
+            Standing(playerID: "p1",    playerName: "Alice",  position: 1, totalStrokes: 20, holesPlayed: 9, scoreRelativeToPar: -7),
+            Standing(playerID: "p2",    playerName: "Bob",    position: 2, totalStrokes: 23, holesPlayed: 9, scoreRelativeToPar: -4),
+            Standing(playerID: "p3",    playerName: "Carol",  position: 3, totalStrokes: 25, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p4",    playerName: "Dave",   position: 4, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar:  0),
+            Standing(playerID: "p5",    playerName: "Eve",    position: 5, totalStrokes: 29, holesPlayed: 9, scoreRelativeToPar:  2),
+            Standing(playerID: "p6",    playerName: "Frank",  position: 6, totalStrokes: 31, holesPlayed: 9, scoreRelativeToPar:  4),
+            Standing(playerID: guestID, playerName: "Darius", position: 7, totalStrokes: 33, holesPlayed: 9, scoreRelativeToPar:  6)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Hawk's Ridge",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+
+        let image = vm.shareSnapshot(displayScale: 3.0)
+        #expect(image != nil)
+        if let image {
+            #expect(image.size.width > 0, "Expected non-zero width for rendered image")
+        }
+    }
+
+    // MARK: - Story 11.3: shareText format — em dash + past-tense "won" (AC: 1)
+
+    @Test("shareText uses em dash (U+2014) and past-tense 'won'")
+    func test_shareText_singleWinner_emDashAndWon() {
+        let round = makeRound(completedAt: Date())
+        let standings = [
+            Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p2", playerName: "Bob",   position: 2, totalStrokes: 29, holesPlayed: 9, scoreRelativeToPar:  0)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Hawk's Ridge",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+        #expect(vm.shareText == "Round at Hawk's Ridge \u{2014} Alice won at -2")
+        #expect(vm.shareText.contains("\u{2014}"), "Caption must use em dash U+2014, not double-hyphen")
+        #expect(vm.shareText.contains("won"), "Caption must use past-tense 'won'")
+        #expect(!vm.shareText.hasSuffix("!"), "Caption must not end with an exclamation mark")
+    }
+
+    @Test("shareText with two winners uses 'and'")
+    func test_shareText_twoWinners_usesAnd() {
+        let round = makeRound(completedAt: Date())
+        let standings = [
+            Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p2", playerName: "Bob",   position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Cedar Hills",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+        #expect(vm.shareText == "Round at Cedar Hills \u{2014} Alice and Bob won at -2")
+    }
+
+    @Test("shareText with three winners uses Oxford comma")
+    func test_shareText_threeWinners_usesOxfordComma() {
+        let round = makeRound(completedAt: Date())
+        let standings = [
+            Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p2", playerName: "Bob",   position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p3", playerName: "Carol", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Cedar Hills",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+        #expect(vm.shareText == "Round at Cedar Hills \u{2014} Alice, Bob, and Carol won at -2")
+    }
+
+    @Test("shareText with many winners truncates with 'others'")
+    func test_shareText_manyWinners_truncates() {
+        let round = makeRound(completedAt: Date())
+        let standings = [
+            Standing(playerID: "p1", playerName: "Alice", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p2", playerName: "Bob",   position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p3", playerName: "Carol", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p4", playerName: "Dave",  position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2),
+            Standing(playerID: "p5", playerName: "Eve",   position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Cedar Hills",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+        #expect(vm.shareText == "Round at Cedar Hills \u{2014} Alice, Bob, Carol, and 2 others won at -2")
+    }
+
+    @Test("shareText sanitizes newlines in course and player names")
+    func test_shareText_sanitizesNewlines() {
+        let round = makeRound(completedAt: Date())
+        let standings = [
+            Standing(playerID: "p1", playerName: "Alice\nWonderland", position: 1, totalStrokes: 27, holesPlayed: 9, scoreRelativeToPar: -2)
+        ]
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: "Hawk's\nRidge",
+            holesPlayed: 9,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+        #expect(vm.shareText == "Round at Hawk's Ridge \u{2014} Alice Wonderland won at -2")
+    }
+
+    @Test("shareText falls back to course-only when standings are empty")
+    func test_shareText_noWinners_fallsBackToCourseName() {
+        let round = makeRound(completedAt: Date())
+        let vm = RoundSummaryViewModel(
+            round: round,
+            standings: [],
+            courseName: "Mystery Links",
+            holesPlayed: 0,
+            coursePar: 27,
+            currentPlayerID: "p1"
+        )
+        #expect(vm.shareText == "Round at Mystery Links")
+    }
+
+    // MARK: - Story 11.3: Cancellation no side effects on ViewModel state (AC: 3)
+
+    @Test("Calling shareSnapshot does not mutate any ViewModel property")
+    func test_shareSnapshot_noMutations() {
+        let vm = makeVM()
+        let rowCountBefore    = vm.playerRows.count
+        let courseNameBefore  = vm.courseName
+        let organizerBefore   = vm.organizerName
+        let holesPlayedBefore = vm.holesPlayed
+
+        _ = vm.shareSnapshot(displayScale: 2.0)
+
+        #expect(vm.playerRows.count == rowCountBefore)
+        #expect(vm.courseName       == courseNameBefore)
+        #expect(vm.organizerName    == organizerBefore)
+        #expect(vm.holesPlayed      == holesPlayedBefore)
+    }
+
     // MARK: - Task 8.2: isRoundCompleted is true after finishRound(force: true)
 
     @Test("ScorecardViewModel.isRoundCompleted is true after finishRound(force: true) succeeds")

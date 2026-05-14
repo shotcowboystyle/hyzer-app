@@ -105,6 +105,6 @@ struct RoundSummaryViewTests {
         // Medal rows (1-3) must all be hasMedal=true
         let medalRows = vm.playerRows.filter { $0.position <= 3 }
         #expect(medalRows.count == 3)
-        #expect(medalRows.allSatisfy(\.hasMedal))
+        #expect(medalRows.allSatisfy { $0.hasMedal })
     }
 }
