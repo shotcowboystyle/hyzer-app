@@ -2,6 +2,14 @@ import Foundation
 import SwiftData
 import HyzerKit
 
+// MARK: - Supporting types
+
+struct PreviousRoundPreview {
+    let registeredPlayers: [Player]
+    let guestNames: [String]
+    var totalCount: Int { registeredPlayers.count + guestNames.count }
+}
+
 /// Handles business logic for the round setup flow: course selection, player management,
 /// guest addition, and round creation.
 ///
@@ -15,6 +23,7 @@ final class RoundSetupViewModel {
     var guestNames: [String] = []
     var guestNameInput: String = ""
     var saveError: Error?
+    var previousRoundPreview: PreviousRoundPreview?
 
     // MARK: - Computed
 
@@ -22,6 +31,11 @@ final class RoundSetupViewModel {
     /// (the organizer counts, so this is true whenever a course is selected).
     var canStartRound: Bool {
         selectedCourse != nil
+    }
+
+    var canShowSameGroupButton: Bool {
+        guard let preview = previousRoundPreview else { return false }
+        return preview.totalCount > 0
     }
 
     // MARK: - Player management
@@ -49,6 +63,66 @@ final class RoundSetupViewModel {
 
     func removeGuest(at offsets: IndexSet) {
         guestNames.remove(atOffsets: offsets)
+    }
+
+    // MARK: - Previous round quick-add
+
+    /// Loads player data from the most recent completed round the current user participated in.
+    /// Receives ModelContext at call time — not via constructor — matching the CourseEditorViewModel pattern.
+    func loadPreviousRoundPlayers(currentUserID: UUID, modelContext: ModelContext) {
+        let statusValue = "completed"
+        var descriptor = FetchDescriptor<Round>(
+            predicate: #Predicate { $0.status == statusValue },
+            sortBy: [SortDescriptor(\Round.completedAt, order: .reverse)]
+        )
+        // Fetch a larger window to ensure we find a round the user participated in
+        descriptor.fetchLimit = 20
+        let recentCompleted: [Round]
+        do {
+            recentCompleted = try modelContext.fetch(descriptor)
+        } catch {
+            // Safe to continue: preview is optional, failure leaves it nil
+            previousRoundPreview = nil
+            return
+        }
+        let userIDString = currentUserID.uuidString
+        guard let round = recentCompleted.first(where: { $0.playerIDs.contains(userIDString) }) else {
+            previousRoundPreview = nil
+            return
+        }
+        let otherPlayerUUIDs = round.playerIDs
+            .filter { $0 != userIDString }
+            .compactMap { UUID(uuidString: $0) }
+        let players: [Player]
+        do {
+            if otherPlayerUUIDs.isEmpty {
+                players = []
+            } else {
+                var playerDescriptor = FetchDescriptor<Player>(
+                    predicate: #Predicate { otherPlayerUUIDs.contains($0.id) }
+                )
+                playerDescriptor.fetchLimit = otherPlayerUUIDs.count
+                players = try modelContext.fetch(playerDescriptor)
+            }
+        } catch {
+            // Safe to continue: preview is optional, failure leaves it nil
+            previousRoundPreview = nil
+            return
+        }
+        previousRoundPreview = PreviousRoundPreview(
+            registeredPlayers: players,
+            guestNames: round.guestNames
+        )
+    }
+
+    /// Applies the previous round's players to the current setup, then clears the preview (idempotent).
+    func applyPreviousRoundPlayers(organizer: Player) {
+        guard let preview = previousRoundPreview else { return }
+        for player in preview.registeredPlayers where player.id != organizer.id {
+            addPlayer(player)
+        }
+        guestNames.append(contentsOf: preview.guestNames)
+        previousRoundPreview = nil
     }
 
     // MARK: - Round creation

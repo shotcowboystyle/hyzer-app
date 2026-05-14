@@ -50,6 +50,9 @@ struct RoundSetupView: View {
             } message: {
                 Text(viewModel.saveError?.localizedDescription ?? "An unknown error occurred.")
             }
+            .onAppear {
+                viewModel.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: modelContext)
+            }
         }
     }
 
@@ -104,6 +107,22 @@ struct RoundSetupView: View {
 
     private var playerSection: some View {
         Section {
+            if viewModel.canShowSameGroupButton, let preview = viewModel.previousRoundPreview {
+                Button {
+                    viewModel.applyPreviousRoundPlayers(organizer: organizer)
+                } label: {
+                    Text("Same group as last round (\(preview.totalCount) players)")
+                        .font(TypographyTokens.body)
+                        .foregroundStyle(Color.accentPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(minHeight: SpacingTokens.minimumTouchTarget)
+                }
+                .listRowBackground(Color.backgroundElevated)
+                .accessibilityLabel("Same group as last round")
+                .accessibilityHint("Adds \(preview.totalCount) players. Double-tap to apply.")
+                .accessibilityAddTraits(.isButton)
+            }
+
             ForEach(filteredPlayers) { player in
                 let isAdded = viewModel.addedPlayers.contains(where: { $0.id == player.id })
                 HStack {

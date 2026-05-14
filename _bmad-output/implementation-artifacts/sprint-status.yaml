@@ -94,6 +94,86 @@ stories:
     title: "Player Hole-by-Hole Breakdown"
     status: done
     epic: 8
+  # Epic 9 intentionally deferred until after Epics 10/11 active wave completes.
+  "9.1":
+    title: "Release Build Configuration & Signing"
+    status: backlog
+    epic: 9
+    deferred: true
+  "9.2":
+    title: "Privacy Manifest, Permission Strings & App Icons"
+    status: backlog
+    epic: 9
+    deferred: true
+  "9.3":
+    title: "App Store Connect Record, TestFlight Test Group & Border Token Debt"
+    status: backlog
+    epic: 9
+    deferred: true
+  \"10.1\":
+    title: \"Same Group as Last Round Quick-Add\"
+    status: done
+    epic: 10
+  \"10.2\":
+    title: \"Scoring Attribution on Hole Card\"
+    status: done
+    epic: 10
+  \"11.1\":
+    title: \"Polished History Round Card\"
+    status: done
+    epic: 11
+  "11.2":
+    title: "Screenshot-First Round Summary Card"
+    status: ready-for-dev
+    epic: 11
+  "11.3":
+    title: "Share Round Summary via System Share Sheet"
+    status: ready-for-dev
+    epic: 11
+  "12.1":
+    title: "Notification Foundation & \"Round Started\" Push"
+    status: backlog
+    epic: 12
+  "12.2":
+    title: "\"Round Complete\" Push Notification"
+    status: backlog
+    epic: 12
+  "12.3":
+    title: "Organizer-Only \"Discrepancy Detected\" Push Notification"
+    status: backlog
+    epic: 12
+  "13.1":
+    title: "Score Trend Visualization Per Player"
+    status: backlog
+    epic: 13
+  "13.2":
+    title: "Personal Best Per Course"
+    status: backlog
+    epic: 13
+  "13.3":
+    title: "Head-to-Head Record Between Two Players"
+    status: backlog
+    epic: 13
+  "14.1":
+    title: "MultipeerConnectivity Nearby Active-Round Discovery"
+    status: backlog
+    epic: 14
+  "14.2":
+    title: "Generative Visual Round Signature on Summary Card"
+    status: backlog
+    epic: 14
+
+# Parallelization plan for active wave (Epics 10 & 11)
+# Generated 2026-05-14 by SM. See dependency analysis: all stories below operate on
+# disjoint files EXCEPT 11.2 ↔ 11.3 which both touch RoundSummaryView.swift.
+parallel_waves:
+  wave_1:
+    description: "Fully independent — safe to assign to 4 parallel dev agents"
+    stories: ["10.1", "10.2", "11.1", "11.2"]
+  wave_2:
+    description: "Run after 11.2 merges (shared file: RoundSummaryView.swift)"
+    stories: ["11.3"]
+    blocked_by: ["11.2"]
 
 retrospectives:
   "epics-1-8":
@@ -101,3 +181,6 @@ retrospectives:
     status: done
     date: 2026-04-07
     artifact: "epics-1-8-retro-2026-04-07.md"
+  "epics-10-11":
+    title: "Retrospective — Epics 10 & 11 (Post-MVP Polish Wave)"
+    status: optional
