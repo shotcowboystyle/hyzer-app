@@ -97,7 +97,7 @@ stories:
   # Epic 9 intentionally deferred until after Epics 10/11 active wave completes.
   "9.1":
     title: "Release Build Configuration & Signing"
-    status: backlog
+    status: done
     epic: 9
     deferred: true
   "9.2":
