@@ -21,15 +21,18 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>HyzerApp uses the microphone to hear player names and scores for hands-free scoring.</string>
+	<string>Hyzer uses your microphone to record disc golf scores when you speak them aloud during a round.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>HyzerApp uses speech recognition to convert spoken scores into game entries. All processing happens on-device.</string>
+	<string>Hyzer recognizes scores on-device from your voice. Audio is not sent to a server.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
 	<key>UILaunchScreen</key>
-	<dict/>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
