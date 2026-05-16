@@ -44,7 +44,8 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         ITSAppUsesNonExemptEncryption: false
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UISupportedInterfaceOrientations~ipad:
@@ -54,8 +55,8 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         UIBackgroundModes:
           - remote-notification
-        NSMicrophoneUsageDescription: "HyzerApp uses the microphone to hear player names and scores for hands-free scoring."
-        NSSpeechRecognitionUsageDescription: "HyzerApp uses speech recognition to convert spoken scores into game entries. All processing happens on-device."
+        NSMicrophoneUsageDescription: "Hyzer uses your microphone to record disc golf scores when you speak them aloud during a round."
+        NSSpeechRecognitionUsageDescription: "Hyzer recognizes scores on-device from your voice. Audio is not sent to a server."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp

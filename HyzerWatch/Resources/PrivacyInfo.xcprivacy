@@ -36,16 +36,7 @@
     <key>NSPrivacyAccessedAPITypes</key>
     <array>
         <dict>
-            <!-- Used by MetricKitObserver to read file creation dates for log rotation -->
-            <key>NSPrivacyAccessedAPIType</key>
-            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
-            <key>NSPrivacyAccessedAPITypeReasons</key>
-            <array>
-                <string>C617.1</string>
-            </array>
-        </dict>
-        <dict>
-            <!-- Used by SyncScheduler to persist last-sync timestamps -->
+            <!-- UserDefaults symbols are linked into the watch binary via HyzerKit (UserDefaultsStorage, SyncScheduler), even though the scheduler is not invoked at runtime on watch. Apple's static binary scan requires the declaration. -->
             <key>NSPrivacyAccessedAPIType</key>
             <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
             <key>NSPrivacyAccessedAPITypeReasons</key>

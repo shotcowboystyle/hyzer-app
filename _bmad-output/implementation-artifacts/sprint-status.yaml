@@ -102,7 +102,7 @@ stories:
     deferred: true
   "9.2":
     title: "Privacy Manifest, Permission Strings & App Icons"
-    status: backlog
+    status: done
     epic: 9
     deferred: true
   "9.3":

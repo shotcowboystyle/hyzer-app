@@ -1,3 +1,10 @@
+## Deferred from: code review of 9-2-privacy-manifest-permission-strings-and-app-icons.md (2026-05-16)
+
+- Pin `UIUserInterfaceStyle: Dark` in `project.yml info.properties` + `HyzerApp/App/Info.plist`. Reason for deferral: current behavior is acceptable until a later polish story. The universal `LaunchBackground.colorset` still wins for the launch screen in light-mode (the near-black launch is preserved); only the launch→first-frame trait-collection seam is fragile. Pick up in the next launch / first-frame polish pass.
+- Run canonical `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'` against the 407-test baseline (AC7). Reason for deferral: current machine has no simulator. To be executed by the reviewer doing the AC4/AC5/AC6 visual verification on a Mac with the paired simulator, in the same session.
+- Mirror privacy manifest declarations (`NSPrivacyCollectedDataTypeUserID` Linked + AppFunctionality, `NSPrivacyCollectedDataTypeAudioData` Not-Linked + AppFunctionality) in App Store Connect's Privacy section before TestFlight submission. Story 9.3 (`epics-post-mvp.md:208-234`) owns App Store Connect setup; manifest alone is necessary but not sufficient for App Review.
+- `UISupportedInterfaceOrientations`, `UIBackgroundModes`, `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`, `ITSAppUsesNonExemptEncryption` are duplicated between `project.yml info.properties` and `HyzerApp/App/Info.plist`. XcodeGen merges them so it's not drift-prone in practice, but consolidating to a single source of truth (prefer `project.yml`) is a future-cleanup item.
+
 ## Deferred from: code review of 9-1-release-build-configuration-and-signing.md (2026-05-16)
 
 - APS environment `aps-environment = development` in `HyzerApp/App/HyzerApp.entitlements:21` — App Store-bound Release archive carries dev APS env. Spec open question #1 parks this until Epic 12 flips it to `production`. Risk surfaces at Story 9.3 upload, not at 9.1 archive/export.
