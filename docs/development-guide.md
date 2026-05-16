@@ -314,6 +314,53 @@ Button(action: { }) {
 
 ---
 
+## Release Archive
+
+### Archive (for App Store / TestFlight)
+
+Archives must target `generic/platform=iOS` (not a simulator). Team ID: `S4729REPN5`.
+
+```sh
+xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp \
+  -configuration Release \
+  -destination 'generic/platform=iOS' \
+  -archivePath build/HyzerApp.xcarchive \
+  archive
+```
+
+### Export IPA
+
+Create a local `build/ExportOptions.plist` (this file is gitignored — do not commit it):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key><string>app-store-connect</string>
+    <key>signingStyle</key><string>automatic</string>
+    <key>teamID</key><string>S4729REPN5</string>
+    <key>uploadSymbols</key><true/>
+    <key>compileBitcode</key><false/>
+</dict>
+</plist>
+```
+
+Then export:
+
+```sh
+xcodebuild -exportArchive \
+  -archivePath build/HyzerApp.xcarchive \
+  -exportOptionsPlist build/ExportOptions.plist \
+  -exportPath build/Export
+```
+
+The resulting `build/Export/HyzerApp.ipa` is the App Store-ready artifact. Upload is handled in Story 9.3 via App Store Connect.
+
+> The `build/` directory is gitignored. Story 9.3 owns the actual TestFlight upload.
+
+---
+
 ## CloudKit Setup
 
 The app uses the **CloudKit public database** with container `iCloud.com.shotcowboystyle.hyzerapp`.

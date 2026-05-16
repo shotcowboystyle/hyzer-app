@@ -97,7 +97,7 @@ stories:
   # Epic 9 intentionally deferred until after Epics 10/11 active wave completes.
   "9.1":
     title: "Release Build Configuration & Signing"
-    status: backlog
+    status: review
     epic: 9
     deferred: true
   "9.2":
@@ -132,7 +132,7 @@ stories:
     epic: 11
   "12.1":
     title: 'Notification Foundation & "Round Started" Push'
-    status: backlog
+    status: ready-for-dev
     epic: 12
   "12.2":
     title: '"Round Complete" Push Notification'
