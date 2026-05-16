@@ -48,6 +48,7 @@ public extension Color {
 
     // Hairlines / Overlays
     static let hairline      = Color(.sRGB, red: 0.961, green: 0.961, blue: 0.969, opacity: 0.08)
+    /// Divider/border token — alias of `hairline`. Provided for semantic clarity at call sites where the intent is "border" rather than "hairline divider".
     static let border        = Color.hairline  // Divider token — same as hairline
     static let rowBackground = Color(.sRGB, red: 0.039, green: 0.039, blue: 0.047, opacity: 0.50)
     static let pillGlass     = Color(.sRGB, red: 0.110, green: 0.110, blue: 0.118, opacity: 0.50)
