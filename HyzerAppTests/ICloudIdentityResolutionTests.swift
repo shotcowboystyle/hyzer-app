@@ -13,6 +13,12 @@ private struct StubCloudKitClient: CloudKitClient, @unchecked Sendable {
     func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
     func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
     func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
+    func subscribeWithAlert(
+        to recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    ) async throws -> CKSubscription.ID { subscriptionID }
 }
 
 /// Minimal no-op stub for AppServices construction in iCloud identity tests.

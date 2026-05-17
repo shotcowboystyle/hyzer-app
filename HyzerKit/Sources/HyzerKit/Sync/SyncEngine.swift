@@ -80,6 +80,101 @@ public actor SyncEngine: ModelActor {
         await pullRecords()
     }
 
+    /// Pushes a newly started `Round` record to CloudKit so the CKQuerySubscription
+    /// can fire and deliver a "Round Started" push to other participants.
+    ///
+    /// Follows the `.pending → .inFlight → .synced/.failed` state machine (Amendment A1).
+    /// The `.inFlight` guard prevents duplicate pushes from concurrent calls.
+    /// If the push fails (network offline), `SyncMetadata` transitions to `.failed` and
+    /// `SyncScheduler` retries on reconnect — the local round is unaffected.
+    ///
+    /// - Parameters:
+    ///   - roundID: The `Round.id` UUID.
+    ///   - organizerID: The organizer's `Player.id`.
+    ///   - organizerFirstName: Precomputed first-name token (PII gate — never a full name or iCloud ID).
+    ///   - courseName: The `Course.name`.
+    ///   - playerIDs: The round's `playerIDs` array.
+    ///   - status: The current round status (should be `"active"` for the subscription predicate to fire).
+    ///   - createdAt: The round's `createdAt` timestamp.
+    public func pushRound(
+        roundID: UUID,
+        organizerID: UUID,
+        organizerFirstName: String,
+        courseName: String,
+        playerIDs: [String],
+        status: String,
+        createdAt: Date
+    ) async {
+        let idString = roundID.uuidString
+
+        // Check for existing in-flight or synced metadata (reentrancy guard)
+        let existingMeta = fetchAllMetadata().first {
+            $0.recordID == idString && $0.recordType == RoundRecord.recordType
+        }
+        if let existing = existingMeta, existing.syncStatus == .inFlight || existing.syncStatus == .synced {
+            logger.info("SyncEngine.pushRound: round \(idString) already \(String(describing: existing.syncStatus)) — skipping")
+            return
+        }
+
+        // Insert or reuse SyncMetadata entry
+        let meta: SyncMetadata
+        if let existing = existingMeta {
+            meta = existing
+        } else {
+            meta = SyncMetadata(recordID: idString, recordType: RoundRecord.recordType)
+            modelContext.insert(meta)
+        }
+        meta.syncStatus = .inFlight
+        meta.lastAttempt = Date()
+
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("SyncEngine.pushRound: failed to persist .inFlight status: \(error)")
+            return
+        }
+
+        let dto = RoundRecord(
+            id: roundID,
+            organizerID: organizerID,
+            organizerFirstName: organizerFirstName,
+            courseName: courseName,
+            status: status,
+            playerIDs: playerIDs,
+            createdAt: createdAt
+        )
+        let ckRecord = dto.toCKRecord()
+
+        do {
+            _ = try await cloudKitClient.save([ckRecord])
+            meta.syncStatus = .synced
+            do {
+                try modelContext.save()
+                logger.info("SyncEngine.pushRound: pushed round \(idString)")
+            } catch {
+                // CK save succeeded but local metadata save failed — leaving .inFlight here
+                // would strand the entry permanently (retryFailed only resets .failed). Demote
+                // to .failed so the retry pipeline picks it up; the CK upsert is idempotent
+                // because the recordID is the round's UUID.
+                meta.syncStatus = .failed
+                try? modelContext.save()
+                logger.error("SyncEngine.pushRound: CK save succeeded but local save failed — marking .failed for retry: \(error)")
+            }
+        } catch let ckError as CKError where ckError.code == .serverRecordChanged {
+            // The record already exists on the server (e.g., this device pushed it earlier
+            // and we lost the local metadata, or a concurrent push beat us). Treat as success.
+            meta.syncStatus = .synced
+            try? modelContext.save()
+            logger.info("SyncEngine.pushRound: serverRecordChanged for round \(idString) — record already on server, marking .synced")
+        } catch {
+            meta.syncStatus = .failed
+            do { try modelContext.save() } catch {
+                logger.error("SyncEngine.pushRound: failed to persist .failed status: \(error)")
+            }
+            logger.error("SyncEngine.pushRound: push failed for round \(idString): \(error)")
+        }
+    }
+
     /// Resets all `.failed` entries to `.pending` and flushes them via `pushPending()`.
     ///
     /// Called by `SyncScheduler` when connectivity is restored after an offline period.

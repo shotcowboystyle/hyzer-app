@@ -127,15 +127,18 @@ final class RoundSetupViewModel {
 
     // MARK: - Round creation
 
-    /// Creates a Round in SwiftData with the organizer as the default participant.
+    /// Creates a Round in SwiftData with the organizer as the default participant,
+    /// then asynchronously pushes the Round record to CloudKit via `SyncEngine`.
     ///
     /// The organizer is always included in `playerIDs` (FR16).
     /// Calls `round.start()` to transition from "setup" to "active".
+    /// The CloudKit push is fire-and-forget — failure falls to the `.failed → retryFailed()` pipeline.
     ///
     /// - Parameters:
     ///   - organizer: The current user's Player record.
     ///   - context: The SwiftData `ModelContext` for persistence.
-    func startRound(organizer: Player, in context: ModelContext) throws {
+    ///   - syncEngine: Injected at call-time; used to push the Round record after save.
+    func startRound(organizer: Player, in context: ModelContext, syncEngine: SyncEngine) throws {
         precondition(canStartRound, "startRound called when canStartRound is false")
         guard let course = selectedCourse else { return }
 
@@ -155,5 +158,30 @@ final class RoundSetupViewModel {
         context.insert(round)
         round.start()
         try context.save()
+
+        // Precompute scalar values from the @Model before crossing actor boundary.
+        let roundID = round.id
+        let organizerID = round.organizerID
+        let organizerFirstName = organizer.displayName
+            .split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+            .first
+            .map(String.init) ?? organizer.displayName
+        let courseName = course.name
+        let playerIDs = round.playerIDs
+        let status = round.status
+        let createdAt = round.createdAt
+
+        // Fire-and-forget: failure falls to the .failed → retryFailed() retry pipeline.
+        Task {
+            await syncEngine.pushRound(
+                roundID: roundID,
+                organizerID: organizerID,
+                organizerFirstName: organizerFirstName,
+                courseName: courseName,
+                playerIDs: playerIDs,
+                status: status,
+                createdAt: createdAt
+            )
+        }
     }
 }

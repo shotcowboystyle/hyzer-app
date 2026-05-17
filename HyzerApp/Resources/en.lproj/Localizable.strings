@@ -1,0 +1,6 @@
+/* Push notification alert body for "Round Started" (Story 12.1, AC #1).
+   %1$@ = organizer first name, %2$@ = course name.
+   CloudKit substitutes field values server-side via alertLocalizationArgs.
+   Positional specifiers allow translators in future locales to reorder arguments
+   (e.g., languages where the course name precedes the verb). */
+"ROUND_STARTED_FORMAT" = "%1$@ started a round at %2$@";

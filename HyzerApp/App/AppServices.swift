@@ -4,6 +4,11 @@ import UIKit
 import os.log
 import HyzerKit
 
+/// Deep-link destinations the app can navigate to from a remote notification tap.
+enum DeepLink: Equatable {
+    case activeRound(roundID: UUID)
+}
+
 /// Composition root for all app services.
 ///
 /// Created once at app startup and injected into the SwiftUI environment.
@@ -13,6 +18,7 @@ import HyzerKit
 ///   ModelContainer → StandingsEngine → RoundLifecycleManager
 ///   → CloudKitClient → NetworkMonitor → SyncEngine → SyncScheduler → ScoringService
 ///   → PhoneConnectivityService (Story 7.1)
+///   → NotificationService (Story 12.1)
 @MainActor
 @Observable
 final class AppServices {
@@ -24,7 +30,12 @@ final class AppServices {
     let syncScheduler: SyncScheduler
     let voiceRecognitionService: VoiceRecognitionService
     let phoneConnectivityService: PhoneConnectivityService
+    let notificationService: any NotificationService
     private(set) var iCloudRecordName: String?
+
+    /// Pending navigation target set when a "Round Started" notification is tapped.
+    /// `ContentView` / `HomeView` observes this and routes to the active round, then nils it (consume-once).
+    var pendingDeepLink: DeepLink?
 
     /// Observable sync state, bridged from the `SyncEngine` actor via an async stream.
     /// Drives `SyncIndicatorView`.
@@ -33,14 +44,17 @@ final class AppServices {
     private let iCloudIdentityProvider: any ICloudIdentityProvider
     private let iCloudLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "ICloudIdentity")
     private let seederLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "CourseSeeder")
+    private let notificationLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices.Notification")
 
     init(
         modelContainer: ModelContainer,
         iCloudIdentityProvider: any ICloudIdentityProvider,
         cloudKitClient: any CloudKitClient,
-        networkMonitor: any NetworkMonitor
+        networkMonitor: any NetworkMonitor,
+        notificationService: any NotificationService = LiveNotificationService()
     ) {
         self.modelContainer = modelContainer
+        self.notificationService = notificationService
         self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
         self.roundLifecycleManager = RoundLifecycleManager(modelContext: modelContainer.mainContext)
         self.syncEngine = SyncEngine(
@@ -112,9 +126,80 @@ final class AppServices {
         await syncScheduler.stopActiveRoundPolling()
     }
 
-    /// Handles a CKSubscription silent push notification.
+    /// Handles a CKSubscription silent push notification (ScoreEvent subscription).
     func handleRemoteNotification() async {
         await syncScheduler.handleRemoteNotification()
+    }
+
+    /// Handles a "Round Started" CKQuerySubscription notification.
+    ///
+    /// Dispatched from `AppDelegate` when the subscription ID is `"Round-active-creation"`.
+    /// Self-exclusion gate: if the local player is the organizer, returns without setting `pendingDeepLink`.
+    func handleRoundStartedNotification(_ userInfo: [AnyHashable: Any]) async {
+        guard let payload = notificationService.parseRoundStartedPayload(userInfo) else {
+            notificationLogger.info("handleRoundStartedNotification: unrecognised payload — ignoring")
+            return
+        }
+
+        let localPlayerID = Self.resolveLocalPlayerID(from: modelContainer.mainContext)
+        if notificationService.shouldSuppressPresentation(for: payload, localPlayerID: localPlayerID) {
+            notificationLogger.info("handleRoundStartedNotification: self-exclusion — suppressing")
+            return
+        }
+
+        // Pull so the round is locally materialised before the user taps through.
+        await syncEngine.pullRecords()
+        // One-shot retry if the round didn't show up — covers notify-before-sync race (Task 7.3).
+        if !Self.roundExists(payload.roundID, in: modelContainer.mainContext) {
+            await syncEngine.pullRecords()
+        }
+
+        // Set deep-link; HomeView observes and switches to the Scoring tab.
+        pendingDeepLink = .activeRound(roundID: payload.roundID)
+        notificationLogger.info("handleRoundStartedNotification: deep-link set for round")
+    }
+
+    /// Seeds `pendingDeepLink` from a cold-launch remote notification (Task 7.4).
+    ///
+    /// Call during `AppDelegate.application(_:didFinishLaunchingWithOptions:)` before
+    /// the first view renders so the Scoring tab is pre-selected.
+    ///
+    /// Eagerly sets `pendingDeepLink` so HomeView's `.onAppear` observer routes immediately;
+    /// then kicks off a fire-and-forget pull so the active Round is materialised in SwiftData
+    /// before the user reaches the Scoring tab. Retries `pullRecords()` once if the round is
+    /// not yet present locally — covers the case where the notification arrived before sync.
+    func seedDeepLinkFromLaunchOptions(_ launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
+        guard let userInfo = launchOptions?[.remoteNotification] as? [AnyHashable: Any],
+              let payload = notificationService.parseRoundStartedPayload(userInfo) else { return }
+
+        let localPlayerID = Self.resolveLocalPlayerID(from: modelContainer.mainContext)
+        guard !notificationService.shouldSuppressPresentation(for: payload, localPlayerID: localPlayerID) else { return }
+
+        pendingDeepLink = .activeRound(roundID: payload.roundID)
+
+        // Ensure the Round is locally materialised so ScoringTabView's @Query picks it up.
+        let container = modelContainer
+        let engine = syncEngine
+        Task {
+            await engine.pullRecords()
+            if !Self.roundExists(payload.roundID, in: container.mainContext) {
+                await engine.pullRecords()  // One-shot retry per Task 7.3
+            }
+        }
+    }
+
+    /// Returns true iff a `Round` with the given ID is present in SwiftData.
+    /// Used by the cold-launch deep-link path to decide whether to retry a pull.
+    private static func roundExists(_ roundID: UUID, in context: ModelContext) -> Bool {
+        var descriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == roundID })
+        descriptor.fetchLimit = 1
+        do {
+            return try !context.fetch(descriptor).isEmpty
+        } catch {
+            Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices")
+                .error("roundExists fetch failed: \(error)")
+            return false
+        }
     }
 
     /// Performs app-foreground round discovery (covers missed CKSubscription pushes).

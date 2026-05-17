@@ -33,4 +33,24 @@ public protocol CloudKitClient: Sendable {
     /// Used for idempotent subscription setup — check this before calling `subscribe(to:predicate:)`
     /// to avoid accumulating duplicate subscriptions across app launches.
     func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID]
+
+    /// Registers a `CKQuerySubscription` that delivers an **alert** (visible) push notification.
+    ///
+    /// Distinct from `subscribe(to:predicate:)` which delivers silent-only pushes.
+    /// The ScoreEvent subscription must remain silent-only (no user-visible alert);
+    /// this method handles the Round subscription that shows the "Round Started" banner.
+    ///
+    /// - Parameters:
+    ///   - recordType: The CloudKit record type to subscribe to.
+    ///   - predicate: Filter predicate (e.g. `status == "active"`).
+    ///   - subscriptionID: Explicit subscription ID used for idempotency checks.
+    ///   - notificationInfo: Pre-configured `CKSubscription.NotificationInfo` with
+    ///     `alertLocalizationKey`, `alertLocalizationArgs`, and `desiredKeys` set.
+    /// - Returns: The saved subscription ID.
+    func subscribeWithAlert(
+        to recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    ) async throws -> CKSubscription.ID
 }

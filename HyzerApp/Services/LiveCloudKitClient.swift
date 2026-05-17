@@ -93,4 +93,21 @@ struct LiveCloudKitClient: CloudKitClient, Sendable {
         let subscriptions = try await Self.publicDB.allSubscriptions()
         return subscriptions.map(\.subscriptionID)
     }
+
+    func subscribeWithAlert(
+        to recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    ) async throws -> CKSubscription.ID {
+        let subscription = CKQuerySubscription(
+            recordType: recordType,
+            predicate: predicate,
+            subscriptionID: subscriptionID,
+            options: [.firesOnRecordCreation]
+        )
+        subscription.notificationInfo = notificationInfo
+        let saved = try await Self.publicDB.save(subscription)
+        return saved.subscriptionID
+    }
 }

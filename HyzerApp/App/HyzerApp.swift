@@ -14,14 +14,16 @@ struct HyzerApp: App {
         MetricKitObserver.shared.register()
         let container = Self.makeModelContainer()
         let networkMonitor = LiveNetworkMonitor()
-        appServices = AppServices(
+        let services = AppServices(
             modelContainer: container,
             iCloudIdentityProvider: LiveICloudIdentityProvider(),
             cloudKitClient: LiveCloudKitClient(),
-            networkMonitor: networkMonitor
+            networkMonitor: networkMonitor,
+            notificationService: LiveNotificationService()
         )
+        appServices = services
         // Give AppDelegate a reference to forward remote notifications
-        AppDelegate.shared = appServices
+        AppDelegate.shared = services
     }
 
     var body: some Scene {
@@ -140,6 +142,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         application.registerForRemoteNotifications()
+        // Seed deep-link before first view renders if launched from a notification tap.
+        AppDelegate.shared?.seedDeepLinkFromLaunchOptions(launchOptions)
         return true
     }
 
@@ -153,7 +157,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                 completionHandler(.noData)
                 return
             }
-            await services.handleRemoteNotification()
+            // Branch on subscription ID: Round-active-creation → handleRoundStartedNotification
+            // ScoreEvent-creation (and any other) → existing silent-push handler
+            if CKNotificationEnvelope.subscriptionID(from: userInfo) == "Round-active-creation" {
+                await services.handleRoundStartedNotification(userInfo)
+            } else {
+                await services.handleRemoteNotification()
+            }
             completionHandler(.newData)
         }
     }
