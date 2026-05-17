@@ -107,7 +107,7 @@ stories:
     deferred: true
   "9.3":
     title: "App Store Connect Record, TestFlight Test Group & Border Token Debt"
-    status: backlog
+    status: done
     epic: 9
     deferred: true
   \"10.1\":

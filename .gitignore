@@ -29,3 +29,6 @@ build/
 .swiftlint.cache
 
 hyzer-design-system
+
+# Story evidence screenshots (local only — gitignored per story spec)
+_bmad-output/implementation-artifacts/*-evidence/

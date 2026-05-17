@@ -117,7 +117,6 @@ From the Epics 1–8 retrospective (`_bmad-output/implementation-artifacts/epics
 - `ShareSheetRepresentable` duplicated in two History views — extract to shared component
 - `ConflictResult` missing `Equatable` conformance
 - `SyncScheduler` uses `UserDefaults.standard` directly — testability concern
-- `ColorTokens.border` referenced but never defined
 - DTO stubs (`CourseRecord`, `PlayerRecord`, `RoundRecord`) — identity-only, deferred to future sync expansion
 
 ### Coding Standards (Enforce, Don't Review)
