@@ -330,4 +330,167 @@ struct SyncEngineConflictTests {
         #expect(discrepancy.holeNumber == 4)
         #expect(discrepancy.status == .unresolved)
     }
+
+    // MARK: - Story 12.3: detectConflicts pushes Discrepancy to CloudKit (Task 4.3–4.5)
+
+    @Test("detectConflicts pushes a DiscrepancyRecord to CloudKit on new conflict when round is locally present")
+    @MainActor
+    func test_detectConflicts_pushesDiscrepancy_onNewConflict() async throws {
+        let container = try TestContainerFactory.makeConflictTestContainer()
+        let context = container.mainContext
+
+        let roundID = UUID()
+        let organizerID = UUID()
+        let playerID = UUID().uuidString
+
+        // Seed a Round locally so detectConflicts can resolve organizerID
+        let round = Round(
+            courseID: UUID(),
+            organizerID: organizerID,
+            playerIDs: [],
+            guestNames: [],
+            holeCount: 18
+        )
+        round.id = roundID
+        context.insert(round)
+
+        let localEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 1, playerID: playerID, strokeCount: 3, deviceID: "device-A"
+        )
+        context.insert(localEvent)
+        try context.save()
+
+        let conflictingEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 1, playerID: playerID, strokeCount: 5, deviceID: "device-B"
+        )
+        let mockCK = MockCloudKitClient()
+        mockCK.seed([
+            ScoreEventRecord(from: localEvent).toCKRecord(),
+            ScoreEventRecord(from: conflictingEvent).toCKRecord()
+        ])
+
+        let engine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: context),
+            modelContainer: container
+        )
+
+        await engine.pullRecords()
+
+        // Wait for the fire-and-forget pushDiscrepancy Task to complete
+        await awaitCondition {
+            mockCK.savedRecords.contains { $0.recordType == DiscrepancyRecord.recordType }
+        }
+
+        let discRecords = mockCK.savedRecords.filter { $0.recordType == DiscrepancyRecord.recordType }
+        #expect(discRecords.count == 1)
+        #expect(discRecords.first?["roundID"] as? String == roundID.uuidString)
+        #expect(discRecords.first?["organizerID"] as? String == organizerID.uuidString)
+        #expect(discRecords.first?["playerID"] as? String == playerID)
+        #expect(discRecords.first?["holeNumber"] as? Int == 1)
+    }
+
+    @Test("detectConflicts does not push DiscrepancyRecord when Round is missing locally")
+    @MainActor
+    func test_detectConflicts_doesNotPush_whenRoundMissing() async throws {
+        let container = try TestContainerFactory.makeConflictTestContainer()
+        let context = container.mainContext
+
+        let roundID = UUID()
+        let playerID = UUID().uuidString
+
+        let localEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 2, playerID: playerID, strokeCount: 3, deviceID: "device-A"
+        )
+        context.insert(localEvent)
+        try context.save()
+
+        let conflictingEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 2, playerID: playerID, strokeCount: 5, deviceID: "device-B"
+        )
+        let mockCK = MockCloudKitClient()
+        mockCK.seed([
+            ScoreEventRecord(from: localEvent).toCKRecord(),
+            ScoreEventRecord(from: conflictingEvent).toCKRecord()
+        ])
+
+        let engine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: context),
+            modelContainer: container
+        )
+
+        await engine.pullRecords()
+
+        // Use `awaitCondition` (deterministic settle, project-banned `Task.sleep`-free) to give any
+        // detached push task a fair chance to fire. The call returns false on timeout — that is the
+        // expected outcome here because the early-return path inside `detectConflicts` means no Task
+        // is launched at all.
+        _ = await awaitCondition(timeout: .milliseconds(200)) {
+            mockCK.savedRecords.contains { $0.recordType == DiscrepancyRecord.recordType }
+        }
+
+        let discRecords = mockCK.savedRecords.filter { $0.recordType == DiscrepancyRecord.recordType }
+        #expect(discRecords.isEmpty, "Must not push Discrepancy CKRecord when Round is not locally present")
+    }
+
+    @Test("detectConflicts does not double-push on second pull cycle — dedup guard prevents it")
+    @MainActor
+    func test_detectConflicts_doesNotDoublePush_onSecondPullCycle() async throws {
+        let container = try TestContainerFactory.makeConflictTestContainer()
+        let context = container.mainContext
+
+        let roundID = UUID()
+        let organizerID = UUID()
+        let playerID = UUID().uuidString
+
+        let round = Round(
+            courseID: UUID(),
+            organizerID: organizerID,
+            playerIDs: [],
+            guestNames: [],
+            holeCount: 18
+        )
+        round.id = roundID
+        context.insert(round)
+
+        let localEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 3, playerID: playerID, strokeCount: 3, deviceID: "device-A"
+        )
+        context.insert(localEvent)
+        try context.save()
+
+        let conflictingEvent = ScoreEvent.fixture(
+            roundID: roundID, holeNumber: 3, playerID: playerID, strokeCount: 5, deviceID: "device-B"
+        )
+        let mockCK = MockCloudKitClient()
+        mockCK.seed([
+            ScoreEventRecord(from: localEvent).toCKRecord(),
+            ScoreEventRecord(from: conflictingEvent).toCKRecord()
+        ])
+
+        let engine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: context),
+            modelContainer: container
+        )
+
+        // First pull — should detect discrepancy and push once
+        await engine.pullRecords()
+        await awaitCondition {
+            mockCK.savedRecords.contains { $0.recordType == DiscrepancyRecord.recordType }
+        }
+        let countAfterFirstPull = mockCK.savedRecords.filter { $0.recordType == DiscrepancyRecord.recordType }.count
+        #expect(countAfterFirstPull == 1)
+
+        // Second pull — existingDiscrepancies guard skips re-insert and re-push.
+        // Wait for any detached duplicate push task to have a chance to fire (it should not).
+        await engine.pullRecords()
+        _ = await awaitCondition(timeout: .milliseconds(200)) {
+            mockCK.savedRecords.filter { $0.recordType == DiscrepancyRecord.recordType }.count > 1
+        }
+
+        let countAfterSecondPull = mockCK.savedRecords.filter { $0.recordType == DiscrepancyRecord.recordType }.count
+        #expect(countAfterSecondPull == 1, "Second pull must not fire a duplicate pushDiscrepancy call")
+    }
 }

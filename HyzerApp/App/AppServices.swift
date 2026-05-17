@@ -8,6 +8,21 @@ import HyzerKit
 enum DeepLink: Equatable {
     case activeRound(roundID: UUID)
     case roundSummary(roundID: UUID)
+    case discrepancyResolution(roundID: UUID, playerID: String, holeNumber: Int)
+
+    /// Ordering used when two deep-links contend for `AppServices.pendingDeepLink`.
+    ///
+    /// Higher value wins. A lower-precedence handler must not clobber a higher-precedence
+    /// link that has not yet been consumed by `HomeView`. Order:
+    /// `discrepancyResolution` (organizer action required) > `roundSummary` (informational
+    /// post-round) > `activeRound` (passive routing).
+    var precedence: Int {
+        switch self {
+        case .discrepancyResolution: return 2
+        case .roundSummary: return 1
+        case .activeRound: return 0
+        }
+    }
 }
 
 /// Composition root for all app services.
@@ -46,6 +61,7 @@ final class AppServices {
     private let iCloudLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "ICloudIdentity")
     private let seederLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "CourseSeeder")
     private let notificationLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices.Notification")
+    private static let helperLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices")
 
     init(
         modelContainer: ModelContainer,
@@ -67,7 +83,10 @@ final class AppServices {
             syncEngine: syncEngine,
             cloudKitClient: cloudKitClient,
             networkMonitor: networkMonitor,
-            userDefaults: UserDefaults.standard
+            userDefaults: UserDefaults.standard,
+            localPlayerIDProvider: { [container = modelContainer] in
+                await MainActor.run { AppServices.resolveLocalPlayerID(from: container.mainContext) }
+            }
         )
         let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         let scoring = ScoringService(modelContext: modelContainer.mainContext, deviceID: deviceID)
@@ -140,8 +159,7 @@ final class AppServices {
         }
 
         // Set deep-link; HomeView observes and switches to the Scoring tab.
-        pendingDeepLink = .activeRound(roundID: payload.roundID)
-        notificationLogger.info("handleRoundStartedNotification: deep-link set for round")
+        setPendingDeepLinkIfHigherOrEqualPrecedence(.activeRound(roundID: payload.roundID), source: "handleRoundStartedNotification")
     }
 
     /// Handles a "Round Complete" CKQuerySubscription notification.
@@ -178,8 +196,49 @@ final class AppServices {
 
         // Set deep-link; HomeView observes and presents the summary card.
         // No PII in log message — no course name, no winner name.
-        pendingDeepLink = .roundSummary(roundID: payload.roundID)
-        notificationLogger.info("handleRoundCompleteNotification: deep-link set for round summary")
+        setPendingDeepLinkIfHigherOrEqualPrecedence(.roundSummary(roundID: payload.roundID), source: "handleRoundCompleteNotification")
+    }
+
+    /// Handles a "Discrepancy Detected" CKQuerySubscription notification.
+    ///
+    /// Dispatched from `AppDelegate` when the subscription ID is `"Discrepancy-creation"`.
+    /// No self-exclusion: the subscription predicate `organizerID == <localPlayerID>` guarantees
+    /// server-side that only the organizer receives this push.
+    func handleDiscrepancyDetectedNotification(_ userInfo: [AnyHashable: Any]) async {
+        guard let payload = notificationService.parseDiscrepancyDetectedPayload(userInfo) else {
+            notificationLogger.info("handleDiscrepancyDetectedNotification: unrecognised payload — ignoring")
+            return
+        }
+
+        await syncEngine.pullRecords()
+
+        if !Self.discrepancyExists(roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber, in: modelContainer.mainContext) {
+            await syncEngine.pullRecords()
+        }
+
+        guard Self.discrepancyExists(roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber, in: modelContainer.mainContext) else {
+            notificationLogger.info("handleDiscrepancyDetectedNotification: discrepancy missing after retry — dropping deep-link")
+            return
+        }
+
+        setPendingDeepLinkIfHigherOrEqualPrecedence(
+            .discrepancyResolution(roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber),
+            source: "handleDiscrepancyDetectedNotification"
+        )
+    }
+
+    /// Assigns `pendingDeepLink` only when `candidate.precedence >= current.precedence`.
+    ///
+    /// Discrepancy resolution outranks round summary outranks active round (see `DeepLink.precedence`).
+    /// A lower-precedence handler that arrives while a higher-precedence link is still pending logs
+    /// the skip rather than silently dropping the queued action.
+    private func setPendingDeepLinkIfHigherOrEqualPrecedence(_ candidate: DeepLink, source: String) {
+        if let current = pendingDeepLink, current.precedence > candidate.precedence {
+            notificationLogger.info("\(source): skipping deep-link overwrite — higher-precedence link still pending")
+            return
+        }
+        pendingDeepLink = candidate
+        notificationLogger.info("\(source): deep-link set")
     }
 
     /// Returns the local player's UUID (or nil pre-onboarding). Exposed for views that need
@@ -190,8 +249,7 @@ final class AppServices {
         do {
             return try context.fetch(descriptor).first?.id
         } catch {
-            Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices")
-                .error("resolveLocalPlayerID failed: \(error)")
+            helperLogger.error("resolveLocalPlayerID failed: \(error)")
             return nil
         }
     }
@@ -208,9 +266,33 @@ final class AppServices {
     func seedDeepLinkFromLaunchOptions(_ launchOptions: [UIApplication.LaunchOptionsKey: Any]?) {
         guard let userInfo = launchOptions?[.remoteNotification] as? [AnyHashable: Any] else { return }
 
-        // Try round-complete first, then round-started (both may arrive at launch).
+        // Try discrepancy-detected first (most specific routing target), then round-complete, then round-started.
+        if let discrepancyPayload = notificationService.parseDiscrepancyDetectedPayload(userInfo) {
+            setPendingDeepLinkIfHigherOrEqualPrecedence(
+                .discrepancyResolution(
+                    roundID: discrepancyPayload.roundID,
+                    playerID: discrepancyPayload.playerID,
+                    holeNumber: discrepancyPayload.holeNumber
+                ),
+                source: "seedDeepLinkFromLaunchOptions[discrepancy]"
+            )
+            let container = modelContainer
+            let engine = syncEngine
+            Task {
+                await engine.pullRecords()
+                if !Self.discrepancyExists(roundID: discrepancyPayload.roundID, playerID: discrepancyPayload.playerID, holeNumber: discrepancyPayload.holeNumber, in: container.mainContext) {
+                    await engine.pullRecords()
+                }
+            }
+            return
+        }
+
+        // Try round-complete, then round-started.
         if let completePayload = notificationService.parseRoundCompletePayload(userInfo) {
-            pendingDeepLink = .roundSummary(roundID: completePayload.roundID)
+            setPendingDeepLinkIfHigherOrEqualPrecedence(
+                .roundSummary(roundID: completePayload.roundID),
+                source: "seedDeepLinkFromLaunchOptions[complete]"
+            )
             let container = modelContainer
             let engine = syncEngine
             Task {
@@ -227,7 +309,10 @@ final class AppServices {
         let localPlayerID = Self.resolveLocalPlayerID(from: modelContainer.mainContext)
         guard !notificationService.shouldSuppressPresentation(for: payload, localPlayerID: localPlayerID) else { return }
 
-        pendingDeepLink = .activeRound(roundID: payload.roundID)
+        setPendingDeepLinkIfHigherOrEqualPrecedence(
+            .activeRound(roundID: payload.roundID),
+            source: "seedDeepLinkFromLaunchOptions[started]"
+        )
 
         // Ensure the Round is locally materialised so ScoringTabView's @Query picks it up.
         let container = modelContainer
@@ -248,8 +333,24 @@ final class AppServices {
         do {
             return try !context.fetch(descriptor).isEmpty
         } catch {
-            Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices")
-                .error("roundExists fetch failed: \(error)")
+            helperLogger.error("roundExists fetch failed: \(error)")
+            return false
+        }
+    }
+
+    /// Returns true iff a `Discrepancy` for the given {roundID, playerID, holeNumber} exists locally.
+    /// Used by `handleDiscrepancyDetectedNotification` to decide whether to set the deep-link.
+    /// Does NOT filter by status — an already-resolved discrepancy still routes to the read-only view (AC #4).
+    private static func discrepancyExists(roundID: UUID, playerID: String, holeNumber: Int, in context: ModelContext) -> Bool {
+        let descriptor = FetchDescriptor<Discrepancy>(
+            predicate: #Predicate { $0.roundID == roundID && $0.playerID == playerID && $0.holeNumber == holeNumber }
+        )
+        do {
+            var bounded = descriptor
+            bounded.fetchLimit = 1
+            return try !context.fetch(bounded).isEmpty
+        } catch {
+            helperLogger.error("discrepancyExists fetch failed: \(error)")
             return false
         }
     }

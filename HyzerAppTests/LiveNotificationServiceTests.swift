@@ -179,7 +179,160 @@ struct LiveNotificationServiceTests {
         #expect(result?.courseName == "Cedar Creek")
     }
 
+    // MARK: - parseDiscrepancyDetectedPayload — happy path
+
+    @Test("parseDiscrepancyDetectedPayload returns the payload for a valid Discrepancy-creation envelope")
+    func test_discrepancy_validInput_returnsPayload() {
+        let discrepancyID = UUID()
+        let roundID = UUID()
+        let userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: discrepancyID,
+            sid: "Discrepancy-creation",
+            roundID: roundID,
+            playerID: "player-abc",
+            holeNumber: 7
+        )
+
+        let result = service.parseDiscrepancyDetectedPayload(userInfo)
+
+        #expect(result != nil)
+        #expect(result?.discrepancyID == discrepancyID)
+        #expect(result?.roundID == roundID)
+        #expect(result?.playerID == "player-abc")
+        #expect(result?.holeNumber == 7)
+    }
+
+    // MARK: - parseDiscrepancyDetectedPayload — SID gating (regression on payload misroute)
+
+    @Test("parseDiscrepancyDetectedPayload returns nil for a Round-complete-update envelope (foreign-payload SID guard)")
+    func test_discrepancy_roundCompleteEnvelope_returnsNil() {
+        let userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: UUID(),
+            sid: "Round-complete-update",
+            roundID: UUID(),
+            playerID: "player-abc",
+            holeNumber: 4
+        )
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    @Test("parseDiscrepancyDetectedPayload returns nil for a Round-active-creation envelope")
+    func test_discrepancy_roundActiveCreationEnvelope_returnsNil() {
+        let userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: UUID(),
+            sid: "Round-active-creation",
+            roundID: UUID(),
+            playerID: "player-abc",
+            holeNumber: 4
+        )
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    // MARK: - parseDiscrepancyDetectedPayload — missing fields
+
+    @Test("parseDiscrepancyDetectedPayload returns nil when rid (discrepancyID) is missing")
+    func test_discrepancy_missingRid_returnsNil() {
+        var userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: UUID(),
+            sid: "Discrepancy-creation",
+            roundID: UUID(),
+            playerID: "player-abc",
+            holeNumber: 4
+        )
+        if var ck = userInfo["ck"] as? [String: Any],
+           var qry = ck["qry"] as? [String: Any] {
+            qry.removeValue(forKey: "rid")
+            ck["qry"] = qry
+            userInfo["ck"] = ck
+        }
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    @Test("parseDiscrepancyDetectedPayload returns nil when roundID is missing from af")
+    func test_discrepancy_missingRoundID_returnsNil() {
+        let userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: UUID(),
+            sid: "Discrepancy-creation",
+            roundID: nil,
+            playerID: "player-abc",
+            holeNumber: 4
+        )
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    @Test("parseDiscrepancyDetectedPayload returns nil when playerID is missing from af")
+    func test_discrepancy_missingPlayerID_returnsNil() {
+        let userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: UUID(),
+            sid: "Discrepancy-creation",
+            roundID: UUID(),
+            playerID: nil,
+            holeNumber: 4
+        )
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    @Test("parseDiscrepancyDetectedPayload returns nil when holeNumber is missing from af")
+    func test_discrepancy_missingHoleNumber_returnsNil() {
+        let userInfo = makeDiscrepancyUserInfo(
+            discrepancyID: UUID(),
+            sid: "Discrepancy-creation",
+            roundID: UUID(),
+            playerID: "player-abc",
+            holeNumber: nil
+        )
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    @Test("parseDiscrepancyDetectedPayload returns nil for malformed discrepancyID (rid)")
+    func test_discrepancy_malformedRid_returnsNil() {
+        let userInfo: [AnyHashable: Any] = [
+            "ck": [
+                "qry": [
+                    "rid": "not-a-uuid",
+                    "sid": "Discrepancy-creation",
+                    "af": [
+                        "roundID": UUID().uuidString,
+                        "playerID": "player-abc",
+                        "holeNumber": 4
+                    ]
+                ]
+            ]
+        ]
+        #expect(service.parseDiscrepancyDetectedPayload(userInfo) == nil)
+    }
+
+    @Test("parseDiscrepancyDetectedPayload returns nil for empty user-info dictionary")
+    func test_discrepancy_emptyDict_returnsNil() {
+        #expect(service.parseDiscrepancyDetectedPayload([:]) == nil)
+    }
+
     // MARK: - Helpers
+
+    /// Builds a Discrepancy-creation envelope; any optional af field passed as `nil` is omitted.
+    private func makeDiscrepancyUserInfo(
+        discrepancyID: UUID,
+        sid: String,
+        roundID: UUID?,
+        playerID: String?,
+        holeNumber: Int?
+    ) -> [AnyHashable: Any] {
+        var af: [String: Any] = [:]
+        if let roundID { af["roundID"] = roundID.uuidString }
+        if let playerID { af["playerID"] = playerID }
+        if let holeNumber { af["holeNumber"] = holeNumber }
+        return [
+            "ck": [
+                "qry": [
+                    "rid": discrepancyID.uuidString,
+                    "sid": sid,
+                    "af": af
+                ]
+            ]
+        ]
+    }
+
+    // MARK: - Helpers (Round payloads)
 
     /// Builds a Round-complete-update envelope; any field passed as `nil` is omitted.
     private func makeCompleteUserInfo(

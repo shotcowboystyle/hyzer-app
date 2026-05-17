@@ -163,6 +163,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                 await services.handleRoundStartedNotification(userInfo)
             case NotificationSubscriptionID.roundCompleteUpdate:
                 await services.handleRoundCompleteNotification(userInfo)
+            case NotificationSubscriptionID.discrepancyCreation:
+                await services.handleDiscrepancyDetectedNotification(userInfo)
             default:
                 await services.handleRemoteNotification()
             }

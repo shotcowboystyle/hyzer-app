@@ -89,14 +89,40 @@ struct LiveNotificationService: NotificationService, Sendable {
             winnerScoreDisplay: winnerScoreDisplay
         )
     }
+
+    func parseDiscrepancyDetectedPayload(_ userInfo: [AnyHashable: Any]) -> DiscrepancyDetectedPayload? {
+        guard let qry = CKNotificationEnvelope.querySubscriptionInfo(from: userInfo),
+              let sid = qry["sid"] as? String,
+              sid == NotificationSubscriptionID.discrepancyCreation,
+              let rid = qry["rid"] as? String,
+              let discrepancyID = UUID(uuidString: rid),
+              let af = CKNotificationEnvelope.dict(qry["af"]) else {
+            return nil
+        }
+
+        guard let roundIDString = af["roundID"] as? String,
+              let roundID = UUID(uuidString: roundIDString),
+              let playerID = af["playerID"] as? String,
+              let holeNumber = af["holeNumber"] as? Int else {
+            return nil
+        }
+
+        return DiscrepancyDetectedPayload(
+            discrepancyID: discrepancyID,
+            roundID: roundID,
+            playerID: playerID,
+            holeNumber: holeNumber
+        )
+    }
 }
 
 /// Canonical subscription IDs used for both CK registration and payload-parse routing.
 /// Must stay in lock-step with `SyncScheduler.setupRoundActiveSubscription` /
-/// `setupRoundCompleteSubscription` and the AppDelegate dispatch switch.
+/// `setupRoundCompleteSubscription` / `setupDiscrepancyCreationSubscription` and the AppDelegate dispatch switch.
 enum NotificationSubscriptionID {
     static let roundActiveCreation = "Round-active-creation"
     static let roundCompleteUpdate = "Round-complete-update"
+    static let discrepancyCreation = "Discrepancy-creation"
 }
 
 // MARK: - CKNotificationEnvelope
