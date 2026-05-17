@@ -1,8 +1,44 @@
 import Testing
 import SwiftData
 import Foundation
+import CloudKit
 @testable import HyzerKit
 @testable import HyzerApp
+
+// MARK: - Stubs for SyncEngine construction
+
+private struct StubCKClientForRoundTests: CloudKitClient, @unchecked Sendable {
+    var savedRecords: [CKRecord] = []
+    func save(_ records: [CKRecord]) async throws -> [CKRecord] { records }
+    func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
+    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
+    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
+    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
+    func subscribeWithAlert(
+        to recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    ) async throws -> CKSubscription.ID { subscriptionID }
+}
+
+private class CapturingCKClient: CloudKitClient, @unchecked Sendable {
+    private(set) var savedRecords: [CKRecord] = []
+    func save(_ records: [CKRecord]) async throws -> [CKRecord] {
+        savedRecords.append(contentsOf: records)
+        return records
+    }
+    func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
+    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
+    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
+    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
+    func subscribeWithAlert(
+        to recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    ) async throws -> CKSubscription.ID { subscriptionID }
+}
 
 /// Tests for RoundSetupViewModel (Story 3.1: round creation and player setup).
 @Suite("RoundSetupViewModel")
@@ -157,12 +193,24 @@ struct RoundSetupViewModelTests {
         #expect(vm.guestNames.count == 1)
     }
 
+    // MARK: - startRound helpers
+
+    /// Container schema includes SyncMetadata so SyncEngine can persist metadata entries.
+    private func makeStartRoundContainer() throws -> ModelContainer {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, SyncMetadata.self, configurations: config)
+    }
+
+    private func makeSyncEngine(container: ModelContainer, ckClient: any CloudKitClient = StubCKClientForRoundTests()) -> SyncEngine {
+        let standings = StandingsEngine(modelContext: container.mainContext)
+        return SyncEngine(cloudKitClient: ckClient, standingsEngine: standings, modelContainer: container)
+    }
+
     // MARK: - startRound
 
     @Test("startRound creates Round with correct courseID and organizerID")
     func test_startRound_createsRoundWithCorrectIDs() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -173,7 +221,7 @@ struct RoundSetupViewModelTests {
 
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         #expect(rounds.count == 1)
@@ -183,8 +231,7 @@ struct RoundSetupViewModelTests {
 
     @Test("startRound sets round status to active with non-nil startedAt")
     func test_startRound_setsActiveStatusWithStartedAt() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -195,7 +242,7 @@ struct RoundSetupViewModelTests {
 
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         #expect(rounds[0].status == "active")
@@ -204,8 +251,7 @@ struct RoundSetupViewModelTests {
 
     @Test("startRound includes organizer in playerIDs even if not explicitly added")
     func test_startRound_includesOrganizerInPlayerIDs() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -217,7 +263,7 @@ struct RoundSetupViewModelTests {
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
         // Do NOT explicitly add organizer
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         #expect(rounds[0].playerIDs.contains(organizer.id.uuidString))
@@ -225,8 +271,7 @@ struct RoundSetupViewModelTests {
 
     @Test("startRound includes playerIDs for all added players")
     func test_startRound_includesAddedPlayers() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -240,7 +285,7 @@ struct RoundSetupViewModelTests {
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
         vm.addPlayer(player2)
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         let playerIDs = rounds[0].playerIDs
@@ -251,8 +296,7 @@ struct RoundSetupViewModelTests {
 
     @Test("startRound includes guestNames in the round")
     func test_startRound_includesGuestNames() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -264,7 +308,7 @@ struct RoundSetupViewModelTests {
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
         vm.guestNames = ["Alice Guest", "Bob Guest"]
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         #expect(rounds[0].guestNames == ["Alice Guest", "Bob Guest"])
@@ -272,8 +316,7 @@ struct RoundSetupViewModelTests {
 
     @Test("startRound does not add organizer twice if organizer is also in addedPlayers")
     func test_startRound_noOrganizerDuplicate() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -285,7 +328,7 @@ struct RoundSetupViewModelTests {
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
         vm.addPlayer(organizer) // Organizer explicitly added — should not duplicate
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         let organizerIDString = organizer.id.uuidString
@@ -295,8 +338,7 @@ struct RoundSetupViewModelTests {
 
     @Test("startRound denormalizes holeCount from course")
     func test_startRound_denormalizesHoleCount() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, configurations: config)
+        let container = try makeStartRoundContainer()
         let context = ModelContext(container)
 
         let organizer = Player(displayName: "Nate")
@@ -307,10 +349,44 @@ struct RoundSetupViewModelTests {
 
         let vm = RoundSetupViewModel()
         vm.selectedCourse = course
-        try vm.startRound(organizer: organizer, in: context)
+        try vm.startRound(organizer: organizer, in: context, syncEngine: makeSyncEngine(container: container))
 
         let rounds = try context.fetch(FetchDescriptor<Round>())
         #expect(rounds[0].holeCount == 9)
+    }
+
+    // MARK: - pushRound assertion (Story 12.1, Task 8.6)
+
+    @Test("startRound triggers exactly one pushRound call with correct organizerFirstName and courseName")
+    @MainActor
+    func test_startRound_triggersOneRoundPushWithCorrectFields() async throws {
+        let container = try makeStartRoundContainer()
+        let context = ModelContext(container)
+        let capturingCK = CapturingCKClient()
+
+        let organizer = Player(displayName: "Mike Jones")
+        context.insert(organizer)
+        let course = Course(name: "Cedar Creek", holeCount: 18)
+        context.insert(course)
+        try context.save()
+
+        let syncEngine = makeSyncEngine(container: container, ckClient: capturingCK)
+        let vm = RoundSetupViewModel()
+        vm.selectedCourse = course
+        try vm.startRound(organizer: organizer, in: context, syncEngine: syncEngine)
+
+        // Wait for the fire-and-forget Task to complete
+        await awaitCondition(timeout: .seconds(3)) {
+            !capturingCK.savedRecords.isEmpty
+        }
+
+        #expect(capturingCK.savedRecords.count == 1)
+        let record = capturingCK.savedRecords.first
+        #expect(record?.recordType == "Round")
+        // organizerFirstName must be the first token only (PII gate)
+        #expect(record?["organizerFirstName"] as? String == "Mike")
+        #expect(record?["courseName"] as? String == "Cedar Creek")
+        #expect(record?["status"] as? String == "active")
     }
 
     // MARK: - loadPreviousRoundPlayers (Story 10.1)

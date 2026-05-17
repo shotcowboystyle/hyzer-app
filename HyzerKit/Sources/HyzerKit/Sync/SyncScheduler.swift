@@ -141,9 +141,11 @@ public actor SyncScheduler {
     /// Idempotency strategy: fetch all subscription IDs from CloudKit. If any IDs
     /// were previously saved to UserDefaults AND are still present in CloudKit,
     /// skip creation. Otherwise subscribe and persist the new ID.
+    ///
+    /// Subscriptions created:
+    /// - `ScoreEvent-creation`: silent push (existing) for live-score syncing
+    /// - `Round-active-creation`: alert push (Story 12.1) for "Round Started" notification
     private func setupSubscriptions() async {
-        let recordTypes = [ScoreEventRecord.recordType]
-
         let existingIDs: [CKSubscription.ID]
         do {
             existingIDs = try await cloudKitClient.fetchAllSubscriptionIDs()
@@ -152,16 +154,15 @@ public actor SyncScheduler {
             return
         }
 
-        for recordType in recordTypes {
+        // Silent-push subscriptions (ScoreEvent)
+        let silentRecordTypes = [ScoreEventRecord.recordType]
+        for recordType in silentRecordTypes {
             let defaultsKey = "HyzerApp.subscriptionID.\(recordType)"
             let storedID = userDefaults.string(forKey: defaultsKey)
-
-            // Skip creation if the stored subscription ID still exists in CloudKit
             if let storedID, existingIDs.contains(storedID) {
                 logger.info("SyncScheduler: subscription for \(recordType) already active — skipping")
                 continue
             }
-
             do {
                 let subID = try await cloudKitClient.subscribe(
                     to: recordType,
@@ -172,6 +173,48 @@ public actor SyncScheduler {
             } catch {
                 logger.error("SyncScheduler: failed to subscribe to \(recordType): \(error)")
             }
+        }
+
+        // Alert-push subscription for Round-active-creation (Story 12.1, AC #1/#2)
+        await setupRoundActiveSubscription(existingIDs: existingIDs)
+    }
+
+    /// Creates the `Round-active-creation` CKQuerySubscription that drives "Round Started" push notifications.
+    ///
+    /// Predicate: `status == "active"` — fires only when a Round record is created with active status.
+    /// `alertLocalizationKey` / `alertLocalizationArgs` let CloudKit compose the alert body server-side
+    /// from the record's `organizerFirstName` and `courseName` fields — no PII travels through APNs payload (AC #2).
+    /// `desiredKeys` delivers organizer/course data to `parseRoundStartedPayload` without a refetch.
+    private func setupRoundActiveSubscription(existingIDs: [CKSubscription.ID]) async {
+        let roundSubID = "Round-active-creation"
+        let defaultsKey = "HyzerApp.subscriptionID.\(RoundRecord.recordType)"
+        let storedID = userDefaults.string(forKey: defaultsKey)
+        if let storedID, existingIDs.contains(storedID) {
+            logger.info("SyncScheduler: Round-active-creation subscription already active — skipping")
+            return
+        }
+
+        let notificationInfo = CKSubscription.NotificationInfo()
+        notificationInfo.shouldSendContentAvailable = true
+        notificationInfo.shouldSendMutableContent = false
+        notificationInfo.alertLocalizationKey = "ROUND_STARTED_FORMAT"
+        notificationInfo.alertLocalizationArgs = ["organizerFirstName", "courseName"]
+        notificationInfo.desiredKeys = ["organizerFirstName", "courseName", "organizerID"]
+
+        do {
+            let subID = try await cloudKitClient.subscribeWithAlert(
+                to: RoundRecord.recordType,
+                predicate: NSPredicate(format: "status == %@", "active"),
+                subscriptionID: roundSubID,
+                notificationInfo: notificationInfo
+            )
+            userDefaults.setString(subID, forKey: defaultsKey)
+            logger.info("SyncScheduler: registered Round-active-creation subscription \(subID)")
+        } catch {
+            // Partial-failure recovery is automatic: we do NOT persist the defaults key on
+            // failure, so the next launch's idempotency check will re-attempt this subscription
+            // even if the ScoreEvent subscription above succeeded and persisted its own key.
+            logger.error("SyncScheduler: failed to subscribe to Round-active-creation — will retry on next launch: \(error)")
         }
     }
 

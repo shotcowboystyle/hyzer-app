@@ -79,6 +79,25 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
         return existingSubscriptionIDs
     }
 
+    /// Subscriptions saved via `subscribeWithAlert` — keyed for inspection of predicate and notification config.
+    private(set) var savedAlertSubscriptions: [(
+        recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    )] = []
+
+    func subscribeWithAlert(
+        to recordType: CKRecord.RecordType,
+        predicate: NSPredicate,
+        subscriptionID: CKSubscription.ID,
+        notificationInfo: CKSubscription.NotificationInfo
+    ) async throws -> CKSubscription.ID {
+        if let error = shouldSimulateError { throw error }
+        savedAlertSubscriptions.append((recordType, predicate, subscriptionID, notificationInfo))
+        return subscriptionID
+    }
+
     // MARK: - Test helpers
 
     /// Seeds the in-memory store with the given records (simulates remote state).
@@ -96,5 +115,6 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
         subscribedRecordTypes.removeAll()
         deletedSubscriptionIDs.removeAll()
         existingSubscriptionIDs.removeAll()
+        savedAlertSubscriptions.removeAll()
     }
 }

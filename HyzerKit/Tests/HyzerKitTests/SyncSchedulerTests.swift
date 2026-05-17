@@ -230,6 +230,100 @@ struct SyncSchedulerTests {
         UserDefaults(suiteName: cleanupSuite)?.removeObject(forKey: cleanupKey)
     }
 
+    // MARK: - Round-active-creation subscription (Story 12.1, Task 8.4)
+
+    @Test("setupSubscriptions creates Round-active-creation alert subscription")
+    @MainActor
+    func test_setupSubscriptions_createsRoundActiveSubscription() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-round-sub")!
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.ScoreEvent")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round")
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults
+        )
+
+        await scheduler.start()
+
+        // Both ScoreEvent (silent) and Round (alert) subscriptions should exist
+        #expect(mockCK.subscribedRecordTypes.contains("ScoreEvent"))
+        #expect(mockCK.savedAlertSubscriptions.count == 1)
+        let roundSub = mockCK.savedAlertSubscriptions.first
+        #expect(roundSub?.recordType == "Round")
+        #expect(roundSub?.subscriptionID == "Round-active-creation")
+    }
+
+    @Test("setupSubscriptions Round-active-creation predicate targets status == active")
+    @MainActor
+    func test_setupSubscriptions_roundSubscriptionPredicateIsActiveStatus() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-round-predicate")!
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round")
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults
+        )
+
+        await scheduler.start()
+
+        let roundSub = mockCK.savedAlertSubscriptions.first
+        // Predicate should evaluate an active-status dict to true and setup-status to false
+        let activeDict: [String: Any] = ["status": "active"]
+        let setupDict: [String: Any] = ["status": "setup"]
+        #expect(roundSub?.predicate.evaluate(with: activeDict) == true)
+        #expect(roundSub?.predicate.evaluate(with: setupDict) == false)
+    }
+
+    @Test("setupSubscriptions Round subscription is idempotent — skips if already active")
+    @MainActor
+    func test_setupSubscriptions_roundSubscription_idempotent() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let existingRoundSubID = "Round-active-creation"
+        mockCK.existingSubscriptionIDs = [existingRoundSubID]
+
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-round-idempotent")!
+        testDefaults.set(existingRoundSubID, forKey: "HyzerApp.subscriptionID.Round")
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults
+        )
+
+        await scheduler.start()
+
+        // Should NOT create a new Round alert subscription
+        #expect(mockCK.savedAlertSubscriptions.isEmpty)
+
+        UserDefaults(suiteName: "test-sync-scheduler-round-idempotent")?.removeObject(forKey: "HyzerApp.subscriptionID.Round")
+    }
+
     // MARK: - Foreground discovery throttle (AC5, Task 8.5)
 
     @Test("foregroundDiscovery throttles repeated calls within 30 seconds")

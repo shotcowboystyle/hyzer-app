@@ -10,6 +10,7 @@ struct RoundSetupView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppServices.self) private var appServices
 
     @Query(sort: \Course.name) private var courses: [Course]
     @Query(sort: \Player.displayName) private var players: [Player]
@@ -230,7 +231,7 @@ struct RoundSetupView: View {
 
     private func startRound() {
         do {
-            try viewModel.startRound(organizer: organizer, in: modelContext)
+            try viewModel.startRound(organizer: organizer, in: modelContext, syncEngine: appServices.syncEngine)
             dismiss()
         } catch {
             viewModel.saveError = error
