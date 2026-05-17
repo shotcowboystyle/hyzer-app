@@ -32,7 +32,7 @@ public actor SyncEngine: ModelActor {
 
     // MARK: - Dependencies
 
-    private let cloudKitClient: any CloudKitClient
+    let cloudKitClient: any CloudKitClient
     private let standingsEngine: StandingsEngine
 
     // MARK: - Observable state
@@ -454,7 +454,7 @@ public actor SyncEngine: ModelActor {
     /// Fetches all SyncMetadata entries. Uses fetch-all-and-filter-in-Swift because
     /// `#Predicate` with custom enum types (SyncStatus) has unpredictable behavior
     /// on macOS test hosts. Bounded in practice: one entry per sync attempt.
-    private func fetchAllMetadata() -> [SyncMetadata] {
+    func fetchAllMetadata() -> [SyncMetadata] {
         do {
             var descriptor = FetchDescriptor<SyncMetadata>()
             descriptor.fetchLimit = 1000

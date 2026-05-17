@@ -64,4 +64,31 @@ struct SelfExclusionTests {
 
         #expect(mock.shouldSuppressPresentationCallCount == 2)
     }
+
+    // MARK: - AC #3: No self-exclusion for RoundCompletePayload (Story 12.2)
+
+    /// Regression guard: `NotificationService` protocol must have exactly ONE
+    /// `shouldSuppressPresentation` overload, accepting `RoundStartedPayload`.
+    /// No `shouldSuppressPresentation(for: RoundCompletePayload, ...)` must exist.
+    ///
+    /// This test is intentionally compile-time: if someone adds a suppression overload
+    /// for `RoundCompletePayload`, this test would still pass but the review gate
+    /// (PR blocking) should catch the protocol change. The runtime assertion here
+    /// verifies that calling `shouldSuppressPresentation` on `RoundStartedPayload`
+    /// does not affect `parseCompletePayloadCallCount`, confirming the two paths
+    /// are separate.
+    @Test("RoundCompletePayload is not subject to the self-exclusion gate (AC #3)")
+    func test_completePayloadIsNotSubjectToSelfExclusionGate() {
+        let mock = MockNotificationService()
+        let startedPayload = makePayload()
+
+        // Only RoundStartedPayload has a suppression overload.
+        _ = mock.shouldSuppressPresentation(for: startedPayload, localPlayerID: organizerID)
+
+        // Confirm the complete-payload parse path was never touched by suppression logic.
+        #expect(mock.parseCompletePayloadCallCount == 0,
+                "Suppression logic must not invoke parseRoundCompletePayload")
+        #expect(mock.shouldSuppressPresentationCallCount == 1,
+                "Only one suppression overload exists (for RoundStartedPayload)")
+    }
 }

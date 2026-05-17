@@ -346,6 +346,48 @@ struct ScorecardContainerView: View {
         withAnimation(AnimationCoordinator.animation(AnimationTokens.springGentle, reduceMotion: reduceMotion)) {
             isShowingSummary = true
         }
+
+        // Fire-and-forget: push completion to CloudKit so Round-complete-update subscription
+        // delivers the "Round Complete" push to all participants (AC #1).
+        // Local UX (summary card) is unaffected by sync timing.
+        let leaders = standings.filter { $0.position == 1 }
+        // Deterministic, locale-independent tie-break: case-insensitive ASCII order on
+        // playerName (AC #6). `localizedCaseInsensitiveCompare` was previously used here
+        // but is locale-dependent — two devices in different user locales could pick
+        // different winners for the same tied standings (e.g., Turkish 'I' collation).
+        let winner = leaders.sorted {
+            $0.playerName.compare($1.playerName, options: [.caseInsensitive]) == .orderedAscending
+        }.first
+
+        guard let winner else { return }
+
+        let winnerFirstName = winner.playerName
+            .split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+            .first
+            .map(String.init) ?? winner.playerName
+        let winnerScoreDisplay = winner.formattedScore
+
+        let organizer = roundPlayers.first { $0.id == round.organizerID }
+        let organizerFirstName = (organizer?.displayName ?? "")
+            .split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+            .first
+            .map(String.init) ?? (organizer?.displayName ?? "")
+        let playerIDs = round.playerIDs
+        let createdAt = round.createdAt
+
+        let engine = appServices.syncEngine
+        Task {
+            await engine.pushRoundCompletion(
+                roundID: round.id,
+                organizerID: round.organizerID,
+                organizerFirstName: organizerFirstName,
+                courseName: courseName,
+                playerIDs: playerIDs,
+                createdAt: createdAt,
+                winnerFirstName: winnerFirstName,
+                winnerScoreDisplay: winnerScoreDisplay
+            )
+        }
     }
 
     // MARK: - Voice overlay termination

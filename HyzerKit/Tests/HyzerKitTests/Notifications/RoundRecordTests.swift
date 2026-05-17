@@ -140,6 +140,123 @@ struct RoundRecordTests {
         #expect(ckRecord.recordID.recordName == id.uuidString)
     }
 
+    // MARK: - Story 12.2: Winner fields (Task 8.3)
+
+    @Test("toCKRecord omits winnerFirstName and winnerScoreDisplay when nil")
+    func test_toCKRecord_winnerFields_omittedWhenNil() {
+        let record = RoundRecord(
+            id: UUID(),
+            organizerID: UUID(),
+            organizerFirstName: "Alice",
+            courseName: "Hawk Ridge",
+            status: "active",
+            playerIDs: [UUID().uuidString],
+            createdAt: Date(),
+            winnerFirstName: nil,
+            winnerScoreDisplay: nil
+        )
+
+        let ckRecord = record.toCKRecord()
+        let actualKeys = Set(ckRecord.allKeys())
+
+        #expect(!actualKeys.contains("winnerFirstName"), "winnerFirstName must be omitted when nil — Story 12.1 active-state push backwards-compat")
+        #expect(!actualKeys.contains("winnerScoreDisplay"), "winnerScoreDisplay must be omitted when nil")
+    }
+
+    @Test("toCKRecord writes winnerFirstName and winnerScoreDisplay when non-nil")
+    func test_toCKRecord_winnerFields_writtenWhenNonNil() {
+        let record = RoundRecord(
+            id: UUID(),
+            organizerID: UUID(),
+            organizerFirstName: "Alice",
+            courseName: "Hawk Ridge",
+            status: "completed",
+            playerIDs: [UUID().uuidString],
+            createdAt: Date(),
+            winnerFirstName: "Bob",
+            winnerScoreDisplay: "-2"
+        )
+
+        let ckRecord = record.toCKRecord()
+
+        #expect(ckRecord["winnerFirstName"] as? String == "Bob")
+        #expect(ckRecord["winnerScoreDisplay"] as? String == "-2")
+    }
+
+    @Test("toCKRecord PII allowlist includes winner fields when set (extended)")
+    func test_toCKRecord_piiAllowlist_withWinnerFields() {
+        let record = RoundRecord(
+            id: UUID(),
+            organizerID: UUID(),
+            organizerFirstName: "Alice",
+            courseName: "Hawk Ridge",
+            status: "completed",
+            playerIDs: [UUID().uuidString],
+            createdAt: Date(),
+            winnerFirstName: "Bob",
+            winnerScoreDisplay: "+2"
+        )
+
+        let ckRecord = record.toCKRecord()
+        let actualKeys = Set(ckRecord.allKeys())
+
+        // Extended allowlist for completed rounds
+        let allowedKeys: Set<String> = [
+            "organizerID",
+            "organizerFirstName",
+            "courseName",
+            "status",
+            "playerIDs",
+            "createdAt",
+            "winnerFirstName",
+            "winnerScoreDisplay"
+        ]
+
+        // PII blocklist — unchanged from Story 12.1
+        let forbiddenKeys: Set<String> = [
+            "displayName",
+            "iCloudRecordName",
+            "email",
+            "strokeCount",
+            "holeNumber",
+            "score",
+            "lastName",
+            "fullName"
+        ]
+
+        #expect(actualKeys == allowedKeys,
+                "CKRecord keys \(actualKeys) must exactly match completed-state allowlist \(allowedKeys) — stricter than `isSubset` per Task 8.3")
+
+        for forbidden in forbiddenKeys {
+            #expect(!actualKeys.contains(forbidden), "PII field '\(forbidden)' must not appear in Round CKRecord")
+        }
+    }
+
+    @Test("init?(from:) succeeds and winner fields are nil when absent from CKRecord")
+    func test_init_fromCKRecord_winnerFieldsOptional_absentMeansNil() {
+        let record = makeMinimalRecord()
+        // No winner keys set — simulates an in-flight active-round record
+
+        let dto = RoundRecord(from: record)
+
+        #expect(dto != nil)
+        #expect(dto?.winnerFirstName == nil)
+        #expect(dto?.winnerScoreDisplay == nil)
+    }
+
+    @Test("init?(from:) round-trips winner fields when present in CKRecord")
+    func test_init_fromCKRecord_winnerFieldsRoundTrip() {
+        let record = makeMinimalRecord()
+        record["status"] = "completed" as CKRecordValue
+        record["winnerFirstName"] = "Carol" as CKRecordValue
+        record["winnerScoreDisplay"] = "E" as CKRecordValue
+
+        let dto = RoundRecord(from: record)
+
+        #expect(dto?.winnerFirstName == "Carol")
+        #expect(dto?.winnerScoreDisplay == "E")
+    }
+
     // MARK: - Helpers
 
     private func makeMinimalRecord() -> CKRecord {
@@ -149,6 +266,7 @@ struct RoundRecordTests {
         record["courseName"] = "Test Course" as CKRecordValue
         record["status"] = "active" as CKRecordValue
         record["createdAt"] = Date() as CKRecordValue
+        record["playerIDs"] = [UUID().uuidString] as CKRecordValue
         return record
     }
 }

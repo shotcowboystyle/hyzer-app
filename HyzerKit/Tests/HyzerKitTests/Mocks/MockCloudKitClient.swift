@@ -24,9 +24,17 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
     /// Internal store keyed by record ID.
     private var store: [CKRecord.ID: CKRecord] = [:]
 
+    /// Captures the `savePolicy` passed for each save call, in insertion order.
+    /// Calls to the policy-less `save(_:)` record `.ifServerRecordUnchanged`.
+    private(set) var savedPolicies: [CKModifyRecordsOperation.RecordSavePolicy] = []
+
     // MARK: - CloudKitClient
 
     func save(_ records: [CKRecord]) async throws -> [CKRecord] {
+        try await save(records, savePolicy: .ifServerRecordUnchanged)
+    }
+
+    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] {
         if let latency = simulatedLatency {
             try await Task.sleep(for: latency)
         }
@@ -36,6 +44,7 @@ final class MockCloudKitClient: CloudKitClient, @unchecked Sendable {
         for record in records {
             store[record.recordID] = record
             savedRecords.append(record)
+            savedPolicies.append(savePolicy)
         }
         return records
     }

@@ -43,6 +43,8 @@ struct LiveNotificationService: NotificationService, Sendable {
 
     func parseRoundStartedPayload(_ userInfo: [AnyHashable: Any]) -> RoundStartedPayload? {
         guard let qry = CKNotificationEnvelope.querySubscriptionInfo(from: userInfo),
+              let sid = qry["sid"] as? String,
+              sid == NotificationSubscriptionID.roundActiveCreation,
               let rid = qry["rid"] as? String,
               let roundID = UUID(uuidString: rid),
               let af = CKNotificationEnvelope.dict(qry["af"]) else {
@@ -63,6 +65,38 @@ struct LiveNotificationService: NotificationService, Sendable {
             courseName: courseName
         )
     }
+
+    func parseRoundCompletePayload(_ userInfo: [AnyHashable: Any]) -> RoundCompletePayload? {
+        guard let qry = CKNotificationEnvelope.querySubscriptionInfo(from: userInfo),
+              let sid = qry["sid"] as? String,
+              sid == NotificationSubscriptionID.roundCompleteUpdate,
+              let rid = qry["rid"] as? String,
+              let roundID = UUID(uuidString: rid),
+              let af = CKNotificationEnvelope.dict(qry["af"]) else {
+            return nil
+        }
+
+        guard let courseName = af["courseName"] as? String,
+              let winnerFirstName = af["winnerFirstName"] as? String,
+              let winnerScoreDisplay = af["winnerScoreDisplay"] as? String else {
+            return nil
+        }
+
+        return RoundCompletePayload(
+            roundID: roundID,
+            courseName: courseName,
+            winnerFirstName: winnerFirstName,
+            winnerScoreDisplay: winnerScoreDisplay
+        )
+    }
+}
+
+/// Canonical subscription IDs used for both CK registration and payload-parse routing.
+/// Must stay in lock-step with `SyncScheduler.setupRoundActiveSubscription` /
+/// `setupRoundCompleteSubscription` and the AppDelegate dispatch switch.
+enum NotificationSubscriptionID {
+    static let roundActiveCreation = "Round-active-creation"
+    static let roundCompleteUpdate = "Round-complete-update"
 }
 
 // MARK: - CKNotificationEnvelope

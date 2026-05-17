@@ -17,13 +17,17 @@ struct LiveCloudKitClient: CloudKitClient, Sendable {
     // MARK: - CloudKitClient
 
     func save(_ records: [CKRecord]) async throws -> [CKRecord] {
+        try await save(records, savePolicy: .ifServerRecordUnchanged)
+    }
+
+    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] {
         guard !records.isEmpty else { return [] }
 
         // Use the modern batch-modify API (iOS 16+)
         let (saveResults, _) = try await Self.publicDB.modifyRecords(
             saving: records,
             deleting: [],
-            savePolicy: .ifServerRecordUnchanged,
+            savePolicy: savePolicy,
             atomically: false
         )
 

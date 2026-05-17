@@ -29,3 +29,18 @@
 - `SyncEngine.fetchAllMetadata()` is bounded at `fetchLimit = 1000`; concurrent `pushRound` against an over-1000-row metadata table could race the duplicate-detect predicate. Pre-existing pattern across SyncEngine; deferred to a broader pagination pass.
 - AC #4 deep-link routes to the first active round by `Round.startedAt` (via ScoringTabView's `@Query` first match), not specifically to `payload.roundID`. Functional when at most one round is active (the dominant case); edge case is two concurrent active rounds where the tapped notification's round is not the first. Deferred.
 - UserDefaults idempotency key for the Round subscription is `"HyzerApp.subscriptionID.Round"` (keyed by `RoundRecord.recordType`) while the subscription ID value is `"Round-active-creation"`. Works for Story 12.1 but will collide once Story 12.2 adds a second Round subscription (e.g., `"Round-complete-update"`). Story 12.2 should re-key by full subscription ID.
+
+## Deferred from: code review of 12-2-round-complete-push-notification (2026-05-17)
+
+- `pushRoundCompletion` actor reentrancy: `await` releases actor isolation; concurrent calls could race `.inFlight` writes. Same pattern in `pushRound` (Story 12.1); needs broader fix across both push paths.
+- All-offline scenario: first push of a never-pushed round as `status == "completed"` lands as a CREATE on CK; `Round-complete-update` subscription (`firesOnRecordUpdate`) will not fire. Documented in story spec lines 317 and 465 as accepted limitation.
+- `serverRecordChanged` catch in `pushRoundCompletion` may mask a real conflict where another device pushed a different winner (tie-break diverged across locales). Pattern lifted as-is from 12.1; reconciliation out of scope.
+- `organizerFirstName` becomes empty string if organizer's `Player` is missing — same pattern as 12.1 (already noted earlier in this file).
+- Hardcoded "Loading summary…" and "Unknown Course" strings in `RoundCompletionSummaryHost` are not localized. Per story spec ("Do NOT Implement"), localization beyond English is out of scope.
+- `Task { await engine.pushRoundCompletion(...) }` in `handleRoundCompleted` is an unstructured fire-and-forget with no cancellation hook if the view disappears mid-push. Minor.
+- `pendingSummaryRoundID` UX leak: if `pendingDeepLink` is re-delivered after `onDismiss`, the cover can re-present. Minor.
+- Old UserDefaults key `"HyzerApp.subscriptionID.Round"` is never deleted post-upgrade — leaves stale data in defaults. Intentional per migration design.
+- Migration test in `SyncSchedulerTests` does not simulate a `duplicate-subscription` error from CloudKit — `MockCloudKitClient` lacks that throw path. Test infra gap.
+- `isShowingSummary` flag is not cleared deterministically after dismiss — theoretical duplicate `pushRoundCompletion` if `isRoundCompleted` flips false→true again. Track `hasPushedCompletionForRoundID` as future hardening.
+- `SelfExclusionTests.test_completePayloadIsNotSubjectToSelfExclusionGate` is described as a compile-time regression guard but is implemented at runtime — would not actually fail if a future `shouldSuppressPresentation(for: RoundCompletePayload, ...)` overload were added.
+- Migration test does not assert the old UserDefaults key is removed — there is no cleanup code by design, but the test does not document that absence.
