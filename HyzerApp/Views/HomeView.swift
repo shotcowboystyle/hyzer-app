@@ -1,10 +1,20 @@
 import SwiftUI
 import SwiftData
+import os.log
 import HyzerKit
 
 /// Thin `Identifiable` wrapper around `UUID` — required by `.fullScreenCover(item:)`.
 private struct IdentifiableUUID: Identifiable {
     let id: UUID
+}
+
+/// Routing key for the discrepancy deep-link cover.
+/// Uses a composed string ID so SwiftUI's `.fullScreenCover(item:)` gets an `Identifiable` value.
+private struct DiscrepancyDeepLinkKey: Identifiable, Equatable {
+    let roundID: UUID
+    let playerID: String
+    let holeNumber: Int
+    var id: String { "\(roundID)-\(playerID)-\(holeNumber)" }
 }
 
 /// Root view after onboarding — 3-tab navigation shell (Story 1.3).
@@ -15,6 +25,7 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab = 0
     @State private var pendingSummaryRoundID: UUID?
+    @State private var pendingDiscrepancyKey: DiscrepancyDeepLinkKey?
 
     @Query(
         filter: #Predicate<Round> { $0.status == "active" || $0.status == "awaitingFinalization" },
@@ -38,6 +49,12 @@ struct HomeView: View {
         .tint(Color.accentPrimary)
         .onAppear { consumePendingDeepLinkIfNeeded() }
         .onChange(of: appServices.pendingDeepLink) { _, _ in consumePendingDeepLinkIfNeeded() }
+        // Discrepancy modifier is above the summary modifier — discrepancy preempts summary (correct priority).
+        .fullScreenCover(item: $pendingDiscrepancyKey) { key in
+            DiscrepancyResolutionDeepLinkHost(key: key) {
+                pendingDiscrepancyKey = nil
+            }
+        }
         .fullScreenCover(
             item: Binding(
                 get: { pendingSummaryRoundID.map { IdentifiableUUID(id: $0) } },
@@ -50,7 +67,7 @@ struct HomeView: View {
         }
     }
 
-    /// Routes to the Scoring tab or presents the round summary and consumes `pendingDeepLink`.
+    /// Routes to the Scoring tab or presents the round summary / discrepancy resolution and consumes `pendingDeepLink`.
     /// Called from both `.onAppear` (covers cold-launch seeding) and `.onChange`.
     private func consumePendingDeepLinkIfNeeded() {
         guard let deepLink = appServices.pendingDeepLink else { return }
@@ -69,6 +86,19 @@ struct HomeView: View {
             }
             selectedTab = 0
             pendingSummaryRoundID = roundID
+            appServices.pendingDeepLink = nil
+        case .discrepancyResolution(let roundID, let playerID, let holeNumber):
+            selectedTab = 0
+            // AC #3 reinterpretation per spec Task 8.2: when the deep-linked round is currently
+            // active, satisfy "the discrepancy resolution view appears directly" via the badge
+            // surfaced reactively by `ScorecardContainerView` rather than by pushing a cover that
+            // would yank the organizer out of mid-round scoring. For non-active rounds we present
+            // `DiscrepancyResolutionView` directly via `pendingDiscrepancyKey`.
+            if activeRounds.contains(where: { $0.id == roundID }) {
+                appServices.pendingDeepLink = nil
+                return
+            }
+            pendingDiscrepancyKey = DiscrepancyDeepLinkKey(roundID: roundID, playerID: playerID, holeNumber: holeNumber)
             appServices.pendingDeepLink = nil
         }
     }
@@ -171,6 +201,143 @@ private struct RoundCompletionSummaryHost: View {
             currentPlayerID: currentPlayerID
         )
     }
+}
+
+// MARK: - DiscrepancyResolutionDeepLinkHost
+
+/// Fetches the target Discrepancy by `{roundID, playerID, holeNumber}` and presents
+/// `DiscrepancyResolutionView` as a full-screen modal for notification deep-links.
+///
+/// Handles both the `.unresolved` flow (organizer picks the correct score) and the AC #4
+/// "already resolved" path (read-only view with a banner — no duplicate resolution event).
+private struct DiscrepancyResolutionDeepLinkHost: View {
+    let key: DiscrepancyDeepLinkKey
+    let onDismiss: () -> Void
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppServices.self) private var appServices
+
+    @State private var discrepancy: Discrepancy?
+    @State private var discrepancyViewModel: DiscrepancyViewModel?
+    @State private var playerName: String = ""
+    @State private var playerNamesByID: [String: String] = [:]
+    @State private var isPresented: Bool = true
+    @State private var isLoading = true
+
+    var body: some View {
+        Group {
+            if let vm = discrepancyViewModel, let d = discrepancy {
+                NavigationStack {
+                    DiscrepancyResolutionView(
+                        viewModel: vm,
+                        discrepancy: d,
+                        playerName: playerName,
+                        playerNamesByID: playerNamesByID,
+                        isPresented: $isPresented,
+                        isAlreadyResolved: d.status == .resolved
+                    )
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { onDismiss() }
+                        }
+                    }
+                }
+            } else if isLoading {
+                ProgressView("Loading…")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.backgroundPrimary)
+            } else {
+                Color.clear.onAppear { onDismiss() }
+            }
+        }
+        .onChange(of: isPresented) { _, newValue in
+            if !newValue { onDismiss() }
+        }
+        .task { await loadDiscrepancy() }
+    }
+
+    private func loadDiscrepancy() async {
+        let roundID = key.roundID
+        let playerID = key.playerID
+        let holeNumber = key.holeNumber
+
+        var descriptor = FetchDescriptor<Discrepancy>(
+            predicate: #Predicate { $0.roundID == roundID && $0.playerID == playerID && $0.holeNumber == holeNumber },
+            sortBy: [SortDescriptor(\Discrepancy.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        let d: Discrepancy
+        do {
+            guard let fetched = try modelContext.fetch(descriptor).first else {
+                isLoading = false
+                return
+            }
+            d = fetched
+        } catch {
+            Self.logger.error("loadDiscrepancy: Discrepancy fetch failed: \(error)")
+            isLoading = false
+            return
+        }
+
+        var roundDescriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == roundID })
+        roundDescriptor.fetchLimit = 1
+        let round: Round
+        do {
+            guard let fetched = try modelContext.fetch(roundDescriptor).first else {
+                isLoading = false
+                return
+            }
+            round = fetched
+        } catch {
+            Self.logger.error("loadDiscrepancy: Round fetch failed: \(error)")
+            isLoading = false
+            return
+        }
+
+        let localPlayerID = AppServices.resolveLocalPlayerID(from: modelContext) ?? round.organizerID
+
+        var playerDescriptor = FetchDescriptor<Player>()
+        playerDescriptor.fetchLimit = 200
+        let players: [Player]
+        do {
+            players = try modelContext.fetch(playerDescriptor)
+        } catch {
+            Self.logger.error("loadDiscrepancy: Player fetch failed: \(error)")
+            players = []
+        }
+        let nameLookup = Dictionary(uniqueKeysWithValues: players.map { ($0.id.uuidString, $0.displayName) })
+
+        let resolvedPlayerName: String
+        if let player = players.first(where: { $0.id.uuidString == playerID }) {
+            resolvedPlayerName = player.displayName
+        } else {
+            let guestIndex = round.guestIDs.firstIndex(of: playerID)
+            resolvedPlayerName = guestIndex.flatMap { round.guestNames.indices.contains($0) ? round.guestNames[$0] : nil } ?? playerID
+        }
+
+        let vm = DiscrepancyViewModel(
+            scoringService: appServices.scoringService,
+            standingsEngine: appServices.standingsEngine,
+            modelContext: modelContext,
+            roundID: round.id,
+            organizerID: round.organizerID,
+            currentPlayerID: localPlayerID
+        )
+        // AC #4: skip `loadUnresolved()` for already-resolved discrepancies — the view reads
+        // `discrepancy` directly so the VM does not need its unresolved-flow state populated,
+        // and per spec Open Question #3 the VM is "focused on the unresolved-flow".
+        if d.status == .unresolved {
+            vm.loadUnresolved()
+        }
+
+        discrepancy = d
+        discrepancyViewModel = vm
+        playerName = resolvedPlayerName
+        playerNamesByID = nameLookup
+        isLoading = false
+    }
+
+    private static let logger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "DiscrepancyResolutionDeepLinkHost")
 }
 
 // MARK: - Scoring Tab

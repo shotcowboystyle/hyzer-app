@@ -34,6 +34,15 @@ public actor SyncScheduler {
     private let cloudKitClient: any CloudKitClient
     private let networkMonitor: any NetworkMonitor
     private let userDefaults: any UserDefaultsStorage
+    /// Resolves the local player's UUID at subscription-setup time.
+    /// Injected from the `AppServices` composition root so `SyncScheduler` avoids a direct
+    /// `ModelContainer` dependency. Returns `nil` if the player hasn't onboarded yet.
+    ///
+    /// **Identity stability note:** `Player.id` is set once at onboarding and never reassigned.
+    /// If a future story supports re-onboarding under a new iCloud account, this closure must
+    /// return the new player ID and `setupSubscriptions()` must be re-called to register a new
+    /// predicate. Today, the subscription is stable for the device lifetime.
+    private let localPlayerIDProvider: @Sendable () async -> UUID?
 
     /// Active polling task; non-nil while a round is in progress.
     private var pollingTask: Task<Void, Never>?
@@ -50,12 +59,14 @@ public actor SyncScheduler {
         syncEngine: SyncEngine,
         cloudKitClient: any CloudKitClient,
         networkMonitor: any NetworkMonitor,
-        userDefaults: any UserDefaultsStorage = UserDefaults.standard
+        userDefaults: any UserDefaultsStorage = UserDefaults.standard,
+        localPlayerIDProvider: @Sendable @escaping () async -> UUID?
     ) {
         self.syncEngine = syncEngine
         self.cloudKitClient = cloudKitClient
         self.networkMonitor = networkMonitor
         self.userDefaults = userDefaults
+        self.localPlayerIDProvider = localPlayerIDProvider
     }
 
     // MARK: - App lifecycle
@@ -180,6 +191,10 @@ public actor SyncScheduler {
 
         // Alert-push subscription for Round-complete-update (Story 12.2, AC #1)
         await setupRoundCompleteSubscription(existingIDs: existingIDs)
+
+        // Alert-push subscription for Discrepancy-creation (Story 12.3, AC #1/#2)
+        let localPlayerID = await localPlayerIDProvider()
+        await setupDiscrepancyCreationSubscription(existingIDs: existingIDs, localPlayerID: localPlayerID)
     }
 
     /// Creates the `Round-active-creation` CKQuerySubscription that drives "Round Started" push notifications.
@@ -265,6 +280,58 @@ public actor SyncScheduler {
             logger.info("SyncScheduler: registered Round-complete-update subscription \(subID)")
         } catch {
             logger.error("SyncScheduler: failed to subscribe to Round-complete-update — will retry on next launch: \(error)")
+        }
+    }
+
+    /// Creates the `Discrepancy-creation` CKQuerySubscription that drives "Discrepancy Detected"
+    /// organizer-only push notifications (Story 12.3, AC #1, #2).
+    ///
+    /// Predicate: `organizerID == <localPlayerID>` — fires server-side only for Discrepancy records
+    /// whose `organizerID` matches the local device's player UUID. Non-organizer devices register
+    /// a subscription with their own player ID, which never matches rounds where they are not the
+    /// organizer. This is the structural enforcement of AC #2: server-side, not client-side.
+    ///
+    /// If `localPlayerID` is nil (pre-onboarding edge case), subscription registration is skipped.
+    /// The next launch's `setupSubscriptions()` retries. Do NOT subscribe with a nil/empty predicate —
+    /// that would send every device every discrepancy (catastrophic PII leak and AC #2 failure).
+    ///
+    /// `firesOnRecordCreation` is correct — Discrepancy records are immutable per event-sourcing.
+    ///
+    /// **Identity stability:** `Player.id` is stable per device (set once at onboarding). If a future
+    /// story supports re-onboarding, this subscription must be explicitly re-registered with the new
+    /// player ID predicate. Delete the UserDefaults key and call `setupSubscriptions()` again.
+    private func setupDiscrepancyCreationSubscription(existingIDs: [CKSubscription.ID], localPlayerID: UUID?) async {
+        guard let localPlayerID else {
+            logger.info("SyncScheduler: localPlayerID unavailable — skipping Discrepancy-creation subscription (will retry on next launch)")
+            return
+        }
+
+        let subID = "Discrepancy-creation"
+        let defaultsKey = "HyzerApp.subscriptionID.\(subID)"
+        let storedID = userDefaults.string(forKey: defaultsKey)
+        if let storedID, existingIDs.contains(storedID) {
+            logger.info("SyncScheduler: Discrepancy-creation subscription already active — skipping")
+            return
+        }
+
+        let notificationInfo = CKSubscription.NotificationInfo()
+        notificationInfo.shouldSendContentAvailable = true
+        notificationInfo.shouldSendMutableContent = false
+        notificationInfo.alertLocalizationKey = "DISCREPANCY_DETECTED_FORMAT"
+        notificationInfo.alertLocalizationArgs = ["holeNumber"]
+        notificationInfo.desiredKeys = ["roundID", "playerID", "holeNumber"]
+
+        do {
+            let resultID = try await cloudKitClient.subscribeWithAlert(
+                to: "Discrepancy",
+                predicate: NSPredicate(format: "organizerID == %@", localPlayerID.uuidString),
+                subscriptionID: subID,
+                notificationInfo: notificationInfo
+            )
+            userDefaults.setString(resultID, forKey: defaultsKey)
+            logger.info("SyncScheduler: registered Discrepancy-creation subscription \(resultID) for player \(localPlayerID.uuidString)")
+        } catch {
+            logger.error("SyncScheduler: failed to subscribe to Discrepancy-creation — will retry on next launch: \(error)")
         }
     }
 

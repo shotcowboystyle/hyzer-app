@@ -2,6 +2,7 @@ import Testing
 import SwiftData
 import CloudKit
 import Foundation
+import UIKit
 @testable import HyzerKit
 @testable import HyzerApp
 
@@ -256,6 +257,150 @@ struct AppServicesTests {
         #expect(services.pendingDeepLink == nil)
     }
 
+    // MARK: - Task 9.7: handleDiscrepancyDetectedNotification
+
+    @Test("handleDiscrepancyDetectedNotification sets pendingDeepLink when local Discrepancy exists")
+    func test_handleDiscrepancyDetectedNotification_setsDeepLink() async throws {
+        let mockNotif = MockNotificationService()
+        let services = try makeServices(notificationService: mockNotif)
+
+        let roundID = UUID()
+        let playerID = "player-abc"
+        let holeNumber = 7
+        mockNotif.discrepancyPayloadToReturn = DiscrepancyDetectedPayload(
+            discrepancyID: UUID(),
+            roundID: roundID,
+            playerID: playerID,
+            holeNumber: holeNumber
+        )
+        try insertDiscrepancy(roundID: roundID, playerID: playerID, holeNumber: holeNumber,
+                              into: services.modelContainer.mainContext)
+
+        await services.handleDiscrepancyDetectedNotification(["test": "value"])
+
+        if case .discrepancyResolution(let rid, let pid, let hole) = services.pendingDeepLink {
+            #expect(rid == roundID)
+            #expect(pid == playerID)
+            #expect(hole == holeNumber)
+        } else {
+            #expect(Bool(false), "pendingDeepLink should be .discrepancyResolution(roundID:playerID:holeNumber:)")
+        }
+    }
+
+    @Test("handleDiscrepancyDetectedNotification drops deep-link when no local Discrepancy materialises after retry")
+    func test_handleDiscrepancyDetectedNotification_dropsDeepLink_whenDiscrepancyMissing() async throws {
+        let mockNotif = MockNotificationService()
+        let services = try makeServices(notificationService: mockNotif)
+
+        mockNotif.discrepancyPayloadToReturn = DiscrepancyDetectedPayload(
+            discrepancyID: UUID(),
+            roundID: UUID(),
+            playerID: "player-xyz",
+            holeNumber: 3
+        )
+        // No Discrepancy inserted — both pulls leave it missing.
+
+        await services.handleDiscrepancyDetectedNotification(["test": "value"])
+
+        #expect(services.pendingDeepLink == nil,
+                "deep-link must not be set when the discrepancy is still missing after retry")
+    }
+
+    @Test("handleDiscrepancyDetectedNotification sets deep-link even when Discrepancy is already resolved (AC #4)")
+    func test_handleDiscrepancyDetectedNotification_setsDeepLink_whenAlreadyResolved() async throws {
+        let mockNotif = MockNotificationService()
+        let services = try makeServices(notificationService: mockNotif)
+
+        let roundID = UUID()
+        let playerID = "player-resolved"
+        let holeNumber = 12
+        mockNotif.discrepancyPayloadToReturn = DiscrepancyDetectedPayload(
+            discrepancyID: UUID(),
+            roundID: roundID,
+            playerID: playerID,
+            holeNumber: holeNumber
+        )
+        try insertDiscrepancy(roundID: roundID, playerID: playerID, holeNumber: holeNumber,
+                              status: .resolved, into: services.modelContainer.mainContext)
+
+        await services.handleDiscrepancyDetectedNotification(["test": "value"])
+
+        if case .discrepancyResolution(let rid, let pid, let hole) = services.pendingDeepLink {
+            #expect(rid == roundID)
+            #expect(pid == playerID)
+            #expect(hole == holeNumber)
+        } else {
+            #expect(Bool(false), "pendingDeepLink must be set even for a resolved discrepancy — read-only view (AC #4)")
+        }
+    }
+
+    @Test("handleDiscrepancyDetectedNotification retries pullRecords exactly once when Discrepancy is missing")
+    func test_handleDiscrepancyDetectedNotification_retriesPullOnce_whenDiscrepancyMissing() async throws {
+        let mockNotif = MockNotificationService()
+        let cloudKit = StubCloudKitClientApp()
+        let services = try makeServices(notificationService: mockNotif, cloudKitClient: cloudKit)
+
+        mockNotif.discrepancyPayloadToReturn = DiscrepancyDetectedPayload(
+            discrepancyID: UUID(),
+            roundID: UUID(),
+            playerID: "player-retry",
+            holeNumber: 5
+        )
+        // No Discrepancy inserted → initial pull + one-shot retry, then give up.
+
+        await services.handleDiscrepancyDetectedNotification(["test": "value"])
+
+        // Two fetch calls: initial pullRecords() + one-shot retry.
+        #expect(cloudKit.fetchCallCount == 2,
+                "handler must call pullRecords twice — initial pull + one-shot retry — then give up")
+    }
+
+    // MARK: - Cold-launch seeding (Task 7.4)
+
+    @Test("seedDeepLinkFromLaunchOptions sets discrepancyResolution deep-link when launch payload is a Discrepancy push")
+    func test_seedDeepLinkFromLaunchOptions_discrepancyPath_setsDeepLink() async throws {
+        let mockNotif = MockNotificationService()
+        let services = try makeServices(notificationService: mockNotif)
+
+        let roundID = UUID()
+        let playerID = "player-cold-launch"
+        let holeNumber = 9
+        mockNotif.discrepancyPayloadToReturn = DiscrepancyDetectedPayload(
+            discrepancyID: UUID(),
+            roundID: roundID,
+            playerID: playerID,
+            holeNumber: holeNumber
+        )
+
+        let launchOptions: [UIApplication.LaunchOptionsKey: Any] = [
+            .remoteNotification: ["seed": "discrepancy"] as [AnyHashable: Any]
+        ]
+        services.seedDeepLinkFromLaunchOptions(launchOptions)
+
+        // The deep-link is set eagerly (sync) — the pull is fire-and-forget. We assert the eager set.
+        if case .discrepancyResolution(let rid, let pid, let hole) = services.pendingDeepLink {
+            #expect(rid == roundID)
+            #expect(pid == playerID)
+            #expect(hole == holeNumber)
+        } else {
+            #expect(Bool(false), "seedDeepLinkFromLaunchOptions must set pendingDeepLink to .discrepancyResolution for a discrepancy payload")
+        }
+        // The parser was consulted with the launch payload.
+        #expect(mockNotif.parseDiscrepancyPayloadCallCount >= 1)
+    }
+
+    @Test("seedDeepLinkFromLaunchOptions ignores absent remote notification")
+    func test_seedDeepLinkFromLaunchOptions_noPayload_noDeepLink() async throws {
+        let mockNotif = MockNotificationService()
+        let services = try makeServices(notificationService: mockNotif)
+
+        services.seedDeepLinkFromLaunchOptions(nil)
+        services.seedDeepLinkFromLaunchOptions([:])
+
+        #expect(services.pendingDeepLink == nil)
+        #expect(mockNotif.parseDiscrepancyPayloadCallCount == 0)
+    }
+
     // MARK: - Helpers
 
     /// Inserts a minimal `Round` with the given ID into the test context so `roundExists` returns true.
@@ -269,6 +414,26 @@ struct AppServicesTests {
         )
         round.id = id
         context.insert(round)
+        try context.save()
+    }
+
+    /// Inserts a minimal `Discrepancy` with the given triple into the test context so `discrepancyExists` returns true.
+    private func insertDiscrepancy(
+        roundID: UUID,
+        playerID: String,
+        holeNumber: Int,
+        status: DiscrepancyStatus = .unresolved,
+        into context: ModelContext
+    ) throws {
+        let discrepancy = Discrepancy(
+            roundID: roundID,
+            playerID: playerID,
+            holeNumber: holeNumber,
+            eventID1: UUID(),
+            eventID2: UUID()
+        )
+        discrepancy.status = status
+        context.insert(discrepancy)
         try context.save()
     }
 }

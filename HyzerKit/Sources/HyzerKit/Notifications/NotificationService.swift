@@ -25,6 +25,27 @@ public struct RoundStartedPayload: Sendable, Equatable {
     }
 }
 
+/// Typed payload for a "Discrepancy Detected" push notification received from a CKQuerySubscription.
+///
+/// No self-exclusion overload: organizer-only enforcement is server-side via the subscription predicate
+/// `organizerID == <localPlayerID>`. Non-organizer devices never register a matching subscription.
+///
+/// `playerID` is a String (not UUID) because `Discrepancy.playerID` stores guest IDs as `"guest:<uuid>"`.
+/// The deep-link handler uses `{roundID, playerID, holeNumber}` as the routing triple.
+public struct DiscrepancyDetectedPayload: Sendable, Equatable {
+    public let discrepancyID: UUID
+    public let roundID: UUID
+    public let playerID: String
+    public let holeNumber: Int
+
+    public init(discrepancyID: UUID, roundID: UUID, playerID: String, holeNumber: Int) {
+        self.discrepancyID = discrepancyID
+        self.roundID = roundID
+        self.playerID = playerID
+        self.holeNumber = holeNumber
+    }
+}
+
 /// Typed payload for a "Round Complete" push notification received from a CKQuerySubscription.
 ///
 /// No self-exclusion: the winner receives this notification (AC #3 — celebrating your own win is valid).
@@ -78,4 +99,13 @@ public protocol NotificationService: Sendable {
     /// No `shouldSuppressPresentation` overload exists for this payload — completion notifications
     /// are delivered unconditionally (AC #3: no self-exclusion for the winner).
     func parseRoundCompletePayload(_ userInfo: [AnyHashable: Any]) -> RoundCompletePayload?
+
+    /// Parses a CKQuerySubscription user-info dictionary into a typed `DiscrepancyDetectedPayload`.
+    /// Returns `nil` if the dictionary is not a Discrepancy-creation subscription payload,
+    /// or if required fields (`rid`, `playerID`, `holeNumber`) are absent or malformed.
+    ///
+    /// No `shouldSuppressPresentation` overload exists for this payload — organizer-only
+    /// enforcement happens server-side via the subscription predicate `organizerID == <localUserID>`.
+    /// Non-organizer devices never register the subscription, so they never receive the push.
+    func parseDiscrepancyDetectedPayload(_ userInfo: [AnyHashable: Any]) -> DiscrepancyDetectedPayload?
 }

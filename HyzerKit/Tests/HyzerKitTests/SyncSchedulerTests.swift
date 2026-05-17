@@ -29,7 +29,7 @@ struct SyncSchedulerTests {
         try context.save()
 
         let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
-        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
+        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor, localPlayerIDProvider: { nil })
 
         // Timer uses 45s intervals so we can't test fire behavior directly.
         // Verify start/stop lifecycle and that the push/pull plumbing works independently.
@@ -52,7 +52,7 @@ struct SyncSchedulerTests {
             standingsEngine: StandingsEngine(modelContext: container.mainContext),
             modelContainer: container
         )
-        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
+        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor, localPlayerIDProvider: { nil })
 
         // Double-stop should not throw or crash
         await scheduler.stopActiveRoundPolling()
@@ -74,7 +74,7 @@ struct SyncSchedulerTests {
             standingsEngine: StandingsEngine(modelContext: container.mainContext),
             modelContainer: container
         )
-        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
+        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor, localPlayerIDProvider: { nil })
 
         await scheduler.startActiveRoundPolling()
         await scheduler.startActiveRoundPolling()  // second call should be no-op (guard pollingTask == nil)
@@ -107,7 +107,7 @@ struct SyncSchedulerTests {
 
         // Start disconnected
         let mockMonitor = MockNetworkMonitor(initiallyConnected: false)
-        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
+        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor, localPlayerIDProvider: { nil })
 
         await scheduler.start()
 
@@ -141,7 +141,7 @@ struct SyncSchedulerTests {
             modelContainer: container
         )
         let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
-        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
+        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor, localPlayerIDProvider: { nil })
 
         await scheduler.handleRemoteNotification()
 
@@ -176,7 +176,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         await scheduler.start()
@@ -213,7 +214,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         // Deisolate the cleanup key before the await so the compiler can prove
@@ -251,7 +253,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         await scheduler.start()
@@ -282,7 +285,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         await scheduler.start()
@@ -316,7 +320,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         await scheduler.start()
@@ -348,7 +353,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         await scheduler.start()
@@ -385,7 +391,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         await scheduler.start()
@@ -428,7 +435,8 @@ struct SyncSchedulerTests {
             syncEngine: syncEngine,
             cloudKitClient: mockCK,
             networkMonitor: mockMonitor,
-            userDefaults: testDefaults
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
         )
 
         // Must not crash — the transient duplicate-subscription error is caught and logged
@@ -441,6 +449,192 @@ struct SyncSchedulerTests {
 
         // Cleanup
         testDefaults.removeObject(forKey: oldKey)
+    }
+
+    // MARK: - Discrepancy-creation subscription (Story 12.3, Task 5)
+
+    @Test("setupSubscriptions creates Discrepancy-creation subscription when localPlayerIDProvider returns a UUID")
+    @MainActor
+    func test_setupSubscriptions_createsDiscrepancySubscription() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-discrepancy-sub")!
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.ScoreEvent")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round-active-creation")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round-complete-update")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Discrepancy-creation")
+
+        let localPlayerID = UUID()
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { localPlayerID }
+        )
+
+        await scheduler.start()
+
+        let alertSubIDs = mockCK.savedAlertSubscriptions.map(\.subscriptionID)
+        #expect(alertSubIDs.contains("Discrepancy-creation"))
+
+        let discSub = mockCK.savedAlertSubscriptions.first { $0.subscriptionID == "Discrepancy-creation" }
+        #expect(discSub != nil)
+        #expect(discSub?.recordType == "Discrepancy")
+        #expect(discSub?.notificationInfo.alertLocalizationKey == "DISCREPANCY_DETECTED_FORMAT")
+        #expect(discSub?.notificationInfo.alertLocalizationArgs == ["holeNumber"])
+        #expect(discSub?.notificationInfo.desiredKeys == ["roundID", "playerID", "holeNumber"])
+    }
+
+    @Test("setupSubscriptions Discrepancy-creation predicate contains the localPlayerID UUID")
+    @MainActor
+    func test_setupSubscriptions_discrepancySubscriptionPredicate() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-discrepancy-predicate")!
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Discrepancy-creation")
+
+        let localPlayerID = UUID()
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { localPlayerID }
+        )
+
+        await scheduler.start()
+
+        let discSub = mockCK.savedAlertSubscriptions.first { $0.subscriptionID == "Discrepancy-creation" }
+        let predicateFormat = discSub?.predicate.predicateFormat ?? ""
+        #expect(predicateFormat.contains(localPlayerID.uuidString), "Predicate must embed the localPlayerID UUID")
+        #expect(predicateFormat.contains("organizerID"), "Predicate must reference organizerID field")
+    }
+
+    @Test("setupSubscriptions skips Discrepancy-creation when localPlayerIDProvider returns nil")
+    @MainActor
+    func test_setupSubscriptions_skipsDiscrepancy_whenLocalPlayerIDUnavailable() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-discrepancy-nil")!
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.ScoreEvent")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round-active-creation")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round-complete-update")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Discrepancy-creation")
+
+        // Provider returns nil — pre-onboarding scenario
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { nil }
+        )
+
+        await scheduler.start()
+
+        let alertSubIDs = mockCK.savedAlertSubscriptions.map(\.subscriptionID)
+        #expect(!alertSubIDs.contains("Discrepancy-creation"), "Must not subscribe when localPlayerID is unavailable")
+        // Other subscriptions still created
+        #expect(alertSubIDs.contains("Round-active-creation"))
+        #expect(alertSubIDs.contains("Round-complete-update"))
+    }
+
+    @Test("setupSubscriptions Discrepancy-creation is idempotent — second call with persisted ID skips re-subscription")
+    @MainActor
+    func test_setupSubscriptions_discrepancySubscription_idempotent() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let existingDiscID = "Discrepancy-creation"
+        mockCK.existingSubscriptionIDs = [existingDiscID]
+
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-discrepancy-idempotent")!
+        testDefaults.set(existingDiscID, forKey: "HyzerApp.subscriptionID.\(existingDiscID)")
+
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { UUID() }
+        )
+
+        await scheduler.start()
+
+        let discSubs = mockCK.savedAlertSubscriptions.filter { $0.subscriptionID == "Discrepancy-creation" }
+        #expect(discSubs.isEmpty, "Second launch must not create a duplicate Discrepancy-creation subscription")
+
+        UserDefaults(suiteName: "test-sync-scheduler-discrepancy-idempotent")?
+            .removeObject(forKey: "HyzerApp.subscriptionID.\(existingDiscID)")
+    }
+
+    @Test("setupSubscriptions creates all four subscriptions (one silent + three alert) when localPlayerIDProvider returns a UUID")
+    @MainActor
+    func test_setupSubscriptions_allFourSubscriptionsCreated() async throws {
+        let container = try TestContainerFactory.makeSyncContainer()
+        let mockCK = MockCloudKitClient()
+        let syncEngine = SyncEngine(
+            cloudKitClient: mockCK,
+            standingsEngine: StandingsEngine(modelContext: container.mainContext),
+            modelContainer: container
+        )
+        let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
+        let testDefaults = UserDefaults(suiteName: "test-sync-scheduler-four-subs")!
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.ScoreEvent")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round-active-creation")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Round-complete-update")
+        testDefaults.removeObject(forKey: "HyzerApp.subscriptionID.Discrepancy-creation")
+        let scheduler = SyncScheduler(
+            syncEngine: syncEngine,
+            cloudKitClient: mockCK,
+            networkMonitor: mockMonitor,
+            userDefaults: testDefaults,
+            localPlayerIDProvider: { UUID() }
+        )
+
+        await scheduler.start()
+
+        // 1. ScoreEvent-creation (silent)
+        #expect(mockCK.subscribedRecordTypes.contains("ScoreEvent"))
+
+        // 2. Round-active-creation (alert)
+        #expect(mockCK.savedAlertSubscriptions.contains { $0.subscriptionID == "Round-active-creation" })
+
+        // 3. Round-complete-update (alert)
+        #expect(mockCK.savedAlertSubscriptions.contains { $0.subscriptionID == "Round-complete-update" })
+
+        // 4. Discrepancy-creation (alert)
+        #expect(mockCK.savedAlertSubscriptions.contains { $0.subscriptionID == "Discrepancy-creation" })
+
+        // Cross-surface total: 1 silent (ScoreEvent) + 3 alert = 4 distinct subscription registrations.
+        // Asserting both surfaces guards against a future regression that swaps one alert subscription
+        // for a stray duplicate while still leaving `savedAlertSubscriptions.count == 3`.
+        #expect(mockCK.savedAlertSubscriptions.count == 3)
+        #expect(mockCK.subscribedRecordTypes.count == 1)
     }
 
     // MARK: - Foreground discovery throttle (AC5, Task 8.5)
@@ -456,7 +650,7 @@ struct SyncSchedulerTests {
             modelContainer: container
         )
         let mockMonitor = MockNetworkMonitor(initiallyConnected: true)
-        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor)
+        let scheduler = SyncScheduler(syncEngine: syncEngine, cloudKitClient: mockCK, networkMonitor: mockMonitor, localPlayerIDProvider: { nil })
 
         // First call should execute (triggers pullRecords → fetch)
         await scheduler.foregroundDiscovery(currentUserID: "user-1")

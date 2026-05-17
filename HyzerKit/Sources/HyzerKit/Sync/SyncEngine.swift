@@ -402,6 +402,9 @@ public actor SyncEngine: ModelActor {
             return
         }
 
+        let roundLookup = fetchRounds(forIDs: Set(affectedRoundIDArray))
+        let organizerByRoundID = Dictionary(uniqueKeysWithValues: roundLookup.map { ($0.id, $0.organizerID) })
+
         let allEvents = allExisting + newEvents
         let conflictDetector = ConflictDetector()
         for newEvent in newEvents {
@@ -437,6 +440,30 @@ public actor SyncEngine: ModelActor {
                 )
                 modelContext.insert(discrepancy)
                 logger.info("SyncEngine: discrepancy for player \(newEvent.playerID, privacy: .private) hole \(newEvent.holeNumber)")
+
+                if let organizerID = organizerByRoundID[newEvent.roundID] {
+                    let did = discrepancy.id
+                    let rid = newEvent.roundID
+                    let pid = newEvent.playerID
+                    let hole = newEvent.holeNumber
+                    let createdAt = discrepancy.createdAt
+                    Task {
+                        await self.pushDiscrepancy(
+                            discrepancyID: did,
+                            roundID: rid,
+                            organizerID: organizerID,
+                            playerID: pid,
+                            holeNumber: hole,
+                            createdAt: createdAt
+                        )
+                    }
+                } else {
+                    // Expected race: the conflict event can arrive before the parent Round
+                    // record is materialised locally. The Discrepancy still exists locally
+                    // for the organizer to resolve in-app; the missed CK push will retry on
+                    // the next conflict for the same round (or via a future Round-sync follow-up).
+                    logger.info("SyncEngine.detectConflicts: round \(newEvent.roundID) not locally materialised — skipping discrepancy push")
+                }
             }
         }
 
@@ -494,6 +521,21 @@ public actor SyncEngine: ModelActor {
             return try modelContext.fetch(descriptor)
         } catch {
             logger.error("SyncEngine.fetchScoreEvents(forRoundIDs:) failed: \(error)")
+            return []
+        }
+    }
+
+    /// Fetches Rounds scoped to the given IDs. Used by `detectConflicts` to resolve
+    /// `organizerID` for the `pushDiscrepancy` call without re-fetching inside the loop.
+    private func fetchRounds(forIDs ids: Set<UUID>) -> [Round] {
+        guard !ids.isEmpty else { return [] }
+        let idArray = Array(ids)
+        var descriptor = FetchDescriptor<Round>(predicate: #Predicate { idArray.contains($0.id) })
+        descriptor.fetchLimit = idArray.count
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            logger.error("SyncEngine.fetchRounds(forIDs:) failed: \(error)")
             return []
         }
     }

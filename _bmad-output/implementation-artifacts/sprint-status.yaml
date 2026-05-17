@@ -140,7 +140,7 @@ stories:
     epic: 12
   "12.3":
     title: 'Organizer-Only "Discrepancy Detected" Push Notification'
-    status: backlog
+    status: done
     epic: 12
   "13.1":
     title: "Score Trend Visualization Per Player"
