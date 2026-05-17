@@ -212,11 +212,14 @@ final class AppServices {
 
         await syncEngine.pullRecords()
 
-        if !Self.discrepancyExists(roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber, in: modelContainer.mainContext) {
+        let context = modelContainer.mainContext
+        if !Self.discrepancyExists(roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber, in: context) {
             await syncEngine.pullRecords()
         }
 
-        guard Self.discrepancyExists(roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber, in: modelContainer.mainContext) else {
+        guard Self.discrepancyExists(
+            roundID: payload.roundID, playerID: payload.playerID, holeNumber: payload.holeNumber, in: context
+        ) else {
             notificationLogger.info("handleDiscrepancyDetectedNotification: discrepancy missing after retry — dropping deep-link")
             return
         }
@@ -278,9 +281,16 @@ final class AppServices {
             )
             let container = modelContainer
             let engine = syncEngine
+            let payload = discrepancyPayload
             Task {
                 await engine.pullRecords()
-                if !Self.discrepancyExists(roundID: discrepancyPayload.roundID, playerID: discrepancyPayload.playerID, holeNumber: discrepancyPayload.holeNumber, in: container.mainContext) {
+                let exists = Self.discrepancyExists(
+                    roundID: payload.roundID,
+                    playerID: payload.playerID,
+                    holeNumber: payload.holeNumber,
+                    in: container.mainContext
+                )
+                if !exists {
                     await engine.pullRecords()
                 }
             }

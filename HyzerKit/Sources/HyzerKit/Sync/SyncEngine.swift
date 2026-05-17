@@ -447,7 +447,16 @@ public actor SyncEngine: ModelActor {
                     let pid = newEvent.playerID
                     let hole = newEvent.holeNumber
                     let createdAt = discrepancy.createdAt
-                    Task { await self.pushDiscrepancy(discrepancyID: did, roundID: rid, organizerID: organizerID, playerID: pid, holeNumber: hole, createdAt: createdAt) }
+                    Task {
+                        await self.pushDiscrepancy(
+                            discrepancyID: did,
+                            roundID: rid,
+                            organizerID: organizerID,
+                            playerID: pid,
+                            holeNumber: hole,
+                            createdAt: createdAt
+                        )
+                    }
                 } else {
                     // Expected race: the conflict event can arrive before the parent Round
                     // record is materialised locally. The Discrepancy still exists locally
