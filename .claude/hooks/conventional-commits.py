@@ -17,18 +17,32 @@ command = tool_input.get("command", "")
 if tool_name != "Bash" or "git commit" not in command:
     sys.exit(0)
 
-# Extract commit message from -m flag
-# Handle both -m "message" and -m 'message' formats
-match = re.search(r'git commit.*?-m\s+["\']([^"\']+)["\']', command)
-if not match:
-    # Also try heredoc format: -m "$(cat <<'EOF' ... EOF)"
-    heredoc_match = re.search(r'git commit.*?-m\s+"?\$\(cat\s+<<["\']?EOF["\']?\s*\n(.+?)\nEOF', command, re.DOTALL)
-    if heredoc_match:
-        commit_msg = heredoc_match.group(1).strip()
-    else:
-        sys.exit(0)  # Can't extract message, allow it
+# Extract commit message from -m flag.
+# IMPORTANT: try heredoc first — the inline-quote regex below will otherwise
+# greedily match `-m "$(cat <<` and capture `$(cat <<` as the "message",
+# because [^"\']+ stops at the single-quote in 'EOF'.
+heredoc_match = re.search(
+    r'git commit.*?-m\s+"?\$\(cat\s+<<["\']?EOF["\']?\s*\n(.+?)\nEOF',
+    command,
+    re.DOTALL,
+)
+# Also support `git commit -F <file>` (message-from-file).
+file_match = re.search(r'git commit.*?-F\s+(\S+)', command)
+
+if heredoc_match:
+    commit_msg = heredoc_match.group(1).strip()
+elif file_match:
+    # Can't read the file contents at hook time without I/O side effects;
+    # trust the caller and allow it. The repo-side hook (if any) will still gate.
+    sys.exit(0)
 else:
-    commit_msg = match.group(1)
+    inline_match = re.search(r'git commit.*?-m\s+["\']([^"\']+)["\']', command)
+    if not inline_match:
+        sys.exit(0)  # Can't extract message, allow it
+    commit_msg = inline_match.group(1)
+
+# Only validate the first line (the subject) against Conventional Commits.
+commit_msg = commit_msg.splitlines()[0] if commit_msg else commit_msg
 
 # Check if message follows Conventional Commits format
 # Format: type(scope)?: description
