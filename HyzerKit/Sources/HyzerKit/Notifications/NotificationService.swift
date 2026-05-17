@@ -25,6 +25,23 @@ public struct RoundStartedPayload: Sendable, Equatable {
     }
 }
 
+/// Typed payload for a "Round Complete" push notification received from a CKQuerySubscription.
+///
+/// No self-exclusion: the winner receives this notification (AC #3 — celebrating your own win is valid).
+public struct RoundCompletePayload: Sendable, Equatable {
+    public let roundID: UUID
+    public let courseName: String
+    public let winnerFirstName: String
+    public let winnerScoreDisplay: String
+
+    public init(roundID: UUID, courseName: String, winnerFirstName: String, winnerScoreDisplay: String) {
+        self.roundID = roundID
+        self.courseName = courseName
+        self.winnerFirstName = winnerFirstName
+        self.winnerScoreDisplay = winnerScoreDisplay
+    }
+}
+
 /// Protocol for managing push notification permissions and payload parsing.
 ///
 /// Lives in HyzerKit so `AppServices` and tests can depend on it without importing
@@ -53,4 +70,12 @@ public protocol NotificationService: Sendable {
     /// Returns `nil` if the dictionary is not a Round-active-creation subscription payload,
     /// or if required fields (`roundID`, `organizerID`, `organizerFirstName`, `courseName`) are absent or malformed.
     func parseRoundStartedPayload(_ userInfo: [AnyHashable: Any]) -> RoundStartedPayload?
+
+    /// Parses a CKQuerySubscription user-info dictionary into a typed `RoundCompletePayload`.
+    /// Returns `nil` if the dictionary is not a Round-complete-update subscription payload,
+    /// or if required fields (`rid`, `courseName`, `winnerFirstName`, `winnerScoreDisplay`) are absent or malformed.
+    ///
+    /// No `shouldSuppressPresentation` overload exists for this payload — completion notifications
+    /// are delivered unconditionally (AC #3: no self-exclusion for the winner).
+    func parseRoundCompletePayload(_ userInfo: [AnyHashable: Any]) -> RoundCompletePayload?
 }

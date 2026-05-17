@@ -177,6 +177,9 @@ public actor SyncScheduler {
 
         // Alert-push subscription for Round-active-creation (Story 12.1, AC #1/#2)
         await setupRoundActiveSubscription(existingIDs: existingIDs)
+
+        // Alert-push subscription for Round-complete-update (Story 12.2, AC #1)
+        await setupRoundCompleteSubscription(existingIDs: existingIDs)
     }
 
     /// Creates the `Round-active-creation` CKQuerySubscription that drives "Round Started" push notifications.
@@ -185,9 +188,15 @@ public actor SyncScheduler {
     /// `alertLocalizationKey` / `alertLocalizationArgs` let CloudKit compose the alert body server-side
     /// from the record's `organizerFirstName` and `courseName` fields — no PII travels through APNs payload (AC #2).
     /// `desiredKeys` delivers organizer/course data to `parseRoundStartedPayload` without a refetch.
+    ///
+    /// Note: UserDefaults key is now keyed by full subscription ID (not record type) to avoid
+    /// collision with the Round-complete-update subscription added in Story 12.2 (deferred-work.md:31).
+    /// Migration: on first launch post-upgrade, the old key "HyzerApp.subscriptionID.Round" is absent
+    /// so this method re-attempts subscription; CloudKit returns a graceful error for duplicate IDs
+    /// (the subscription is still alive in CloudKit). The error is caught and logged — non-fatal.
     private func setupRoundActiveSubscription(existingIDs: [CKSubscription.ID]) async {
         let roundSubID = "Round-active-creation"
-        let defaultsKey = "HyzerApp.subscriptionID.\(RoundRecord.recordType)"
+        let defaultsKey = "HyzerApp.subscriptionID.\(roundSubID)"
         let storedID = userDefaults.string(forKey: defaultsKey)
         if let storedID, existingIDs.contains(storedID) {
             logger.info("SyncScheduler: Round-active-creation subscription already active — skipping")
@@ -215,6 +224,47 @@ public actor SyncScheduler {
             // failure, so the next launch's idempotency check will re-attempt this subscription
             // even if the ScoreEvent subscription above succeeded and persisted its own key.
             logger.error("SyncScheduler: failed to subscribe to Round-active-creation — will retry on next launch: \(error)")
+        }
+    }
+
+    /// Creates the `Round-complete-update` CKQuerySubscription that drives "Round Complete" push notifications.
+    ///
+    /// Predicate: `status == "completed"` with `firesOnRecordUpdate` — fires when a Round record
+    /// is UPDATED to completed status. NOT `firesOnRecordCreation` because the Round record already
+    /// exists (created on round-start by Story 12.1); creation would never fire for this case.
+    ///
+    /// `alertLocalizationKey` / `alertLocalizationArgs` compose the alert body server-side —
+    /// PII never enters the APNs payload (PMVP-NFR1 structural guarantee, same mechanism as Story 12.1).
+    ///
+    /// `aps-environment` remains `development` — do NOT flip to `production` until the Epic 12
+    /// release-train story; this constraint blocks BOTH 12.1 and 12.2 (and 12.3 when complete).
+    private func setupRoundCompleteSubscription(existingIDs: [CKSubscription.ID]) async {
+        let roundSubID = "Round-complete-update"
+        let defaultsKey = "HyzerApp.subscriptionID.\(roundSubID)"
+        let storedID = userDefaults.string(forKey: defaultsKey)
+        if let storedID, existingIDs.contains(storedID) {
+            logger.info("SyncScheduler: Round-complete-update subscription already active — skipping")
+            return
+        }
+
+        let notificationInfo = CKSubscription.NotificationInfo()
+        notificationInfo.shouldSendContentAvailable = true
+        notificationInfo.shouldSendMutableContent = false
+        notificationInfo.alertLocalizationKey = "ROUND_COMPLETE_FORMAT"
+        notificationInfo.alertLocalizationArgs = ["courseName", "winnerFirstName", "winnerScoreDisplay"]
+        notificationInfo.desiredKeys = ["courseName", "winnerFirstName", "winnerScoreDisplay"]
+
+        do {
+            let subID = try await cloudKitClient.subscribeWithAlert(
+                to: RoundRecord.recordType,
+                predicate: NSPredicate(format: "status == %@", "completed"),
+                subscriptionID: roundSubID,
+                notificationInfo: notificationInfo
+            )
+            userDefaults.setString(subID, forKey: defaultsKey)
+            logger.info("SyncScheduler: registered Round-complete-update subscription \(subID)")
+        } catch {
+            logger.error("SyncScheduler: failed to subscribe to Round-complete-update — will retry on next launch: \(error)")
         }
     }
 

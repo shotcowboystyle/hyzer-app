@@ -2,12 +2,24 @@ import SwiftUI
 import SwiftData
 import HyzerKit
 
+/// Thin `Identifiable` wrapper around `UUID` — required by `.fullScreenCover(item:)`.
+private struct IdentifiableUUID: Identifiable {
+    let id: UUID
+}
+
 /// Root view after onboarding — 3-tab navigation shell (Story 1.3).
 struct HomeView: View {
     let player: Player
 
     @Environment(AppServices.self) private var appServices
+    @Environment(\.modelContext) private var modelContext
     @State private var selectedTab = 0
+    @State private var pendingSummaryRoundID: UUID?
+
+    @Query(
+        filter: #Predicate<Round> { $0.status == "active" || $0.status == "awaitingFinalization" },
+        sort: \Round.startedAt
+    ) private var activeRounds: [Round]
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -26,15 +38,138 @@ struct HomeView: View {
         .tint(Color.accentPrimary)
         .onAppear { consumePendingDeepLinkIfNeeded() }
         .onChange(of: appServices.pendingDeepLink) { _, _ in consumePendingDeepLinkIfNeeded() }
+        .fullScreenCover(
+            item: Binding(
+                get: { pendingSummaryRoundID.map { IdentifiableUUID(id: $0) } },
+                set: { pendingSummaryRoundID = $0?.id }
+            )
+        ) { item in
+            RoundCompletionSummaryHost(roundID: item.id) {
+                pendingSummaryRoundID = nil
+            }
+        }
     }
 
-    /// Routes to the Scoring tab and consumes `pendingDeepLink`.
-    /// Called from both `.onAppear` (covers cold-launch seeding where the value is set
-    /// before the view mounts and `.onChange` would not fire) and `.onChange`.
+    /// Routes to the Scoring tab or presents the round summary and consumes `pendingDeepLink`.
+    /// Called from both `.onAppear` (covers cold-launch seeding) and `.onChange`.
     private func consumePendingDeepLinkIfNeeded() {
-        guard let deepLink = appServices.pendingDeepLink, case .activeRound = deepLink else { return }
-        selectedTab = 0
-        appServices.pendingDeepLink = nil
+        guard let deepLink = appServices.pendingDeepLink else { return }
+        switch deepLink {
+        case .activeRound:
+            selectedTab = 0
+            appServices.pendingDeepLink = nil
+        case .roundSummary(let roundID):
+            // Defer the summary cover when the user is mid-scoring a different round —
+            // force-presenting a cover would yank them out of their active scoring session.
+            // The completed round is available via History; consume the deep-link without
+            // routing rather than queueing (queueing risks a stale cover later).
+            if !activeRounds.isEmpty {
+                appServices.pendingDeepLink = nil
+                return
+            }
+            selectedTab = 0
+            pendingSummaryRoundID = roundID
+            appServices.pendingDeepLink = nil
+        }
+    }
+}
+
+// MARK: - RoundCompletionSummaryHost
+
+/// Fetches the completed Round by ID and presents `RoundSummaryView` as a full-screen modal.
+///
+/// Presented from `HomeView` (not `ScoringTabView`) because `ScoringTabView.activeRounds`
+/// only queries `status == "active"` or `"awaitingFinalization"` — a completed round won't appear there.
+private struct RoundCompletionSummaryHost: View {
+    let roundID: UUID
+    let onDismiss: () -> Void
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(AppServices.self) private var appServices
+
+    @State private var summaryViewModel: RoundSummaryViewModel?
+    @State private var isLoading = true
+
+    var body: some View {
+        Group {
+            if let vm = summaryViewModel {
+                RoundSummaryView(viewModel: vm, onDismiss: onDismiss)
+            } else if isLoading {
+                ProgressView("Loading summary…")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.backgroundPrimary)
+            } else {
+                // Round not found after retry — dismiss silently (no error toast per AC #2 spirit).
+                Color.clear.onAppear { onDismiss() }
+            }
+        }
+        .task { await loadSummary() }
+    }
+
+    private func loadSummary() async {
+        // Recompute standings (idempotent — ensures latest synced events are reflected).
+        appServices.standingsEngine.recompute(for: roundID, trigger: .remoteSync)
+
+        if let vm = buildViewModel() {
+            summaryViewModel = vm
+            isLoading = false
+            return
+        }
+
+        // Round / course not locally materialised yet. Pull-and-retry with bounded
+        // exponential backoff (no Task.yield busy-loop — that completed in microseconds
+        // and silently dismissed any non-instant sync per CLAUDE.md tech-debt note).
+        let backoffsMillis: [UInt64] = [200, 500, 1000]
+        for delay in backoffsMillis {
+            try? await Task.sleep(nanoseconds: delay * 1_000_000)
+            await appServices.syncEngine.pullRecords()
+            appServices.standingsEngine.recompute(for: roundID, trigger: .remoteSync)
+            if let vm = buildViewModel() {
+                summaryViewModel = vm
+                isLoading = false
+                return
+            }
+        }
+        isLoading = false
+    }
+
+    private func buildViewModel() -> RoundSummaryViewModel? {
+        var roundDescriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == roundID })
+        roundDescriptor.fetchLimit = 1
+        guard let round = (try? modelContext.fetch(roundDescriptor))?.first else { return nil }
+
+        let fetchedCourseID = round.courseID
+        var courseDescriptor = FetchDescriptor<Course>(predicate: #Predicate { $0.id == fetchedCourseID })
+        courseDescriptor.fetchLimit = 1
+        // Require the Course locally — without it, coursePar is 0 and the summary card
+        // renders a degenerate "Round complete at Unknown Course" placeholder. Fall through
+        // to the silent-dismiss branch and let the user re-open via History.
+        guard let course = (try? modelContext.fetch(courseDescriptor))?.first else { return nil }
+        let courseName = course.name
+
+        let courseID = fetchedCourseID
+        var holeDescriptor = FetchDescriptor<Hole>(predicate: #Predicate { $0.courseID == courseID })
+        holeDescriptor.fetchLimit = round.holeCount
+        let holes = (try? modelContext.fetch(holeDescriptor)) ?? []
+        // No holes locally means coursePar is 0; abandon rather than render gibberish.
+        guard !holes.isEmpty else { return nil }
+        let coursePar = holes.reduce(0) { $0 + $1.par }
+
+        let standings = appServices.standingsEngine.currentStandings
+        // For a completed-round summary, the round's hole count is authoritative; the
+        // leader's `holesPlayed` could lag for DNF players in the standings array.
+        let played = round.holeCount
+        let localPlayerID = AppServices.resolveLocalPlayerID(from: modelContext)
+        let currentPlayerID = localPlayerID?.uuidString ?? round.organizerID.uuidString
+
+        return RoundSummaryViewModel(
+            round: round,
+            standings: standings,
+            courseName: courseName,
+            holesPlayed: played,
+            coursePar: coursePar,
+            currentPlayerID: currentPlayerID
+        )
     }
 }
 

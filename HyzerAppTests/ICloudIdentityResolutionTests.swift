@@ -9,6 +9,7 @@ import CloudKit
 /// Minimal no-op stub for AppServices construction in iCloud identity tests.
 private struct StubCloudKitClient: CloudKitClient, @unchecked Sendable {
     func save(_ records: [CKRecord]) async throws -> [CKRecord] { [] }
+    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] { [] }
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
     func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
     func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}

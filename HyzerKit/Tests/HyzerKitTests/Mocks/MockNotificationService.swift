@@ -15,6 +15,9 @@ final class MockNotificationService: NotificationService, @unchecked Sendable {
     /// When set to non-nil, `parseRoundStartedPayload` returns this payload.
     var payloadToReturn: RoundStartedPayload?
 
+    /// When set to non-nil, `parseRoundCompletePayload` returns this payload.
+    var completePayloadToReturn: RoundCompletePayload?
+
     /// Controls `shouldSuppressPresentation` return value.
     var suppressionResult: Bool = false
 
@@ -24,9 +27,13 @@ final class MockNotificationService: NotificationService, @unchecked Sendable {
     private(set) var requestAuthorizationCallCount = 0
     private(set) var shouldSuppressPresentationCallCount = 0
     private(set) var parsePayloadCallCount = 0
+    private(set) var parseCompletePayloadCallCount = 0
 
     /// All user-info dictionaries passed to `parseRoundStartedPayload`.
     private(set) var capturedParsePayloadArgs: [[AnyHashable: Any]] = []
+
+    /// All user-info dictionaries passed to `parseRoundCompletePayload`.
+    private(set) var capturedParseCompletePayloadArgs: [[AnyHashable: Any]] = []
 
     // MARK: - NotificationService
 
@@ -52,16 +59,25 @@ final class MockNotificationService: NotificationService, @unchecked Sendable {
         return payloadToReturn
     }
 
+    func parseRoundCompletePayload(_ userInfo: [AnyHashable: Any]) -> RoundCompletePayload? {
+        parseCompletePayloadCallCount += 1
+        capturedParseCompletePayloadArgs.append(userInfo)
+        return completePayloadToReturn
+    }
+
     // MARK: - Test helpers
 
     func reset() {
         nextAuthorizationStatus = .authorized
         payloadToReturn = nil
+        completePayloadToReturn = nil
         suppressionResult = false
         currentAuthorizationStatusCallCount = 0
         requestAuthorizationCallCount = 0
         shouldSuppressPresentationCallCount = 0
         parsePayloadCallCount = 0
+        parseCompletePayloadCallCount = 0
         capturedParsePayloadArgs.removeAll()
+        capturedParseCompletePayloadArgs.removeAll()
     }
 }

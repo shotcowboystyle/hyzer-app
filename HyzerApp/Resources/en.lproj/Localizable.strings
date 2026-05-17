@@ -4,3 +4,8 @@
    Positional specifiers allow translators in future locales to reorder arguments
    (e.g., languages where the course name precedes the verb). */
 "ROUND_STARTED_FORMAT" = "%1$@ started a round at %2$@";
+
+/* Push notification alert body for "Round Complete" (Story 12.2, AC #1).
+   %1$@ = course name, %2$@ = winner first name, %3$@ = winner score display ("+2"/"-3"/"E").
+   Positional specifiers allow translators in future locales to reorder arguments. */
+"ROUND_COMPLETE_FORMAT" = "Round complete at %1$@. %2$@ won at %3$@.";

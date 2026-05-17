@@ -10,7 +10,19 @@ import CloudKit
 /// the `SyncEngine` actor.
 public protocol CloudKitClient: Sendable {
     /// Saves records to CloudKit and returns the saved copies (with system fields populated).
+    ///
+    /// Uses `.ifServerRecordUnchanged` semantics — appropriate for CREATE-only writes
+    /// (ScoreEvent appends, initial Round push). For UPDATE writes where the local CKRecord
+    /// has no `recordChangeTag`, callers must use `save(_:savePolicy:)` with `.changedKeys`
+    /// instead to avoid every UPDATE throwing `serverRecordChanged`.
     func save(_ records: [CKRecord]) async throws -> [CKRecord]
+
+    /// Saves records to CloudKit with an explicit save policy. Required for UPDATE writes
+    /// on records whose local copy has no `recordChangeTag` (e.g., `pushRoundCompletion`
+    /// builds a fresh CKRecord from a DTO and pushes it as an update to the existing
+    /// server record). Pass `.changedKeys` to bypass the change-tag check while preserving
+    /// field-level merge semantics on the server.
+    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord]
 
     /// Fetches records matching `query` from the given record zone (nil → default zone).
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord]

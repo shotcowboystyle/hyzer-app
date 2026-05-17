@@ -157,11 +157,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                 completionHandler(.noData)
                 return
             }
-            // Branch on subscription ID: Round-active-creation → handleRoundStartedNotification
-            // ScoreEvent-creation (and any other) → existing silent-push handler
-            if CKNotificationEnvelope.subscriptionID(from: userInfo) == "Round-active-creation" {
+            let subscriptionID = CKNotificationEnvelope.subscriptionID(from: userInfo)
+            switch subscriptionID {
+            case NotificationSubscriptionID.roundActiveCreation:
                 await services.handleRoundStartedNotification(userInfo)
-            } else {
+            case NotificationSubscriptionID.roundCompleteUpdate:
+                await services.handleRoundCompleteNotification(userInfo)
+            default:
                 await services.handleRemoteNotification()
             }
             completionHandler(.newData)

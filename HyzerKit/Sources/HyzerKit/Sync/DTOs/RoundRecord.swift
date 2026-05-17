@@ -22,6 +22,12 @@ public struct RoundRecord: Sendable {
     public let status: String
     public let playerIDs: [String]
     public let createdAt: Date
+    /// Precomputed first-name token of the winner, used in the round-complete alert body.
+    /// Set when the round is pushed in completion state; nil during round-start push.
+    public let winnerFirstName: String?
+    /// Precomputed "+/- par" string for the winner ("+2", "-3", "E"). Aggregate summary value —
+    /// never an individual player's stroke count.
+    public let winnerScoreDisplay: String?
 
     public init(
         id: UUID,
@@ -30,7 +36,9 @@ public struct RoundRecord: Sendable {
         courseName: String,
         status: String,
         playerIDs: [String],
-        createdAt: Date
+        createdAt: Date,
+        winnerFirstName: String? = nil,
+        winnerScoreDisplay: String? = nil
     ) {
         self.id = id
         self.organizerID = organizerID
@@ -39,6 +47,8 @@ public struct RoundRecord: Sendable {
         self.status = status
         self.playerIDs = playerIDs
         self.createdAt = createdAt
+        self.winnerFirstName = winnerFirstName
+        self.winnerScoreDisplay = winnerScoreDisplay
     }
 }
 
@@ -60,6 +70,8 @@ extension RoundRecord {
         record["status"] = status as CKRecordValue
         record["playerIDs"] = playerIDs as CKRecordValue
         record["createdAt"] = createdAt as CKRecordValue
+        if let winnerFirstName { record["winnerFirstName"] = winnerFirstName as CKRecordValue }
+        if let winnerScoreDisplay { record["winnerScoreDisplay"] = winnerScoreDisplay as CKRecordValue }
         return record
     }
 
@@ -93,5 +105,7 @@ extension RoundRecord {
         self.status = status
         self.playerIDs = playerIDs
         self.createdAt = createdAt
+        self.winnerFirstName = ckRecord["winnerFirstName"] as? String
+        self.winnerScoreDisplay = ckRecord["winnerScoreDisplay"] as? String
     }
 }

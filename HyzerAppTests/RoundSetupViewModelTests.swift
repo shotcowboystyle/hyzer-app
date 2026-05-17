@@ -10,6 +10,7 @@ import CloudKit
 private struct StubCKClientForRoundTests: CloudKitClient, @unchecked Sendable {
     var savedRecords: [CKRecord] = []
     func save(_ records: [CKRecord]) async throws -> [CKRecord] { records }
+    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] { records }
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
     func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
     func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
@@ -24,8 +25,15 @@ private struct StubCKClientForRoundTests: CloudKitClient, @unchecked Sendable {
 
 private class CapturingCKClient: CloudKitClient, @unchecked Sendable {
     private(set) var savedRecords: [CKRecord] = []
+    private(set) var savedPolicies: [CKModifyRecordsOperation.RecordSavePolicy] = []
     func save(_ records: [CKRecord]) async throws -> [CKRecord] {
         savedRecords.append(contentsOf: records)
+        savedPolicies.append(contentsOf: records.map { _ in .ifServerRecordUnchanged })
+        return records
+    }
+    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] {
+        savedRecords.append(contentsOf: records)
+        savedPolicies.append(contentsOf: records.map { _ in savePolicy })
         return records
     }
     func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
