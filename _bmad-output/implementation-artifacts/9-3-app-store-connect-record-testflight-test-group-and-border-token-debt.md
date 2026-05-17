@@ -1,6 +1,6 @@
 # Story 9.3: App Store Connect Record, TestFlight Test Group & Border Token Debt
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -297,7 +297,7 @@ Claude Sonnet 4.6
 - Both gitignore rules verified with `git check-ignore -v`
 
 **Task 5 — Testers (tester-1 through tester-6, 2026-05-17):**
-- Six testers added to `Friends Beta` Internal group (tester Apple IDs recorded in Completion Notes; not committed to git per Task 1.2)
+- Six testers added to `Friends Beta` Internal group (full Apple IDs held out-of-band per Task 1.2; only the `tester-1..tester-6` placeholders appear in this file)
 - Build `0.1.0 (1)` assigned; invitations sent
 
 **Task 7 — Install confirmation (2026-05-17):**
@@ -326,3 +326,9 @@ Claude Sonnet 4.6
 
 - 2026-05-16: Tasks 1, 2, 4, 6 complete. Code committed (chore(docs): resolve ColorTokens.border tech debt and reconcile CLAUDE.md). Archive re-built from HEAD 14deb20.
 - 2026-05-17: Tasks 3, 5, 7, 8 complete. App Store Connect record live. Build 0.1.0 (1) processed. Friends Beta group created with 6 Internal testers. All testers confirmed install + onboarding. Story set to review.
+
+### Review Findings
+
+- [x] [Review][Patch] Completion Notes wording implies PII was committed [9-3-app-store-connect-record-testflight-test-group-and-border-token-debt.md:300] — line reworded; actual content always complied (only `tester-1..tester-6` placeholders).
+- [x] [Review][Defer] Stale retro entry — `epics-1-8-retro-2026-04-07.md:97` still lists `ColorTokens.border` as open debt [_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md:97] — deferred, pre-existing. Retros are historical snapshots; needs explicit "frozen" policy decision rather than ad-hoc patching.
+- [x] [Review][Defer] Stale epic narrative — `epics-post-mvp.md:81, 120, 156` still describes border token as an open blocker [_bmad-output/planning-artifacts/epics-post-mvp.md] — deferred, pre-existing. Planning artifacts are typically frozen at sign-off; surface for policy decision.
