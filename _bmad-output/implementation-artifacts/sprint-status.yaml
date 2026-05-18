@@ -162,6 +162,46 @@ stories:
     title: "Generative Visual Round Signature on Summary Card"
     status: done
     epic: 14
+  "15.1":
+    title: "APS Environment Production Flip & App Store Connect Privacy Mirror"
+    status: ready-for-dev
+    epic: 15
+  "15.2":
+    title: "Canonical 407-Test Baseline Pre-Flight Validation on Simulator"
+    status: ready-for-dev
+    epic: 15
+  "15.3":
+    title: "Story 14.2 Generative Signature Ship-Gate Manual Verification"
+    status: ready-for-dev
+    epic: 15
+  "15.4":
+    title: "On-Device History-Services Performance Verification"
+    status: ready-for-dev
+    epic: 15
+  "15.5":
+    title: "Launch Screen Polish — UIUserInterfaceStyle Pin, Info.plist Consolidation, LaunchBackground Light/Dark Variants"
+    status: ready-for-dev
+    epic: 15
+  "15.6":
+    title: "Stale Planning Artifact Cleanup (ColorTokens.border Reference Purge & Frozen-Artifact Policy)"
+    status: ready-for-dev
+    epic: 15
+  "15.7":
+    title: "Extract Shared TestSupport SPM Target (ValueCollector, MockNotificationService, MockNearbyDiscoveryClient)"
+    status: ready-for-dev
+    epic: 15
+  "15.8":
+    title: "Deterministic-Wait Test Helper (Task.sleep Replacement)"
+    status: ready-for-dev
+    epic: 15
+  "15.9":
+    title: "VoiceOver-Friendly Score Formatter (E → even par)"
+    status: ready-for-dev
+    epic: 15
+  "15.10":
+    title: "Centralize History-Service Constants (ScoreEvent.maxEventsPerRound, RoundStatus.completed)"
+    status: ready-for-dev
+    epic: 15
 
 # Parallelization plan for active wave (Epics 10 & 11)
 # Generated 2026-05-14 by Gemini CLI. See dependency analysis: all stories below operate on
@@ -174,6 +214,23 @@ parallel_waves:
     description: "Run after 11.2 merges (shared file: RoundSummaryView.swift)"
     stories: ["11.3"]
     blocked_by: ["11.2"]
+
+# Parallelization plan for Epic 15 (Pre-Launch Hardening)
+# Generated 2026-05-18. Most stories operate on disjoint files; 15.8 has a
+# soft dependency on 15.7 (TestSupport target must exist first). 15.4 has
+# a soft dependency on user-supplied hardware.
+epic_15_waves:
+  wave_1:
+    description: "Fully independent — safe to assign to N parallel dev agents"
+    stories: ["15.1", "15.2", "15.3", "15.5", "15.6", "15.7", "15.9", "15.10"]
+  wave_2:
+    description: "Run after 15.7 merges (TestSupport target must exist)"
+    stories: ["15.8"]
+    blocked_by: ["15.7"]
+  wave_3:
+    description: "Requires physical iPhone 12+ (user elicitation in Task 1.1)"
+    stories: ["15.4"]
+    notes: "Can run in any wave once hardware is available; not blocked by other 15.x stories"
 
 retrospectives:
   "epics-1-8":

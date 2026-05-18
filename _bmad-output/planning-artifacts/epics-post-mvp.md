@@ -149,6 +149,12 @@ The most technically novel work: MultipeerConnectivity-based local-network disco
 **PMVP-NFRs covered:** PMVP-NFR2
 **Dependencies:** Epic 9. Soft dependency on Epic 11 (PMVP-FR18 modifies the round summary built there).
 
+### Epic 15: Pre-Launch Hardening
+The remaining deferred work from `_bmad-output/implementation-artifacts/deferred-work.md` that must close before the public/TestFlight push beyond the original `Friends Beta` group. Three categories: App Store submission prep (Story 9.x deferrals — APS environment production flip, App Store Connect privacy mirror, simulator baseline), ship-gate verifications (Story 14.2 manual checks, Story 13.1 on-device perf measurement), and test-infrastructure consolidation (shared `TestSupport` SPM target for `ValueCollector` / mocks / deterministic-wait helper). Closes with two small code-quality items repeatedly flagged in review (VoiceOver "E" pronunciation, magic-multiplier constants).
+**PMVP-FRs covered:** None new — hardens deliverables from Epics 9–14.
+**PMVP-NFRs covered:** Refines PMVP-NFR4 with device-measured evidence.
+**Dependencies:** Epics 9–14 (the surfaces being hardened). All ten stories run independently within the epic.
+
 ---
 
 ## Epic 9: TestFlight Launch Readiness
@@ -646,3 +652,289 @@ So that round summaries feel like keepsakes rather than receipts.
 **Given** the summary card is shared via Story 11.3
 **When** the PNG is exported
 **Then** the signature is included in the exported image (it is part of the screenshot-first design surface)
+
+---
+
+## Epic 15: Pre-Launch Hardening
+
+The remaining deferred work that must close before the public/TestFlight push beyond the original six-friend `Friends Beta` group. Sweeps three categories: (a) **App Store submission prep** items that Story 9.3 explicitly parked until later (APS environment, App Store Connect privacy questionnaire mirror, simulator-baseline test pass), (b) **ship-gate verifications** that prior stories deferred when the dev agent had no simulator/device available (Story 14.2 manual checks, Story 13.1 on-device performance measurement), and (c) **test-infrastructure consolidation** for the three duplication threads called out in CLAUDE.md "Known Technical Debt" (`ValueCollector`, `MockNotificationService`, `MockNearbyDiscoveryClient`, `Task.sleep` flaky timing). Closes with two small code-quality items repeatedly flagged in review (`"E"` VoiceOver pronunciation, magic-multiplier constants in history services).
+
+**Inputs:** `_bmad-output/implementation-artifacts/deferred-work.md` (the authoritative inventory).
+
+**PMVP-FRs covered:** None new — Epic 15 hardens deliverables already shipped in Epics 9–14.
+**PMVP-NFRs covered:** Refines PMVP-NFR4 (chart render <500ms) by adding device-measured evidence.
+**Dependencies:** Epics 9–14 (the surfaces being hardened). No story in Epic 15 depends on any other story within the epic; all ten run independently.
+
+### Story 15.1: APS Environment Production Flip & App Store Connect Privacy Mirror
+
+As the developer preparing to submit hyzer-app for App Store distribution beyond TestFlight,
+I want the production APS environment configured on the App Store-bound entitlements and the App Store Connect Privacy section to mirror the in-bundle `PrivacyInfo.xcprivacy` declarations,
+So that the first App Store submission does not get rejected for an entitlement/manifest mismatch or for an undeclared privacy data type.
+
+**Scope:** Flip `aps-environment` from `development` to `production` in the App Store-bound entitlements path (Story 9.1 deferral; explicitly parked until Epic 12 finalized push delivery, which is now done — Epic 12 closed 2026-05-17); mirror `NSPrivacyCollectedDataTypeUserID` (Linked + AppFunctionality) and `NSPrivacyCollectedDataTypeAudioData` (Not-Linked + AppFunctionality) declarations into App Store Connect's App Privacy questionnaire (Story 9.2 deferral); verify the CloudKit container schema is deployed to Production (Story 9.3 operational flag) so synced rounds work for non-`Friends Beta` testers. No code changes beyond the `.entitlements` flip.
+
+**Acceptance Criteria:**
+
+**Given** `HyzerApp/App/HyzerApp.entitlements` is opened for an App Store-bound distribution build
+**When** the `aps-environment` key is read
+**Then** the value is `production` (Story 9.1 deferral)
+**And** the TestFlight-only build path continues to function (Apple accepts `production` APS in TestFlight; the inverse — `development` for App Store — is the rejection-causing direction)
+
+**Given** the App Store Connect App Privacy section is opened
+**When** the data type list is compared against `HyzerApp/App/PrivacyInfo.xcprivacy`
+**Then** the two are byte-for-intent identical: `User ID` (Linked, non-tracking, AppFunctionality) and `Audio Data` (Not-Linked, non-tracking, AppFunctionality), no extra categories, no missing categories (Story 9.2 deferral)
+
+**Given** the CloudKit Dashboard is opened for container `iCloud.com.shotcowboystyle.hyzerapp`
+**When** the schema deployment state is inspected
+**Then** the Development schema has been promoted to Production (Story 9.3 operational flag) — testers outside the Friends Beta group can sync rounds without the schema-missing silent failure
+
+**Given** a Release archive is produced from the entitlement-flipped main branch
+**When** the archive is uploaded to App Store Connect for TestFlight
+**Then** processing completes without the "Missing Compliance"/entitlement mismatch warning, and the build is `Ready to Test` within 30 minutes
+
+### Story 15.2: Canonical 407-Test Baseline Pre-Flight Validation on Simulator
+
+As the developer about to upload a TestFlight build,
+I want a documented green run of the canonical `xcodebuild test` command against the 407-test baseline on the `iPhone 17 with Watch` simulator,
+So that no regression slips into TestFlight from a sim-unavailable dev-agent run that deferred this gate.
+
+**Scope:** Execute the canonical command from CLAUDE.md "Build & Test Commands" against current `main`, reconcile the test-count baseline (CLAUDE.md states `407 tests`; Story 14.2 Completion Notes report HyzerKit `423` after additions plus 28 HyzerApp suites; Story 9.3 references `278` HyzerKit + simulator deferral — the three figures need a single authoritative reconciliation), and record evidence; no code changes beyond an updated CLAUDE.md test-count snapshot.
+
+**Acceptance Criteria:**
+
+**Given** a clean checkout of current `main` HEAD on a Mac with Xcode 16.x + `iPhone 17 with Watch` simulator installed
+**When** the canonical command `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'` runs
+**Then** the build succeeds, SwiftLint pre-build emits zero warnings, and every test suite passes (Story 9.2 AC7 deferral)
+
+**Given** the test run produces a final count
+**When** the count is compared to CLAUDE.md "Project Status" (`407 tests`)
+**Then** CLAUDE.md is updated to the actual current count with a single sentence noting the breakdown by target (HyzerKit + HyzerAppTests + HyzerWatch test target if any) — the three figures referenced across Stories 9.3 / 14.2 / CLAUDE.md must reconcile to a single number
+
+**Given** the canonical command is unavailable on the dev machine (the recurring sim-unavailable pattern from Stories 9.1, 9.2, 9.3, 14.1)
+**When** the dev agent is unable to run the gate
+**Then** the story stays in `ready-for-dev` and the deferral is explicit — a different reviewer with sim access closes the gate; this story does not get marked `done` based on `swift test --package-path HyzerKit` alone
+
+### Story 15.3: Story 14.2 Generative Signature Ship-Gate Manual Verification
+
+As the developer about to merge Story 14.2 to the launch branch,
+I want a documented manual verification of the four ship-gate items the dev agent could not perform (palette-on-`backgroundElevated` contrast spot-check, AirDrop PNG round-trip, VoiceOver announcement, Reduce Motion behavior),
+So that AC #3 (contrast against `backgroundElevated`), AC #5 (PNG export integrity), AC #6 (VoiceOver), and AC #4 (Reduce Motion) of Story 14.2 are evidenced by human observation, not inferred from code structure.
+
+**Scope:** Perform the four sub-tasks 8.1–8.5 from Story 14.2 on a Mac with simulator support; record any palette-color contrast result below 4.5:1 against `Color.backgroundElevated` (#1C1C1E); record the exported PNG's exact pixel dimensions; record the VoiceOver utterance verbatim; record Reduce Motion behavior. No code changes UNLESS contrast is below threshold — in which case file a single follow-up to swap or constrain the offending palette entry (do not patch in this story; it is a verification story).
+
+**Acceptance Criteria:**
+
+**Given** a debug build running on the `iPhone 17 with Watch` simulator
+**When** a fixture round is completed and the round summary card is shown
+**Then** the signature appears between standings and metadata, uses only the 8-color palette enumerated in Story 14.2 Task 3.1, and the contrast of each palette color against `Color.backgroundElevated` is measured with the Color Contrast Analyzer
+**And** any palette entry that falls below 4.5:1 against `backgroundElevated` is recorded in Completion Notes; a follow-up issue is opened naming the entry and proposing either a replacement token or constraining the entry to outline-only treatment
+
+**Given** the summary card is shared via the "Share Results" button
+**When** the PNG is AirDropped to a Mac (or saved to Notes/Photos)
+**Then** the exported image contains the signature between the standings and metadata regions
+**And** the recorded pixel dimensions reconcile with the documented 120pt × `displayScale` height delta from Story 14.2 AC #5
+
+**Given** VoiceOver is enabled
+**When** the user swipes through the round summary card
+**Then** the signature announces as exactly "Round signature" (Story 14.2 AC #6) — not 32 spoken bytes, not "image", not silent
+
+**Given** Settings → Accessibility → Motion → Reduce Motion is enabled
+**When** a previously-completed round's summary is re-opened from history
+**Then** no animation runs; the final-frame signature is identical to the no-Reduce-Motion render (Story 14.2 AC #4)
+**And** the snapshot-export PNG is identical to the no-Reduce-Motion export
+
+### Story 15.4: On-Device History-Services Performance Verification
+
+As the developer claiming PMVP-NFR4 satisfaction,
+I want the Story 13.1 on-device `<500ms` measurement performed on physical hardware (not a macOS x86 host or a simulator) with 250 rounds, and adjacent device-time measurements for `PersonalBestService.computeBest` and `HeadToHeadService.computeRecord`,
+So that the AC #3 claim of PMVP-NFR4 satisfaction has device-measured evidence and adjacent history services are not silently slower than expected.
+
+**Scope:** Build a release-config Hyzer install onto an iPhone 12+ (Story 14.2 dev notes assume iPhone 12+ as the device floor); seed a fixture player with 250 completed rounds (using a debug-only test-data harness if one exists, otherwise a one-off `xcrun simctl` or device-side seeding script); measure (a) `PlayerTrendService.computeTrend` first-render-to-first-paint via `signpostID`, (b) `PersonalBestService.computeBest` median time over 5 invocations, (c) `HeadToHeadService.computeRecord` median time over 5 invocations; record numbers in `_bmad-output/implementation-artifacts/15-4-evidence/perf.md` (gitignored evidence per Story 9.3's `*-evidence/` glob pattern); no code changes UNLESS a measurement exceeds budget — in which case file a follow-up story.
+
+**Acceptance Criteria:**
+
+**Given** a fixture player with 250 completed rounds is loaded on a physical iPhone 12+ running iOS 18+
+**When** the trend view first appears
+**Then** the time from view-appear to first-paint of the chart is `<500ms` (PMVP-NFR4; Story 13.1 AC #3 unmeasured-on-device deferral)
+**And** the measurement methodology is `os_signpost` `Logger`-based, run 5 times, median reported
+
+**Given** the same fixture player + course (any course with ≥3 completed rounds)
+**When** `PersonalBestService.computeBest` is invoked
+**Then** the median time over 5 invocations is recorded (no formal budget — establishes a baseline number that future regression PRs can compare against)
+
+**Given** the same fixture player + a second player who has played in at least 10 of the 250 rounds
+**When** `HeadToHeadService.computeRecord` is invoked
+**Then** the median time over 5 invocations is recorded — same baseline-only intent as the PB measurement
+
+**Given** any measurement exceeds an obvious-failure threshold (`PlayerTrendService` >500ms, `PersonalBest`/`HeadToHead` >2s as informal regression bars)
+**When** the failure surfaces during verification
+**Then** the failure is recorded in Completion Notes, a follow-up story is filed to optimize the offending service, and Story 15.4 still closes (the verification was performed; the optimization is separate)
+
+### Story 15.5: Launch Screen Polish (`UIUserInterfaceStyle` Pin, Info.plist Consolidation, `LaunchBackground` Light/Dark Variants)
+
+As a user launching hyzer-app on a device running iOS in light mode for the first time,
+I want the launch-screen-to-first-frame transition to be visually stable (no flash of light-mode content before the dark UI renders),
+So that the launch impression is consistent with the dark-dominant in-app experience.
+
+**Scope:** Add `UIUserInterfaceStyle: Dark` to `project.yml info.properties` and `HyzerApp/App/Info.plist` (Story 9.2 deferral); add light/dark variants to `HyzerApp/Resources/Assets.xcassets/LaunchBackground.colorset/` so the launch background is correct under both system themes (current state: universal-only `Contents.json:13`); consolidate the Info.plist duplication between `project.yml` and `HyzerApp/App/Info.plist` for `UISupportedInterfaceOrientations`, `UIBackgroundModes`, `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`, `ITSAppUsesNonExemptEncryption` — `project.yml` is the canonical source of truth, `Info.plist` is XcodeGen-managed (Story 9.2 deferral).
+
+**Acceptance Criteria:**
+
+**Given** the app is installed on a device with iOS system theme set to Light
+**When** the app launches cold
+**Then** no light-mode flash appears between launch screen and first SwiftUI frame (Story 9.2 deferral)
+**And** the launch screen background uses a tone consistent with `ColorTokens.backgroundPrimary` in both light and dark system themes
+
+**Given** `project.yml` and `HyzerApp/App/Info.plist` are inspected
+**When** the five duplicated keys (`UISupportedInterfaceOrientations`, `UIBackgroundModes`, `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`, `ITSAppUsesNonExemptEncryption`) are compared
+**Then** each key has exactly one source-of-truth declaration in `project.yml info.properties`; `HyzerApp/App/Info.plist` either contains no duplicate (XcodeGen-generated from `project.yml`) OR the duplicate is removed and the two files no longer drift on regenerate (Story 9.2 deferral)
+
+**Given** `HyzerApp/Resources/Assets.xcassets/LaunchBackground.colorset/Contents.json` is inspected
+**When** the `colors` array is read
+**Then** the array contains at least two entries — `idiom: "universal"` with `appearances` for `luminosity: "light"` and `luminosity: "dark"` — and the dark variant matches `ColorTokens.backgroundPrimary` (#0A0A0C) while the light variant matches whatever the canonical light-mode launch tone is (treat as #FFFFFF unless the design system has a different `backgroundPrimary` light value)
+
+**Given** the canonical test command is re-run after the Info.plist consolidation
+**When** the build completes
+**Then** the test count remains identical to Story 15.2's reconciled baseline and SwiftLint emits zero warnings
+
+### Story 15.6: Stale Planning Artifact Cleanup (`ColorTokens.border` Reference Purge)
+
+As a future contributor reading the planning artifacts to understand outstanding work,
+I want the `ColorTokens.border` references that remain in `_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md:97` and `_bmad-output/planning-artifacts/epics-post-mvp.md:81, 120, 156` removed or annotated as resolved,
+So that the planning-artifact graph reflects post-Story-9.3 reality and a new contributor does not file a duplicate tech-debt resolution effort.
+
+**Scope:** Apply the minimal-edit pattern documented in Story 9.3 Review Findings — annotate the three stale planning-artifact references with `(Resolved by Story 9.3 — Path A retained.)` rather than rewriting the artifacts; add a one-paragraph "Frozen Artifact Policy" section to the project's BMAD readme (or `CLAUDE.md`'s "BMAD Project Management" section) defining whether retros and at-sign-off planning docs are append-only historical snapshots or living documents — the policy decision is owned by the user, not the dev agent.
+
+**Acceptance Criteria:**
+
+**Given** `_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md:97` is read
+**When** the `ColorTokens.border` reference is encountered
+**Then** an inline annotation reads `(Resolved by Story 9.3 — Path A retained. Token is defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51.)` or the line is removed entirely per the policy decision
+
+**Given** `_bmad-output/planning-artifacts/epics-post-mvp.md` lines 81, 120, 156 are read
+**When** the three references are encountered
+**Then** each is annotated identically OR removed per the policy decision
+
+**Given** the user is asked to choose between "append-only frozen artifacts" and "living documents" for retros and planning docs
+**When** the decision is recorded
+**Then** the policy is documented in a single short section in CLAUDE.md (or the project README) so the next deferred-work cycle does not re-debate it
+
+**Given** the changes are committed
+**When** the canonical regression check runs
+**Then** no Swift test count changes — this story has no Swift edits
+
+### Story 15.7: Extract Shared TestSupport SPM Target
+
+As the developer maintaining a test suite that has grown across Stories 12.1, 13.x, 14.1, 14.2,
+I want `ValueCollector`, `MockNotificationService`, and `MockNearbyDiscoveryClient` consolidated into a single `HyzerKit/Tests/TestSupport/` shared target,
+So that the three known duplications called out in CLAUDE.md "Known Technical Debt" and the deferred-work entries from Stories 12.1, 13.2, 14.1 are eliminated, and the test suite has one canonical source for each helper.
+
+**Scope:** Create a new `HyzerKit/Tests/TestSupport/` Swift package target (or `target_dependencies` block in `Package.swift`) exposing `ValueCollector`, `MockNotificationService`, `MockNearbyDiscoveryClient`; update `HyzerKitTests` and `HyzerAppTests` to import the shared target; delete the duplicate implementations in `HyzerKit/Tests/HyzerKitTests/Mocks/` and `HyzerAppTests/Mocks/`. No production-code changes; no behavior changes.
+
+**Acceptance Criteria:**
+
+**Given** `HyzerKit/Package.swift` is read
+**When** the target list is inspected
+**Then** a new `TestSupport` target exists with `path: "Tests/TestSupport"` and is listed as a test dependency of `HyzerKitTests`
+**And** the iOS app side's `HyzerAppTests` target in `project.yml` lists `TestSupport` as a Swift package dependency
+
+**Given** `HyzerKit/Tests/TestSupport/ValueCollector.swift`, `MockNotificationService.swift`, and `MockNearbyDiscoveryClient.swift` are created
+**When** the file tree is inspected
+**Then** the old duplicate locations (`HyzerKit/Tests/HyzerKitTests/Mocks/MockNotificationService.swift`, `HyzerAppTests/Mocks/MockNotificationService.swift`, `HyzerAppTests/Mocks/MockNearbyDiscoveryClient.swift`, and any `ValueCollector` duplicates) are deleted in the same commit
+**And** the contents of the consolidated files are the union of the most-recent versions across the duplicates — semantic differences resolved by picking the more-permissive/more-recent implementation
+
+**Given** `HyzerKitTests` and `HyzerAppTests` are re-run
+**When** the test count is compared to the Story 15.2 reconciled baseline
+**Then** the count is identical (no tests added, no tests removed; same green status)
+**And** `swiftlint lint` emits zero warnings on the new `TestSupport` files
+
+**Given** a future story adds a new `Mock<Service>` helper
+**When** the dev agent reads `CLAUDE.md`
+**Then** the existence of `TestSupport` is documented as the canonical location for new shared mocks — the duplication thread is closed
+
+### Story 15.8: Deterministic-Wait Test Helper (`Task.sleep` Replacement)
+
+As the developer triaging flaky CI failures,
+I want a `await waitUntil(_:timeout:)` helper that replaces the `Task.sleep(for: .milliseconds(20))` / `for _ in 0..<20 { await Task.yield() }` flaky-timing patterns in `AppServicesNearbyDiscoveryTests` and `WatchVoiceViewModel`,
+So that the flaky-timing thread called out in CLAUDE.md "Known Technical Debt" closes and the test suite's pass rate is no longer dependent on CI runner load.
+
+**Scope:** Add `HyzerKit/Tests/TestSupport/WaitUntil.swift` (in the same target created by Story 15.7) implementing a polling-with-timeout helper backed by `ContinuousClock`; refactor the call-sites in `AppServicesNearbyDiscoveryTests` (Story 14.1 deferral), `WatchVoiceViewModel` flaky test (Story 14.2 dev notes), and any other test using `Task.sleep` or `Task.yield` loops as wait primitives; do NOT change production code (the `ContinuousClock` seam on `AppServices` is out of scope for this story — its addition is what unlocks Story 14.1's missing throttle-window test, which can then be filed separately).
+
+**Acceptance Criteria:**
+
+**Given** `HyzerKit/Tests/TestSupport/WaitUntil.swift` is read
+**When** the API is inspected
+**Then** it exposes `func waitUntil(_ condition: @MainActor () async -> Bool, timeout: Duration = .seconds(2), pollInterval: Duration = .milliseconds(10), sourceLocation: SourceLocation = #_sourceLocation) async throws` using Swift Testing's `SourceLocation` so failures point at the test, not the helper
+
+**Given** a test using `Task.sleep` is refactored to use `waitUntil`
+**When** the test runs under both fast (M1/M2) and slow (CI runner) conditions
+**Then** it passes deterministically — the polling backoff is bounded by `timeout` and the condition check runs at most `timeout / pollInterval` times before throwing
+
+**Given** the existing flaky tests are refactored: `test_handleDiscoveredRound_throttleWindow_firstCall` and its siblings in `AppServicesNearbyDiscoveryTests` (Story 14.1 spec lines 366–390), the `WatchVoiceViewModel` auto-commit timer test (Story 14.2 dev notes)
+**When** the canonical test command runs 10 times in a row
+**Then** every run passes — no flake on any of the previously-flaky tests
+
+**Given** a future story adds a new async-pipeline test
+**When** the dev reads the test helper documentation in `WaitUntil.swift`'s doc comment
+**Then** they use `waitUntil` rather than re-inventing a `Task.sleep` pattern; the helper's doc comment includes the rationale and a one-line example
+
+### Story 15.9: VoiceOver-Friendly Score Formatter (`"E"` → `"even par"`)
+
+As a VoiceOver user reading a leaderboard, head-to-head, or trend view,
+I want relative-to-par scores like `"E"`, `"+3"`, `"-1"` announced as `"even par"`, `"three over par"`, `"one under par"`,
+So that the announcements are intelligible (current behavior reads `"E"` as the letter "E", which is meaningless and was acknowledged as tech debt in CLAUDE.md and Story 13.3 review findings).
+
+**Scope:** Add `Standing.verboseScoreFormatter: String` (or a free function `verboseScore(relativeToPar:Int) -> String`) producing the spoken form; update `HeadToHeadViewModel`, `PlayerTrendViewModel`, `PersonalBestViewModel`, and any leaderboard/summary VoiceOver `accessibilityLabel` site that currently passes `Standing.formatScore` to read from `verboseScoreFormatter` instead; preserve the existing compact `"E"`/`"+3"` formatter for non-VoiceOver visual rendering — only the accessibility label changes.
+
+**Acceptance Criteria:**
+
+**Given** `Standing.verboseScoreFormatter` is invoked with `relativeToPar == 0`
+**When** the string is read
+**Then** the output is exactly `"even par"` (Story 13.3 deferral)
+
+**Given** `Standing.verboseScoreFormatter` is invoked with `relativeToPar == 1`
+**When** the string is read
+**Then** the output is `"one over par"` — singular form, no plural
+
+**Given** `Standing.verboseScoreFormatter` is invoked with `relativeToPar == -1`
+**When** the string is read
+**Then** the output is `"one under par"` — singular form
+
+**Given** `Standing.verboseScoreFormatter` is invoked with `relativeToPar == 2..=20` (positive) or `-20..=-2` (negative)
+**When** the string is read
+**Then** the output uses cardinal word forms (`"two"`, `"three"`, …, `"twenty"`) + `"over par"`/`"under par"` — integers above 20 fall back to digit form (`"21 over par"`) to avoid an unbounded word ladder
+
+**Given** a `HeadToHeadView` is rendered with VoiceOver active
+**When** the player score cell receives focus
+**Then** the announcement uses `verboseScoreFormatter` — never raw `"E"`, never raw `"+3"`
+
+**Given** the leaderboard and round summary card are rendered with VoiceOver active
+**When** each score row is announced
+**Then** the announcement uses `verboseScoreFormatter` (the existing `accessibilityLabel` call sites are migrated in this same story; no new VoiceOver surfaces are introduced)
+
+### Story 15.10: Centralize History-Service Constants (`maxEventsPerRound`, `RoundStatus.completed`)
+
+As a future contributor refactoring `PlayerTrendService`, `PersonalBestService`, or `HeadToHeadService`,
+I want the `fetchLimit = maxRounds * 20` magic multiplier promoted to a single named constant `ScoreEvent.maxEventsPerRound = 20` and the string-literal predicate `$0.status == "completed"` replaced with a type-safe `RoundStatus.completed` symbol,
+So that future tweaks to scoring-event-cap or round-status comparison do not require three-service touch-points and a manual cross-grep.
+
+**Scope:** Add `static let maxEventsPerRound = 20` to `ScoreEvent`; replace `maxRounds * 20` in `PlayerTrendService`, `PersonalBestService`, `HeadToHeadService` with `maxRounds * ScoreEvent.maxEventsPerRound`; introduce a type-safe `RoundStatus.completed` constant (or extend the existing enum if one exists; CLAUDE.md mentions `Round.lifecycleState` but the deferred-work file references `Round.status == "completed"` string predicates — investigate and reconcile); refactor all three services' predicate string literal to the symbol form. No behavior changes; no test additions beyond a compile-time guard test.
+
+**Acceptance Criteria:**
+
+**Given** `HyzerKit/Sources/HyzerKit/Models/ScoreEvent.swift` is read
+**When** the type is inspected
+**Then** it exposes `public static let maxEventsPerRound: Int = 20` with a one-line doc comment explaining the multiplier's origin (Story 13.x services; per-round upper bound of strokes-plus-corrections per player)
+
+**Given** `PlayerTrendService.swift`, `PersonalBestService.swift`, and `HeadToHeadService.swift` are inspected
+**When** every `fetchLimit` initialization referencing `* 20` is grep'd
+**Then** every match uses `ScoreEvent.maxEventsPerRound` (zero raw `* 20` remaining in the three files)
+**And** the `$0.status == "completed"` string-literal predicate is replaced with the type-safe constant in every match (Story 13.1 deferral)
+
+**Given** the canonical test command runs after the refactor
+**When** the test count is compared to Story 15.2's reconciled baseline
+**Then** every test still passes (the refactor is behavior-preserving)
+
+**Given** a new SwiftData service is added in a future story
+**When** the dev agent reads `CLAUDE.md` or the doc comments on `ScoreEvent.maxEventsPerRound` and `RoundStatus.completed`
+**Then** they reuse the named constants — no new magic multipliers or string literals enter the codebase
