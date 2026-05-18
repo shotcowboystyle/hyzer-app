@@ -16,6 +16,8 @@ struct PlayerHoleBreakdownView: View {
     @Environment(\.modelContext) private var modelContext
 
     @State private var viewModel: PlayerHoleBreakdownViewModel?
+    @State private var isShowingOpponentPicker = false
+    @State private var selectedOpponent: HeadToHeadCandidate?
 
     var body: some View {
         Group {
@@ -29,6 +31,27 @@ struct PlayerHoleBreakdownView: View {
         }
         .navigationTitle(playerName)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingOpponentPicker) {
+            HeadToHeadOpponentPickerSheet(
+                playerAID: playerID,
+                playerAName: playerName,
+                onSelect: { candidate in
+                    isShowingOpponentPicker = false
+                    selectedOpponent = candidate
+                },
+                onCancel: {
+                    isShowingOpponentPicker = false
+                }
+            )
+        }
+        .navigationDestination(item: $selectedOpponent) { opponent in
+            HeadToHeadView(
+                playerAID: playerID,
+                playerAName: playerName,
+                playerBID: opponent.playerID,
+                playerBName: opponent.playerName
+            )
+        }
         .onAppear {
             guard viewModel == nil else { return }
             let vm = PlayerHoleBreakdownViewModel(
@@ -63,6 +86,22 @@ struct PlayerHoleBreakdownView: View {
                         .padding(.horizontal, SpacingTokens.lg)
                         .padding(.vertical, SpacingTokens.md)
                         .accessibilityLabel("View score trend for \(playerName)")
+                }
+
+                if !GuestIdentifier.isGuest(playerID) {
+                    Button {
+                        isShowingOpponentPicker = true
+                    } label: {
+                        Label("Compare", systemImage: "person.2.fill")
+                            .font(TypographyTokens.body)
+                            .foregroundStyle(Color.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, SpacingTokens.lg)
+                            .padding(.vertical, SpacingTokens.md)
+                            .frame(minHeight: SpacingTokens.minimumTouchTarget)
+                            .accessibilityLabel("Compare \(playerName) with another player")
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 Divider()

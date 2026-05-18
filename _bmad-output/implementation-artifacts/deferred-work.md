@@ -1,3 +1,14 @@
+## Deferred from: code review of 13-3-head-to-head-record-between-two-players (2026-05-18)
+
+- `#Predicate { sharedRoundIDs.contains($0.id) }` with up to ~10k UUIDs in `sharedRoundIDs` may approach SQLite IN-clause limits — pre-existing pattern from `PlayerTrendService` / `PersonalBestService`. Needs systematic review across all three services with an explicit batching or chunking guard.
+- `fetchLimit = maxRounds * 20` magic multiplier in `HeadToHeadService.computeRecord` / `findOpponentCandidates` — pre-existing PlayerTrendService/PersonalBestService pattern. Promote to a single shared, documented constant (e.g., `ScoreEvent.maxEventsPerRound = 20`).
+- `StandingsEngine.recompute` failure cannot be distinguished from "player legitimately not in round" in `HeadToHeadService.computeRecord:130-138` — both produce empty `currentStandings`. Pre-existing pattern; reconsider when the engine surfaces a recoverable error signal.
+- `trigger: .localScore` passed when recomputing historical rounds in `HeadToHeadService.computeRecord:130` is semantically inaccurate — pre-existing pattern. Risk surfaces only if a future analytics/sync side-effect is keyed on `.localScore`.
+- No `Task.isCancelled` checks inside the per-round loop in `HeadToHeadService.computeRecord:126-148` — pre-existing pattern. User navigating away from `HeadToHeadView` mid-compute pays full compute cost.
+- `HeadToHeadViewModel.init(service:)` and `HeadToHeadOpponentPickerViewModel.init(service:)` rely on doc comment `"NOT used in production"` rather than access control — pre-existing pattern from Stories 13.1/13.2. Gate with `#if DEBUG` or factor into a separate testing-only module.
+- `HeadToHeadServiceTests` and `HeadToHeadViewModelTests` rely on `parByHole[n] ?? 3` fallback inside `StandingsEngine` instead of inserting `Hole` rows — project-wide test pattern. Coupling that would silently green-test through an engine refactor requiring explicit holes.
+- `Standing.formatScore`'s `"E"` is pronounced as the letter "E" by VoiceOver in `accessibilityLabel` for `HeadToHeadViewModel` — pre-existing tech debt acknowledged in CLAUDE.md. Need a separate `verboseScoreFormatter` (e.g., `"even par"`) for VoiceOver consumption.
+
 ## Deferred from: code review of 13-2-personal-best-per-course (2026-05-18)
 
 - `participantRoundIDs.contains($0.id)` SwiftData translation may fall back to in-memory filtering with very large `participantRoundIDs` sets — combined with `fetchLimit = maxRounds` applied before the predicate. Same concern as Story 13.1 (already in this file). Bounded `maxRounds = 500` keeps it in-budget for PMVP. (`HyzerKit/Sources/HyzerKit/Domain/PersonalBestService.swift:83-87`)
