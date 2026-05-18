@@ -80,6 +80,7 @@ struct HistoryRoundDetailView: View {
                 NavigationLink {
                     PlayerHoleBreakdownView(
                         roundID: round.id,
+                        courseID: round.courseID,
                         playerID: row.id,
                         playerName: row.playerName
                     )
