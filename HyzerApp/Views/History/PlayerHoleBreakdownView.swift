@@ -9,6 +9,7 @@ import HyzerKit
 /// Read-only. No editing, no sync.
 struct PlayerHoleBreakdownView: View {
     let roundID: UUID
+    let courseID: UUID
     let playerID: String
     let playerName: String
 
@@ -46,6 +47,14 @@ struct PlayerHoleBreakdownView: View {
     private func breakdownContent(vm: PlayerHoleBreakdownViewModel) -> some View {
         ScrollView {
             VStack(spacing: 0) {
+                PersonalBestCardView(
+                    playerID: playerID,
+                    courseID: courseID,
+                    displayTitle: "\(playerName)'s personal best"
+                )
+                .padding(.top, SpacingTokens.md)
+                .padding(.bottom, SpacingTokens.md)
+
                 NavigationLink(destination: PlayerTrendView(playerID: playerID, playerName: playerName)) {
                     Label("View score trend", systemImage: "chart.line.uptrend.xyaxis")
                         .font(TypographyTokens.body)

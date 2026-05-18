@@ -148,7 +148,7 @@ stories:
     epic: 13
   "13.2":
     title: "Personal Best Per Course"
-    status: backlog
+    status: done
     epic: 13
   "13.3":
     title: "Head-to-Head Record Between Two Players"
