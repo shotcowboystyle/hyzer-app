@@ -58,7 +58,7 @@ public final class PlayerTrendService {
             predicate: #Predicate { $0.playerID == playerIDLocal },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        eventDescriptor.fetchLimit = maxRounds * 20  // upper bound: maxRounds rounds × ~18 holes
+        eventDescriptor.fetchLimit = maxRounds * ScoreEvent.maxEventsPerRound  // upper bound: maxRounds rounds × ~18 holes
         let playerEvents: [ScoreEvent]
         do {
             playerEvents = try modelContext.fetch(eventDescriptor)
@@ -76,8 +76,9 @@ public final class PlayerTrendService {
         // (b) Fetch completed Rounds in that set — bounded. Sort newest-first so fetchLimit
         // keeps the most recent `maxRounds` rounds (the trend-view intent), then reverse
         // to ascending order for chart display.
+        let completedStatus = RoundStatus.completed
         var roundDescriptor = FetchDescriptor<Round>(
-            predicate: #Predicate { participantRoundIDs.contains($0.id) && $0.status == "completed" },
+            predicate: #Predicate { participantRoundIDs.contains($0.id) && $0.status == completedStatus },
             sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
         )
         roundDescriptor.fetchLimit = maxRounds

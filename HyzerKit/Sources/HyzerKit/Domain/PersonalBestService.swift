@@ -65,7 +65,7 @@ public final class PersonalBestService {
             predicate: #Predicate { $0.playerID == playerIDLocal },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        eventDescriptor.fetchLimit = maxRounds * 20  // upper bound: maxRounds rounds × ~18 holes
+        eventDescriptor.fetchLimit = maxRounds * ScoreEvent.maxEventsPerRound  // upper bound: maxRounds rounds × ~18 holes
         let playerEvents: [ScoreEvent]
         do {
             playerEvents = try modelContext.fetch(eventDescriptor)
@@ -79,10 +79,11 @@ public final class PersonalBestService {
 
         // (b) Completed Rounds on THIS course in that set — bounded, newest-first so
         // fetchLimit truncation keeps the most recent `maxRounds` rounds (AC #3).
+        let completedStatus = RoundStatus.completed
         var roundDescriptor = FetchDescriptor<Round>(
             predicate: #Predicate {
                 participantRoundIDs.contains($0.id)
-                    && $0.status == "completed"
+                    && $0.status == completedStatus
                     && $0.courseID == courseIDLocal
             },
             sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
