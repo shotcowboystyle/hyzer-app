@@ -23,6 +23,10 @@ struct RoundSummaryView: View {
                     standingsSection
                     Divider()
                         .overlay(Color.backgroundElevated)
+                    RoundSignature(input: viewModel.signatureInput)
+                        .equatable()
+                    Divider()
+                        .overlay(Color.backgroundElevated)
                     metadataSection
                 }
                 .padding(.horizontal, SpacingTokens.lg)
@@ -202,6 +206,7 @@ struct SummaryCardSnapshotView: View {
     let playerRows: [SummaryPlayerRow]
     let holesPlayed: Int
     let organizerName: String
+    let signatureInput: RoundSignatureInput
 
     var body: some View {
         VStack(spacing: SpacingTokens.lg) {
@@ -224,6 +229,12 @@ struct SummaryCardSnapshotView: View {
                     PlayerSummaryRow(row: row)
                 }
             }
+
+            Divider()
+                .overlay(Color.backgroundElevated)
+
+            RoundSignature(input: signatureInput)
+                .equatable()
 
             Divider()
                 .overlay(Color.backgroundElevated)

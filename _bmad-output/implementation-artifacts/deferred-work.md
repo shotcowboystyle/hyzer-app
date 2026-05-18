@@ -1,3 +1,7 @@
+## Deferred from: code review of 14-2-generative-visual-round-signature-on-summary-card (2026-05-18)
+
+- Manual verification (Tasks 8.1–8.5) was not performed by the dev agent per Completion Notes. Includes the palette-on-`backgroundElevated` contrast spot-check (`Color.textSecondary`, `Color.backgroundTertiary` are at higher risk of failing 4.5:1 AA against the elevated background). Spec line 425 explicitly required this check before proceeding past Task 4. Recommend human verification on simulator (live + AirDrop PNG + VoiceOver + Reduce Motion) before merge.
+
 ## Deferred from: code review of 13-3-head-to-head-record-between-two-players (2026-05-18)
 
 - `#Predicate { sharedRoundIDs.contains($0.id) }` with up to ~10k UUIDs in `sharedRoundIDs` may approach SQLite IN-clause limits — pre-existing pattern from `PlayerTrendService` / `PersonalBestService`. Needs systematic review across all three services with an explicit batching or chunking guard.
