@@ -40,6 +40,19 @@ final class RoundSummaryViewModel {
             ?? "Organizer"
     }
 
+    /// Deterministic input for the `RoundSignature` visual.
+    ///
+    /// Computed (not stored) so any future change to `standings` or `round` is reflected.
+    /// In practice `standings` is final at viewmodel construction time, so reading
+    /// `signatureInput` is O(n log n) once per render where n = standings.count.
+    var signatureInput: RoundSignatureInput {
+        RoundSignatureInput(
+            courseID: round.courseID,
+            playerIDs: standings.map(\.playerID).sorted(),
+            sortedTotalStrokes: standings.map(\.totalStrokes).sorted()
+        )
+    }
+
     // MARK: - Private
 
     private let round: Round
@@ -119,7 +132,8 @@ final class RoundSummaryViewModel {
             formattedDate: formattedDate,
             playerRows: playerRows,
             holesPlayed: holesPlayed,
-            organizerName: organizerName
+            organizerName: organizerName,
+            signatureInput: signatureInput
         )
         let renderer = ImageRenderer(content: view)
         renderer.scale = displayScale
