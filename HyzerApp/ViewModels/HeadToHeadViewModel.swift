@@ -53,7 +53,9 @@ final class HeadToHeadViewModel {
            let winsB = winsBFormatted, let pctB = winsBPercentFormatted,
            let diff = averageDifferentialFormatted
         {
-            return "Head-to-head, \(playerAName) versus \(playerBName). \(rounds) played. \(playerAName) wins \(winsA), \(pctA). \(playerBName) wins \(winsB), \(pctB). Average differential \(diff)."
+            return "Head-to-head, \(playerAName) versus \(playerBName). \(rounds) played. "
+                 + "\(playerAName) wins \(winsA), \(pctA). \(playerBName) wins \(winsB), \(pctB). "
+                 + "Average differential \(diff)."
         }
         return "\(playerAName) and \(playerBName) haven't played a round together yet."
     }

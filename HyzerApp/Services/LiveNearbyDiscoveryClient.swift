@@ -172,9 +172,10 @@ final class LiveNearbyDiscoveryClient: NSObject, NearbyDiscoveryClient, @uncheck
             byteCount += added
         }
         if capped.count != playerIDs.count {
-            logger.notice(
-                "encodeDiscoveryInfo: truncated playerIDs from \(playerIDs.count) to \(capped.count) to fit Bonjour TXT-record byte budget (\(Self.txtValueMaxBytes) bytes)"
-            )
+            let original = playerIDs.count
+            let kept = capped.count
+            let budget = Self.txtValueMaxBytes
+            logger.notice("encodeDiscoveryInfo: truncated playerIDs from \(original) to \(kept) (TXT budget \(budget) bytes)")
         }
         return [
             Self.txtKeyRoundID: roundID.uuidString,
