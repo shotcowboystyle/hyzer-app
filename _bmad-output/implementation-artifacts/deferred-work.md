@@ -60,3 +60,12 @@
 - `isShowingSummary` flag is not cleared deterministically after dismiss — theoretical duplicate `pushRoundCompletion` if `isRoundCompleted` flips false→true again. Track `hasPushedCompletionForRoundID` as future hardening.
 - `SelfExclusionTests.test_completePayloadIsNotSubjectToSelfExclusionGate` is described as a compile-time regression guard but is implemented at runtime — would not actually fail if a future `shouldSuppressPresentation(for: RoundCompletePayload, ...)` overload were added.
 - Migration test does not assert the old UserDefaults key is removed — there is no cleanup code by design, but the test does not document that absence.
+
+## Deferred from: code review of 13-1-score-trend-visualization-per-player (2026-05-17)
+
+- AC #3 on-device `<500ms` performance measurement — already noted in Completion Note #8. macOS x86 test runner measured ~0.84s for 250 rounds; device target requires on-iPhone measurement during Task 8.2/8.3 manual verification. AC #3 not claimed as fully satisfied until measured.
+- No retry path after `PlayerTrendViewModel.errorMessage` is set — user stuck on "Unable to load trend." with no recovery action (`PlayerTrendViewModel.swift:64`). UX improvement; not a correctness bug.
+- `TrendChartDescriptor.makeChartDescriptor()` uses `dateFormatter.string(from:)` keyed by `MMMd` template — two rounds completed the same calendar day produce duplicate `categoryOrder` keys; `AXCategoricalDataAxisDescriptor` behavior with duplicate keys is undefined. (`PlayerTrendView.swift:167-170`)
+- `$0.status == "completed"` string literal in `PlayerTrendService` predicate (line 77) rather than `RoundStatus.completed` constant — pattern used codebase-wide; not story-specific. Would benefit from a type-safe wrapper across all `Round.status` comparisons.
+- `#Predicate { participantRoundIDs.contains($0.id) }` SwiftData translation may fall back to in-memory filtering with very large `participantRoundIDs` sets — combined with `fetchLimit = maxRounds` applied before the predicate, this could silently drop rounds. Verify on real device during Task 8.2/8.3.
+- "Best" stat column always tinted `Color.scoreUnderPar` (green) even when best score is `+5` (positive over-par) — verbatim spec Task 3.6; product decision to revisit if user feedback flags it. (`PlayerTrendView.swift:123`)

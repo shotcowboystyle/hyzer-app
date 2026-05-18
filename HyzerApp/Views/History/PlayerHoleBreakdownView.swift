@@ -46,6 +46,19 @@ struct PlayerHoleBreakdownView: View {
     private func breakdownContent(vm: PlayerHoleBreakdownViewModel) -> some View {
         ScrollView {
             VStack(spacing: 0) {
+                NavigationLink(destination: PlayerTrendView(playerID: playerID, playerName: playerName)) {
+                    Label("View score trend", systemImage: "chart.line.uptrend.xyaxis")
+                        .font(TypographyTokens.body)
+                        .foregroundStyle(Color.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, SpacingTokens.lg)
+                        .padding(.vertical, SpacingTokens.md)
+                        .accessibilityLabel("View score trend for \(playerName)")
+                }
+
+                Divider()
+                    .overlay(Color.backgroundElevated)
+
                 ForEach(vm.holeScores) { hole in
                     HoleScoreRow(hole: hole)
                     Divider()

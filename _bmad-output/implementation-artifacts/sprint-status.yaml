@@ -144,7 +144,7 @@ stories:
     epic: 12
   "13.1":
     title: "Score Trend Visualization Per Player"
-    status: backlog
+    status: done
     epic: 13
   "13.2":
     title: "Personal Best Per Course"
