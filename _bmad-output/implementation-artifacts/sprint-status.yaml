@@ -152,7 +152,7 @@ stories:
     epic: 13
   "13.3":
     title: "Head-to-Head Record Between Two Players"
-    status: backlog
+    status: done
     epic: 13
   "14.1":
     title: "MultipeerConnectivity Nearby Active-Round Discovery"
