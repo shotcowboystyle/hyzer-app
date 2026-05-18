@@ -55,6 +55,9 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         UIBackgroundModes:
           - remote-notification
+        NSLocalNetworkUsageDescription: "Hyzer uses your local network to discover other Hyzer players' active rounds nearby — so your group's round appears instantly without waiting for a server push."
+        NSBonjourServices:
+          - _hyzer-rounds._tcp
         NSMicrophoneUsageDescription: "Hyzer uses your microphone to record disc golf scores when you speak them aloud during a round."
         NSSpeechRecognitionUsageDescription: "Hyzer recognizes scores on-device from your voice. Audio is not sent to a server."
     settings:

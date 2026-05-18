@@ -19,7 +19,8 @@ struct HyzerApp: App {
             iCloudIdentityProvider: LiveICloudIdentityProvider(),
             cloudKitClient: LiveCloudKitClient(),
             networkMonitor: networkMonitor,
-            notificationService: LiveNotificationService()
+            notificationService: LiveNotificationService(),
+            nearbyDiscoveryClient: LiveNearbyDiscoveryClient()
         )
         appServices = services
         // Give AppDelegate a reference to forward remote notifications

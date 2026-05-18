@@ -88,3 +88,12 @@
 - `$0.status == "completed"` string literal in `PlayerTrendService` predicate (line 77) rather than `RoundStatus.completed` constant — pattern used codebase-wide; not story-specific. Would benefit from a type-safe wrapper across all `Round.status` comparisons.
 - `#Predicate { participantRoundIDs.contains($0.id) }` SwiftData translation may fall back to in-memory filtering with very large `participantRoundIDs` sets — combined with `fetchLimit = maxRounds` applied before the predicate, this could silently drop rounds. Verify on real device during Task 8.2/8.3.
 - "Best" stat column always tinted `Color.scoreUnderPar` (green) even when best score is `+5` (positive over-par) — verbatim spec Task 3.6; product decision to revisit if user feedback flags it. (`PlayerTrendView.swift:123`)
+
+## Deferred from: code review of 14-1-multipeerconnectivity-nearby-active-round-discovery (2026-05-18)
+
+- Duplicate `MockNearbyDiscoveryClient` files across `HyzerKit/Tests/HyzerKitTests/Mocks/` and `HyzerAppTests/Mocks/` — same pattern as `MockNotificationService`; awaits a project-wide shared TestSupport extraction (CLAUDE.md "ValueCollector test helper" thread).
+- Tests use `for _ in 0..<20 { await Task.yield() }` and `try? await Task.sleep(for: .milliseconds(20))` to wait for async pipeline propagation — CLAUDE.md known flaky-timing tech debt, authorized by Story 14.1 spec line 390. Needs deterministic-wait helper.
+- `test_handleDiscoveredRound_throttleWindow_secondCallAfter30sTriggersAgain` missing — Story 14.1 spec Task 7.1 authorized deferral absent a controllable-clock seam on `AppServices`. Re-evaluate when `lastPullByRoundID` clock source is refactored to `ContinuousClock`.
+- Round.playerIDs mid-game mutation does NOT re-advertise an updated TXT record — Story 14.1 spec line 514 explicitly out of scope; CloudKit subscription path (FR16b) handles late joiners. Re-evaluate if observed in field debugging.
+- `AppServicesNearbyDiscoveryTests` asserts on `cloudKit.fetchCallCount` as a proxy for `syncEngine.pullRecords()` invocations — couples test to transitive `SyncEngine` impl. Replace with a direct hook on `AppServices.pullTrigger` (closure seam) in a follow-up.
+- New tech-debt entries discovered during Story 14.1 implementation (mock duplication, flaky timing) were noted in Completion Notes but not appended to this file at PR time — retroactively captured above. Future stories: append in the same PR.
