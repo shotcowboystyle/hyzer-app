@@ -156,7 +156,7 @@ stories:
     epic: 13
   "14.1":
     title: "MultipeerConnectivity Nearby Active-Round Discovery"
-    status: backlog
+    status: done
     epic: 14
   "14.2":
     title: "Generative Visual Round Signature on Summary Card"

@@ -47,6 +47,7 @@ final class AppServices {
     let voiceRecognitionService: VoiceRecognitionService
     let phoneConnectivityService: PhoneConnectivityService
     let notificationService: any NotificationService
+    let nearbyDiscoveryClient: any NearbyDiscoveryClient
     private(set) var iCloudRecordName: String?
 
     /// Pending navigation target set when a "Round Started" notification is tapped.
@@ -61,17 +62,30 @@ final class AppServices {
     private let iCloudLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "ICloudIdentity")
     private let seederLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "CourseSeeder")
     private let notificationLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices.Notification")
+    private let nearbyLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices.Nearby")
     private static let helperLogger = Logger(subsystem: "com.shotcowboystyle.hyzerapp", category: "AppServices")
+
+    /// Per-roundID throttle window for nearby-triggered pulls (AC #9).
+    ///
+    /// Uses `ContinuousClock.Instant` (monotonic) so the window is immune to wall-clock
+    /// changes (NTP correction, manual time-set, time-zone rollover).
+    private var lastPullByRoundID: [UUID: ContinuousClock.Instant] = [:]
+
+    /// Unstructured consumer Task for `nearbyDiscoveryClient.discoveredRounds`.
+    /// Held to prevent double-spawn if `startSync()` is invoked twice in the AppServices lifetime.
+    private var nearbyConsumerTask: Task<Void, Never>?
 
     init(
         modelContainer: ModelContainer,
         iCloudIdentityProvider: any ICloudIdentityProvider,
         cloudKitClient: any CloudKitClient,
         networkMonitor: any NetworkMonitor,
-        notificationService: any NotificationService = LiveNotificationService()
+        notificationService: any NotificationService = LiveNotificationService(),
+        nearbyDiscoveryClient: any NearbyDiscoveryClient = LiveNearbyDiscoveryClient()
     ) {
         self.modelContainer = modelContainer
         self.notificationService = notificationService
+        self.nearbyDiscoveryClient = nearbyDiscoveryClient
         self.standingsEngine = StandingsEngine(modelContext: modelContainer.mainContext)
         self.roundLifecycleManager = RoundLifecycleManager(modelContext: modelContainer.mainContext)
         self.syncEngine = SyncEngine(
@@ -112,15 +126,104 @@ final class AppServices {
         await syncScheduler.start()
         await syncEngine.start()
 
-        // Bridge: consume the syncStateStream and propagate to @MainActor-observable property.
+        // Spawn the nearby-discovery consumer BEFORE startBrowsing() so any peers found
+        // immediately after browsing begins are received (the live client's continuation
+        // is set up at init time, so iteration order is not load-bearing, but subscribing
+        // first preserves the invariant for future implementations).
+        // Guard against double-spawn if startSync() is re-entered during the AppServices lifetime.
+        if nearbyConsumerTask == nil {
+            nearbyConsumerTask = Task { [weak self] in
+                guard let self else { return }
+                for await payload in self.nearbyDiscoveryClient.discoveredRounds {
+                    await self.handleDiscoveredRound(payload)
+                }
+            }
+        }
+
+        await nearbyDiscoveryClient.startBrowsing()
+
+        // Bridge: consume the syncStateStream and propagate to the @MainActor-observable property.
         for await state in await syncEngine.syncStateStream {
             syncState = state
+        }
+    }
+
+    /// Handles a discovered nearby round payload from `NearbyDiscoveryClient`.
+    ///
+    /// Applies participant filter (AC #5), idempotency check (AC #8), and 30s throttle (AC #9)
+    /// before triggering a `syncEngine.pullRecords()` to materialize the round locally.
+    private func handleDiscoveredRound(_ payload: DiscoveredRoundPayload) async {
+        guard let localID = Self.resolveLocalPlayerID(from: modelContainer.mainContext) else {
+            nearbyLogger.info("nearby: handleDiscoveredRound — no local player (pre-onboarding), skipping")
+            return
+        }
+
+        guard payload.playerIDs.contains(localID.uuidString) else {
+            // Log roundID only — never player UUIDs (log volume + no diagnostic value).
+            nearbyLogger.info("nearby: skipped — local user not in payload for roundID=\(payload.roundID, privacy: .private)")
+            return
+        }
+
+        // 30s throttle window per roundID (AC #9). Uses ContinuousClock — immune to
+        // wall-clock changes (NTP, manual time-set).
+        let now = ContinuousClock.now
+        if let last = lastPullByRoundID[payload.roundID], now < last.advanced(by: .seconds(30)) {
+            return
+        }
+        // Stamp on every observation for which the participant filter passed (D1 decision):
+        // suppress repeat SwiftData fetches AND repeat pulls for the same roundID within 30s.
+        // Stamping before the fetch (rather than only on the pull path) prevents bursty
+        // re-broadcasts from churning bounded fetches on the main context.
+        lastPullByRoundID[payload.roundID] = now
+
+        // Already-materialized check (AC #8 step a).
+        let targetRoundID = payload.roundID
+        var descriptor = FetchDescriptor<Round>(predicate: #Predicate { $0.id == targetRoundID })
+        descriptor.fetchLimit = 1
+        do {
+            let existing = try modelContainer.mainContext.fetch(descriptor)
+            if !existing.isEmpty {
+                nearbyLogger.info("nearby: already materialized — skipping pull for roundID=\(payload.roundID, privacy: .private)")
+                return
+            }
+        } catch {
+            nearbyLogger.error("nearby: fetch failed for roundID=\(payload.roundID, privacy: .private): \(error)")
+            return
+        }
+
+        nearbyLogger.info("nearby: triggering pullRecords for roundID=\(payload.roundID, privacy: .private)")
+        await syncEngine.pullRecords()
+    }
+
+    /// Returns the local user's organized active round, if any. Used to drive advertiser lifecycle.
+    ///
+    /// Returns nil for participants (round's organizerID differs from local player).
+    private func currentOrganizedActiveRound() -> Round? {
+        guard let localID = Self.resolveLocalPlayerID(from: modelContainer.mainContext) else { return nil }
+        let activeStatus = RoundStatus.active
+        var descriptor = FetchDescriptor<Round>(
+            predicate: #Predicate { $0.status == activeStatus && $0.organizerID == localID }
+        )
+        descriptor.fetchLimit = 1
+        do {
+            return try modelContainer.mainContext.fetch(descriptor).first
+        } catch {
+            nearbyLogger.error("currentOrganizedActiveRound fetch failed: \(error)")
+            return nil
         }
     }
 
     /// Notifies the scheduler that an active round started — begins periodic polling.
     func roundDidStart() async {
         await syncScheduler.startActiveRoundPolling()
+        if let round = currentOrganizedActiveRound() {
+            await nearbyDiscoveryClient.startAdvertising(roundID: round.id, playerIDs: round.playerIDs)
+        } else {
+            // No active organized round (participant, or save not yet committed) — ensure
+            // any stale advertiser from a prior round is stopped so it can't continue
+            // broadcasting a finished round's TXT record.
+            await nearbyDiscoveryClient.stopAdvertising()
+        }
     }
 
     /// Notifies the scheduler that a round ended — stops periodic polling and clears
@@ -128,6 +231,10 @@ final class AppServices {
     func roundDidEnd() async {
         phoneConnectivityService.activeRoundID = nil
         await syncScheduler.stopActiveRoundPolling()
+        await nearbyDiscoveryClient.stopAdvertising()
+        // Clear nearby-pull throttle entries: re-discovering a recently-ended round
+        // should not be suppressed by a stale 30s stamp.
+        lastPullByRoundID.removeAll()
     }
 
     /// Handles a CKSubscription silent push notification (ScoreEvent subscription).
@@ -367,6 +474,15 @@ final class AppServices {
 
     /// Performs app-foreground round discovery (covers missed CKSubscription pushes).
     func performForegroundDiscovery() async {
+        // Nearby discovery has no iCloud dependency — resume browsing/advertising
+        // regardless of `iCloudRecordName`. Without this hoist, a foreground after
+        // signing out of iCloud (or before identity resolution completes) would leave
+        // nearby discovery suspended for the rest of the foreground session.
+        await nearbyDiscoveryClient.startBrowsing()
+        if let round = currentOrganizedActiveRound() {
+            await nearbyDiscoveryClient.startAdvertising(roundID: round.id, playerIDs: round.playerIDs)
+        }
+
         guard let userID = iCloudRecordName else { return }
         await syncScheduler.foregroundDiscovery(currentUserID: userID)
     }
@@ -377,6 +493,8 @@ final class AppServices {
     /// polling resumes when the app returns to foreground via `roundDidStart()`.
     func handleAppBackground() async {
         await syncScheduler.stopActiveRoundPolling()
+        await nearbyDiscoveryClient.stopAdvertising()
+        await nearbyDiscoveryClient.stopBrowsing()
     }
 
     // MARK: - iCloud Identity
