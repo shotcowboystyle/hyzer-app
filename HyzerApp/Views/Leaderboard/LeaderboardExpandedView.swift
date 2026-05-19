@@ -106,8 +106,8 @@ struct LeaderboardExpandedView: View {
     // MARK: - Helpers
 
     private func rowAccessibilityLabel(for standing: Standing) -> String {
-        let scoreText = standing.formattedScore
-        return "Position \(standing.position), \(standing.playerName), \(scoreText) par, \(standing.holesPlayed) holes played"
+        let scoreText = verboseScore(relativeToPar: standing.scoreRelativeToPar)
+        return "Position \(standing.position), \(standing.playerName), \(scoreText), \(standing.holesPlayed) holes played"
     }
 
 }

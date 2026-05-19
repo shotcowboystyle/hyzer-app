@@ -33,9 +33,9 @@ final class PlayerTrendViewModel {
         guard hasEnoughData else {
             return "Score trend for \(playerName): not enough rounds yet."
         }
-        let best = bestFormattedScore ?? "—"
-        let worst = worstFormattedScore ?? "—"
-        let avg = averageFormattedScore ?? "—"
+        let best = t.bestScore.map { verboseScore(relativeToPar: $0) } ?? "—"
+        let worst = t.worstScore.map { verboseScore(relativeToPar: $0) } ?? "—"
+        let avg = t.averageScore.map { verboseScore(relativeToPar: Int($0.rounded())) } ?? "—"
         return "Score trend for \(playerName): \(t.points.count) rounds, best \(best), worst \(worst), average \(avg)"
     }
 

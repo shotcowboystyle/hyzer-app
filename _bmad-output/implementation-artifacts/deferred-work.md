@@ -10,7 +10,6 @@
 - No `Task.isCancelled` checks inside the per-round loop in `HeadToHeadService.computeRecord:126-148` — pre-existing pattern. User navigating away from `HeadToHeadView` mid-compute pays full compute cost.
 - `HeadToHeadViewModel.init(service:)` and `HeadToHeadOpponentPickerViewModel.init(service:)` rely on doc comment `"NOT used in production"` rather than access control — pre-existing pattern from Stories 13.1/13.2. Gate with `#if DEBUG` or factor into a separate testing-only module.
 - `HeadToHeadServiceTests` and `HeadToHeadViewModelTests` rely on `parByHole[n] ?? 3` fallback inside `StandingsEngine` instead of inserting `Hole` rows — project-wide test pattern. Coupling that would silently green-test through an engine refactor requiring explicit holes.
-- `Standing.formatScore`'s `"E"` is pronounced as the letter "E" by VoiceOver in `accessibilityLabel` for `HeadToHeadViewModel` — pre-existing tech debt acknowledged in CLAUDE.md. Need a separate `verboseScoreFormatter` (e.g., `"even par"`) for VoiceOver consumption.
 
 ## Deferred from: code review of 13-2-personal-best-per-course (2026-05-18)
 

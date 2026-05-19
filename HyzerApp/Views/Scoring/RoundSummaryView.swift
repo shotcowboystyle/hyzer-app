@@ -126,10 +126,10 @@ struct RoundSummaryView: View {
     private var accessibilityLabel: String {
         let winners = viewModel.playerRows.filter { $0.position == 1 }
         let winnerNames = winners.map(\.playerName).joined(separator: ", ")
-        let winnerScore = winners.first?.formattedScore ?? ""
+        let winnerScore = winners.first.map { verboseScore(relativeToPar: $0.scoreRelativeToPar) } ?? ""
         let currentPlayer = viewModel.playerRows.first(where: { $0.id == viewModel.currentPlayerID })
         let myPosition = currentPlayer?.position ?? 0
-        let myScore = currentPlayer?.formattedScore ?? ""
+        let myScore = currentPlayer.map { verboseScore(relativeToPar: $0.scoreRelativeToPar) } ?? ""
 
         let winnersText = winners.count > 1 ? "\(winnerNames) tied for first" : "\(winnerNames) finished first"
         return "Round complete at \(viewModel.courseName). \(winnersText) at \(winnerScore). You finished \(myPosition) at \(myScore)."

@@ -50,12 +50,17 @@ final class HeadToHeadViewModel {
            let record,
            let rounds = roundsPlayedFormatted,
            let winsA = winsAFormatted, let pctA = winsAPercentFormatted,
-           let winsB = winsBFormatted, let pctB = winsBPercentFormatted,
-           let diff = averageDifferentialFormatted
+           let winsB = winsBFormatted, let pctB = winsBPercentFormatted
         {
+            let diffText: String
+            if let avg = record.averageDifferential {
+                diffText = verboseScore(relativeToPar: Int(avg.rounded()))
+            } else {
+                diffText = "—"
+            }
             return "Head-to-head, \(playerAName) versus \(playerBName). \(rounds) played. "
                  + "\(playerAName) wins \(winsA), \(pctA). \(playerBName) wins \(winsB), \(pctB). "
-                 + "Average differential \(diff)."
+                 + "Average differential \(diffText)."
         }
         return "\(playerAName) and \(playerBName) haven't played a round together yet."
     }

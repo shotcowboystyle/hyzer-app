@@ -118,7 +118,7 @@ struct LeaderboardPillView: View {
         guard let leader = viewModel.currentStandings.first else {
             return "Leaderboard: no scores yet"
         }
-        return "Leaderboard: \(leader.playerName) leads at \(leader.formattedScore) par"
+        return "Leaderboard: \(leader.playerName) leads at \(verboseScore(relativeToPar: leader.scoreRelativeToPar))"
     }
 
 }

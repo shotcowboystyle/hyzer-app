@@ -8,6 +8,7 @@ struct SummaryPlayerRow: Identifiable {
     let position: Int
     let playerName: String
     let formattedScore: String
+    let scoreRelativeToPar: Int
     let totalStrokes: Int
     let scoreColor: Color
     /// True for positions 1, 2, and 3.
@@ -87,6 +88,7 @@ final class RoundSummaryViewModel {
                 position: standing.position,
                 playerName: standing.playerName,
                 formattedScore: standing.formattedScore,
+                scoreRelativeToPar: standing.scoreRelativeToPar,
                 totalStrokes: standing.totalStrokes,
                 scoreColor: standing.scoreColor,
                 hasMedal: standing.position <= 3
