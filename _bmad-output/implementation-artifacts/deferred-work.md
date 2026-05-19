@@ -4,6 +4,7 @@
 
 ## Deferred from: code review of 14-2-generative-visual-round-signature-on-summary-card (2026-05-18)
 
+- Manual verification (Tasks 8.1–8.5) was not performed by the dev agent per Completion Notes. Includes the palette-on-`backgroundElevated` contrast spot-check (`Color.textSecondary`, `Color.backgroundTertiary` are at higher risk of failing 4.5:1 AA against the elevated background). Spec line 425 explicitly required this check before proceeding past Task 4. Recommend human verification on simulator (live + AirDrop PNG + VoiceOver + Reduce Motion) before merge. **Note (2026-05-19, Story 15.3 review patch):** Story 15.3's AC #2 automated contrast spot-check **confirms** this risk rather than resolves it — `backgroundTertiary` at 1.21:1 is a real AC #3 failure affecting approximately 37.5% of generated signatures because `RoundSignature.swift:114-117` includes `backgroundTertiary` in the foreground palette. This bullet remains open pending (a) human simulator verification of the remaining manual ACs and (b) a separate follow-up story to replace `backgroundTertiary` in the palette array.
 - **Story 15.3** — Story 14.2 manual verification pending: contrast calculations complete (all auto-checkable via code); live-simulator verifications (screenshots, VoiceOver utterance, Reduce Motion comparison) still required from a human developer with simulator access. Status: in-progress.
 
 ## Deferred from: code review of 13-3-head-to-head-record-between-two-players (2026-05-18)

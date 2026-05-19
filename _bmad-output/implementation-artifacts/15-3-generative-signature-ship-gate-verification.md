@@ -223,3 +223,33 @@ claude-sonnet-4-6
 ### Change Log
 
 - 2026-05-18: Evidence directory scaffold created; WCAG 2.1 contrast report pre-populated; deferred-work.md and sprint-status.yaml updated. Tasks 1/3/4/5 deferred to human simulator verification.
+- 2026-05-19: Applied Story 15.3 code-review patches — corrected contrast-report.md framing of `backgroundTertiary` (it IS in the foreground palette at `RoundSignature.swift:114-117`; 1.21:1 is a real AC #3 risk in ~37.5% of signatures, not "expected by design"); restored the prematurely-closed Story 14.2 manual-verification deferred-work bullet with annotation that AC #2 confirms rather than resolves the risk.
+
+## Review Findings
+
+Source: `_bmad-output/implementation-artifacts/review-15-3-findings.md` (code-reviewer subagent, 2026-05-18). Triage counts: decision_needed: 1 | patch: 2 | defer: 0 | dismissed: 2.
+
+### [HIGH] [accuracy] contrast-report.md mischaracterizes `backgroundTertiary` as sub-layer-only when it is actively used as a foreground stroke/fill — `patch`
+
+- [x] **Applied 2026-05-19.** Updated `15-3-evidence/contrast-report.md` Notes section to acknowledge that `backgroundTertiary` IS in the foreground palette (`RoundSignature.swift:114-117`), flagged the 1.21:1 ratio as a real AC #3 risk in approximately 37.5% of generated signatures, and referenced the Story 14.2 deferred-work bullet as the authoritative tracking record. Also added a methodology-equivalence paragraph (covering the [MEDIUM] [methodology] finding below) confirming the WCAG 2.1 sRGB formula is mathematically identical to Color Contrast Analyzer's reading for `Color(.sRGB, …)` tokens.
+
+### [MEDIUM] [completeness] Completion Notes claim "Tasks 1/3/4/5 deferred to human simulator verification" but the spec's exit criterion requires those tasks to run before the story closes — `patch` (deferred-work hygiene portion only); residual `decision_needed`
+
+- [x] **Partially applied 2026-05-19** (deferred-work hygiene): restored the original Story 14.2 manual-verification bullet in `deferred-work.md` so the unresolved 14.2 risk remains visible to anyone auditing deferred-work alone. Annotated the restored bullet noting that Story 15.3's AC #2 confirms the risk rather than resolves it.
+- [ ] **Decision-needed:** the spec still needs a named human handoff for the 4 manual-verification ACs (#3, #4, #5, #6) — owner, target simulator, and target date — before Story 15.3 can close. This requires human input and is not patched here.
+
+### [MEDIUM] [methodology] Automated WCAG calculation substituted for the spec-mandated tool without acknowledging the trade-off — folded into the [HIGH] patch above
+
+- [x] **Applied 2026-05-19** as part of the contrast-report.md correction (see Methodology equivalence section). `ColorTokens` use plain `Color(.sRGB, …)` in `HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:14`, so the WCAG 2.1 sRGB formula is mathematically identical to Color Contrast Analyzer's reading. The "automated" choice is justified-equivalent, not a shortcut.
+
+### [LOW] [doc-link] Spec line 153 references "Story 14.2 line 455" but that line is in the 14.2 spec — `dismissed`
+
+- Dismissed by reviewer — readable in context, not worth churn.
+
+### [LOW] [consistency] `[~]` checkbox character is non-standard — `dismissed`
+
+- Dismissed by reviewer — internal artifact, intent obvious from surrounding context.
+
+### Verdict
+
+🟡 — Story remains correctly held in `in-progress`. The contrast-report misframing is corrected; the deferred-work bullet is restored. The remaining `decision_needed` item (named human handoff for the manual-verification ACs) is outside the scope of this patch pass.
