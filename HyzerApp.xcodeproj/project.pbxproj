@@ -47,7 +47,6 @@
 		596A35E4701C525655211716 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */; };
 		5D8E4A77A4DDD95955B5F8D7 /* VoiceOverlayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0179A787B752A224A7B38E /* VoiceOverlayViewModel.swift */; };
 		602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6AEC89D27BF2CC224C8D55BB /* HyzerKit */; };
-		603B6FC574DBFC18AA856CD1 /* TestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CB657E8D6E74C6E6C7789E9D /* TestSupport */; };
 		64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */; };
 		689356B498827861015A14A4 /* LiveNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */; };
 		6995CC037A2E94E70DA23AD0 /* PlayerHoleBreakdownScoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D409A9A1DA1E58BB604EC7D4 /* PlayerHoleBreakdownScoreTests.swift */; };
@@ -68,7 +67,7 @@
 		8C3A37E858EC8BF31CCE054B /* HyzerWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED517066535936D3C664FF33 /* HyzerWatchApp.swift */; };
 		902791983CB24E0EA4FA4D8A /* HistoryListQueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD64F9474CBE7ECC934D1B7 /* HistoryListQueryTests.swift */; };
 		915770F21BA9C30CDAC86B2B /* PhoneConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF27AB5613FDD66774D32B9 /* PhoneConnectivityService.swift */; };
-		93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBF7E3B49360BEFE78202833 /* HyzerKit */; };
+		93BDDE9BB3DD4F18A7A26E3F /* TestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CB657E8D6E74C6E6C7789E9D /* TestSupport */; };
 		953A5AFD53D6DB75925EF04B /* DiscrepancyResolveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186E9E3D3F028244D0C5A241 /* DiscrepancyResolveTests.swift */; };
 		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		98858E89E1915B90C68829CB /* ShareSheetRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB2B4647E81F997607BBDE3 /* ShareSheetRepresentable.swift */; };
@@ -270,8 +269,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */,
-				603B6FC574DBFC18AA856CD1 /* TestSupport in Frameworks */,
+				93BDDE9BB3DD4F18A7A26E3F /* TestSupport in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -621,7 +619,6 @@
 			);
 			name = HyzerAppTests;
 			packageProductDependencies = (
-				FBF7E3B49360BEFE78202833 /* HyzerKit */,
 				CB657E8D6E74C6E6C7789E9D /* TestSupport */,
 			);
 			productName = HyzerAppTests;
@@ -1209,10 +1206,6 @@
 		CB657E8D6E74C6E6C7789E9D /* TestSupport */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TestSupport;
-		};
-		FBF7E3B49360BEFE78202833 /* HyzerKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = HyzerKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

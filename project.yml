@@ -109,8 +109,13 @@ targets:
       - HyzerAppTests
     dependencies:
       - target: HyzerApp
-      - package: HyzerKit
-        product: HyzerKit
+      # HyzerKit is reached transitively via the HyzerApp host (which already
+      # links HyzerKit). Listing `product: HyzerKit` here in addition would
+      # double-link HyzerKit into HyzerAppTests.xctest (once via the SPM
+      # PackageFramework, once embedded in the test bundle), causing
+      # `Class _TtC8HyzerKit... is implemented in both ...` duplicate-class
+      # warnings and a signal-trap crash at test bootstrap. Story 15.2 / PR #104
+      # surfaced this when CI started reporting real signal.
       - package: HyzerKit
         product: TestSupport
     settings:

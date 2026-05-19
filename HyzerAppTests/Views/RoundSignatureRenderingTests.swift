@@ -24,6 +24,7 @@ struct RoundSignatureRenderingTests {
                 position: 1,
                 playerName: "Alice",
                 formattedScore: "-2",
+                scoreRelativeToPar: -2,
                 totalStrokes: 27,
                 scoreColor: .scoreUnderPar,
                 hasMedal: true
@@ -33,6 +34,7 @@ struct RoundSignatureRenderingTests {
                 position: 2,
                 playerName: "Bob",
                 formattedScore: "E",
+                scoreRelativeToPar: 0,
                 totalStrokes: 31,
                 scoreColor: .scoreAtPar,
                 hasMedal: true
