@@ -178,7 +178,7 @@ stories:
     status: blocked-on-human-ops
     epic: 15
   "15.2":
-    title: "Canonical 407-Test Baseline Pre-Flight Validation on Simulator"
+    title: "Canonical Test Baseline Pre-Flight Validation on Simulator"
     status: done
     epic: 15
   "15.3":

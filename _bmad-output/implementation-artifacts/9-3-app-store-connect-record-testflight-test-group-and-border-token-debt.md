@@ -2,6 +2,8 @@
 
 Status: done
 
+> _Note (Story 15.2 reconciliation, 2026-05-18): canonical HyzerKit baseline is 413 tests (`swift test --package-path HyzerKit`); the `407 tests` and `278 tests` figures referenced throughout this file (AC6, AC7, Tasks, Completion Notes) are historical snapshots from earlier epics. See also the per-section annotation at the Task 8 Completion Notes block._
+
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story
