@@ -7,7 +7,13 @@ public protocol UserDefaultsStorage: Sendable {
     func setString(_ value: String, forKey defaultName: String)
 }
 
-extension UserDefaults: UserDefaultsStorage {
+// `@unchecked Sendable` is required because the `UserDefaultsStorage`
+// protocol declares `Sendable` conformance, but `UserDefaults` is defined
+// in Foundation (a different module) than this extension. Swift 6 strict
+// concurrency requires retroactive `Sendable` conformance on cross-module
+// classes to be opt-in via `@unchecked Sendable`. `UserDefaults` is
+// documented as thread-safe by Apple, so the unchecked opt-in is sound.
+extension UserDefaults: @unchecked Sendable, UserDefaultsStorage {
     public func setString(_ value: String, forKey defaultName: String) {
         set(value, forKey: defaultName)
     }
