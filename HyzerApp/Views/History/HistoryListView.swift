@@ -170,15 +170,24 @@ private struct HistoryRoundCard: View {
 
     private func accessibilityLabel(data: HistoryRoundCardData) -> String {
         if data.userIsWinner {
-            let scoreSuffix = data.winnerFormattedScore.map { " at \($0)" } ?? ""
+            let scoreSuffix = data.winnerScoreRelativeToPar
+                .map { " at \(verboseScore(relativeToPar: $0))" } ?? ""
             return "\(data.courseName), \(data.formattedDate). You won\(scoreSuffix)."
         }
         var parts: [String] = ["\(data.courseName), \(data.formattedDate)."]
         if let name = data.winnerName {
-            parts.append("\(name) won.")
+            if let rel = data.winnerScoreRelativeToPar {
+                parts.append("\(name) won at \(verboseScore(relativeToPar: rel)).")
+            } else {
+                parts.append("\(name) won.")
+            }
         }
         if let position = data.userPosition {
-            parts.append("You finished \(position).")
+            if let rel = data.userScoreRelativeToPar {
+                parts.append("You finished \(position) at \(verboseScore(relativeToPar: rel)).")
+            } else {
+                parts.append("You finished \(position).")
+            }
         }
         return parts.joined(separator: " ")
     }

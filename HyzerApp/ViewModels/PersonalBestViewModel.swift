@@ -45,10 +45,11 @@ final class PersonalBestViewModel {
         if isLoading { return "\(displayTitle) loading." }
         if errorMessage != nil || hasNoData { return "No rounds yet on this course." }
         guard let strokes = formattedStrokes,
-              let score = formattedScore,
+              let b = best,
               let date = formattedDate else {
             return "\(displayTitle) unavailable."
         }
+        let score = verboseScore(relativeToPar: b.scoreRelativeToPar)
         return "\(displayTitle): \(strokes) strokes, \(score), on \(date)"
     }
 

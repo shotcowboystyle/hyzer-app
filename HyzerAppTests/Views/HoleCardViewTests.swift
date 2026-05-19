@@ -165,7 +165,7 @@ struct HoleCardViewTests {
 
     @Test("relativeToParPhrase: two under par")
     func test_relativeToParPhrase_twoUnder() {
-        #expect(relativeToParPhrase(strokes: 1, par: 3) == "2 under par")
+        #expect(relativeToParPhrase(strokes: 1, par: 3) == "two under par")
     }
 
     @Test("relativeToParPhrase: one under par (birdie)")
@@ -185,19 +185,12 @@ struct HoleCardViewTests {
 
     @Test("relativeToParPhrase: two over par (double bogey)")
     func test_relativeToParPhrase_doubleBogey() {
-        #expect(relativeToParPhrase(strokes: 5, par: 3) == "2 over par")
+        #expect(relativeToParPhrase(strokes: 5, par: 3) == "two over par")
     }
 }
 
 // MARK: - Free function mirror of HoleCardView.relativeToParPhrase (testable without a View instance)
 
 private func relativeToParPhrase(strokes: Int, par: Int) -> String {
-    let delta = strokes - par
-    switch delta {
-    case ..<(-1): return "\(abs(delta)) under par"
-    case -1:      return "one under par"
-    case 0:       return "even par"
-    case 1:       return "one over par"
-    default:      return "\(delta) over par"
-    }
+    verboseScore(relativeToPar: strokes - par)
 }

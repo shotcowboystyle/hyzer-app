@@ -196,7 +196,7 @@ stories:
     epic: 15
   "15.9":
     title: "VoiceOver-Friendly Score Formatter (E → even par)"
-    status: ready-for-dev
+    status: done
     epic: 15
   "15.10":
     title: "Centralize History-Service Constants (ScoreEvent.maxEventsPerRound, RoundStatus.completed)"

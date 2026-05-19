@@ -14,12 +14,18 @@ struct HistoryRoundCardData {
     let winnerName: String?
     /// Winner's formatted score relative to par (e.g. "-2", "E", "+1").
     let winnerFormattedScore: String?
+    /// Winner's raw score relative to par. Used to produce VoiceOver-friendly verbose phrasing
+    /// (e.g. "even par", "one under par") in `accessibilityLabel`. Visual rendering still uses
+    /// `winnerFormattedScore`.
+    let winnerScoreRelativeToPar: Int?
     /// Winner's score color derived from Standing.scoreColor.
     let winnerScoreColor: Color?
     /// Current player's ordinal finishing position (e.g. "1st", "2nd").
     let userPosition: String?
     /// Current player's formatted score.
     let userFormattedScore: String?
+    /// Current player's raw score relative to par. Used for VoiceOver verbose phrasing.
+    let userScoreRelativeToPar: Int?
     /// Current player's score color derived from Standing.scoreColor.
     let userScoreColor: Color?
     /// True when the current player is the round winner. Collapses winner + user lines in the card.
@@ -97,9 +103,11 @@ final class HistoryListViewModel {
             playerCount: playerCount,
             winnerName: winnerName,
             winnerFormattedScore: winner?.formattedScore,
+            winnerScoreRelativeToPar: winner?.scoreRelativeToPar,
             winnerScoreColor: winner?.scoreColor,
             userPosition: userStanding.map { ordinal($0.position) },
             userFormattedScore: userStanding?.formattedScore,
+            userScoreRelativeToPar: userStanding?.scoreRelativeToPar,
             userScoreColor: userStanding?.scoreColor,
             userIsWinner: userIsWinner
         )

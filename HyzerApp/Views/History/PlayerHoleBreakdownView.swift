@@ -157,13 +157,7 @@ private struct HoleScoreRow: View {
         .padding(.horizontal, SpacingTokens.lg)
         .padding(.vertical, SpacingTokens.md)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Hole \(hole.holeNumber), par \(hole.par), scored \(hole.strokeCount), \(accessibilityRelativeToPar(hole.relativeToPar)) par")
-    }
-
-    private func accessibilityRelativeToPar(_ relative: Int) -> String {
-        if relative < 0 { return "\(abs(relative)) under" }
-        if relative == 0 { return "even with" }
-        return "\(relative) over"
+        .accessibilityLabel("Hole \(hole.holeNumber), par \(hole.par), scored \(hole.strokeCount), \(verboseScore(relativeToPar: hole.relativeToPar))")
     }
 }
 
@@ -211,14 +205,6 @@ private struct SummaryFooterRow: View {
 
     private var accessibilitySummary: String {
         let relative = totalStrokes - totalPar
-        let relativeText: String
-        if relative < 0 {
-            relativeText = "\(abs(relative)) under"
-        } else if relative == 0 {
-            relativeText = "even with"
-        } else {
-            relativeText = "\(relative) over"
-        }
-        return "Total, \(totalStrokes) strokes, par \(totalPar), \(relativeText) par"
+        return "Total, \(totalStrokes) strokes, par \(totalPar), \(verboseScore(relativeToPar: relative))"
     }
 }

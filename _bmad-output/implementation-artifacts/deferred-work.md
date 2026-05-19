@@ -10,7 +10,6 @@
 - No `Task.isCancelled` checks inside the per-round loop in `HeadToHeadService.computeRecord:126-148` — pre-existing pattern. User navigating away from `HeadToHeadView` mid-compute pays full compute cost.
 - `HeadToHeadViewModel.init(service:)` and `HeadToHeadOpponentPickerViewModel.init(service:)` rely on doc comment `"NOT used in production"` rather than access control — pre-existing pattern from Stories 13.1/13.2. Gate with `#if DEBUG` or factor into a separate testing-only module.
 - `HeadToHeadServiceTests` and `HeadToHeadViewModelTests` rely on `parByHole[n] ?? 3` fallback inside `StandingsEngine` instead of inserting `Hole` rows — project-wide test pattern. Coupling that would silently green-test through an engine refactor requiring explicit holes.
-- `Standing.formatScore`'s `"E"` is pronounced as the letter "E" by VoiceOver in `accessibilityLabel` for `HeadToHeadViewModel` — pre-existing tech debt acknowledged in CLAUDE.md. Need a separate `verboseScoreFormatter` (e.g., `"even par"`) for VoiceOver consumption.
 
 ## Deferred from: code review of 13-2-personal-best-per-course (2026-05-18)
 
@@ -104,3 +103,9 @@
 
 - **CloudKit-side `"completed"` literal predicate (`HyzerKit/Sources/HyzerKit/Sync/SyncScheduler.swift:275`)** — `NSPredicate(format: "status == %@", "completed")` for the CKQuerySubscription on Round-status-completed. Same string-literal class as the SwiftData `#Predicate` sites this story closed, but a different domain (CloudKit subscriptions, not SwiftData queries). Trivially fixable to `RoundStatus.completed`. Defer to a sync-domain follow-up story; do not re-open Story 15.10 for this.
 - **DTO-write `"completed"` literal (`HyzerKit/Sources/HyzerKit/Sync/SyncEngine+RoundCompletion.swift:78`)** — `RoundRecord(... status: "completed", ...)` is a value write, not a comparison, so strictly outside AC #3 scope. Trivial substitution to `RoundStatus.completed` would tighten the symbol coupling without changing behavior. Bundle with the SyncScheduler fix above.
+
+## Deferred from: code review of story-15.9 (2026-05-19)
+
+- `verboseScore(relativeToPar:)` is a free function in `HyzerKit/Sources/HyzerKit/Domain/Standing+Formatting.swift` rather than a static on `Standing`. Spec recommended the free-function form so this is "acceptable as-is", but a `Standing.verboseScore(relativeToPar:)` static would mirror the existing `Standing.formatScore(_:)` static for symmetry. Cosmetic.
+
+_(2026-05-19: `HoleCardView.relativeToParPhrase` duplication promoted from Defer to Patch and resolved in PR #98 follow-up commit — removed from this list.)_
