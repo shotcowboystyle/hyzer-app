@@ -1,6 +1,6 @@
 # Story 15.1: APS Environment Production Flip & App Store Connect Privacy Mirror
 
-Status: blocked-on-human-ops
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -36,32 +36,32 @@ So that the first App Store submission does not get rejected for an entitlement/
   - [x] 2.2 If `HyzerWatch/Resources/HyzerWatch.entitlements` carries an `aps-environment` key (per Task 1.2), apply the same flip. Otherwise skip 2.2.
   - [x] 2.3 Verify via `plutil -p HyzerApp/App/HyzerApp.entitlements` that the resulting plist is valid and the key now reads `production`. If `plutil` reports a parse error, the edit malformed the XML — revert and re-edit.
 
-- [ ] **Task 3: Re-produce the Release archive against the flipped entitlements** (AC: 2)
-  - [ ] 3.1 On the branch `feature/15-1-aps-production-and-asc-privacy` (per CLAUDE.md "Git Workflow"), run the canonical Story 9.1 archive command verbatim: `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -configuration Release -destination 'generic/platform=iOS' -archivePath build/HyzerApp.xcarchive archive`. Expect `** ARCHIVE SUCCEEDED **`. If signing prompts appear, surface to the user — Story 9.1 verified zero-prompt archive flow; any prompt is a regression.
-  - [ ] 3.2 Verify the embedded entitlement was flipped end-to-end: `codesign -d --entitlements - build/HyzerApp.xcarchive/Products/Applications/HyzerApp.app 2>&1 | grep -A1 aps-environment` — expected output includes `<string>production</string>`. If it still shows `development`, the Release configuration is pulling from a different entitlements file (`project.yml` is the only authority that XcodeGen respects); re-check `project.yml` entitlements references.
+- [x] **Task 3: Re-produce the Release archive against the flipped entitlements** (AC: 2)
+  - [x] 3.1 On the branch `feature/15-1-aps-production-and-asc-privacy` (per CLAUDE.md "Git Workflow"), run the canonical Story 9.1 archive command verbatim: `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -configuration Release -destination 'generic/platform=iOS' -archivePath build/HyzerApp.xcarchive archive`. Expect `** ARCHIVE SUCCEEDED **`. If signing prompts appear, surface to the user — Story 9.1 verified zero-prompt archive flow; any prompt is a regression.
+  - [x] 3.2 Verify the embedded entitlement was flipped end-to-end: `codesign -d --entitlements - build/HyzerApp.xcarchive/Products/Applications/HyzerApp.app 2>&1 | grep -A1 aps-environment` — expected output includes `<string>production</string>`. If it still shows `development`, the Release configuration is pulling from a different entitlements file (`project.yml` is the only authority that XcodeGen respects); re-check `project.yml` entitlements references.
 
-- [ ] **Task 4: Mirror the App Privacy questionnaire in App Store Connect** (AC: 3)
-  - [ ] 4.1 **Manual step (cannot be automated from Claude Code):** Log in to `https://appstoreconnect.apple.com` with the Apple ID for team `S4729REPN5`. Navigate to Apps → `hyzer` (the record created in Story 9.3) → App Privacy.
-  - [ ] 4.2 Confirm the existing questionnaire from Story 9.3 Task 3.5 already matches `HyzerApp/App/PrivacyInfo.xcprivacy`. If the prior story closed correctly, this step is a no-op verification. If discrepancies surface (e.g., a category drift caused by an Apple-side questionnaire schema change post-9.3), reconcile to match the manifest verbatim — `User ID` Linked / non-tracking / AppFunctionality, `Audio Data` Not-Linked / non-tracking / AppFunctionality.
-  - [ ] 4.3 Save a fresh screenshot of the completed questionnaire to `_bmad-output/implementation-artifacts/15-1-evidence/asc-app-privacy.png` (create the directory; `.gitignore` already covers the `*-evidence/` glob).
+- [x] **Task 4: Mirror the App Privacy questionnaire in App Store Connect** (AC: 3)
+  - [x] 4.1 **Manual step (cannot be automated from Claude Code):** Log in to `https://appstoreconnect.apple.com` with the Apple ID for team `S4729REPN5`. Navigate to Apps → `hyzer` (the record created in Story 9.3) → App Privacy.
+  - [x] 4.2 Confirm the existing questionnaire from Story 9.3 Task 3.5 already matches `HyzerApp/App/PrivacyInfo.xcprivacy`. If the prior story closed correctly, this step is a no-op verification. If discrepancies surface (e.g., a category drift caused by an Apple-side questionnaire schema change post-9.3), reconcile to match the manifest verbatim — `User ID` Linked / non-tracking / AppFunctionality, `Audio Data` Not-Linked / non-tracking / AppFunctionality.
+  - [x] 4.3 Save a fresh screenshot of the completed questionnaire to `_bmad-output/implementation-artifacts/15-1-evidence/asc-app-privacy.png` (create the directory; `.gitignore` already covers the `*-evidence/` glob).
 
-- [ ] **Task 5: Deploy CloudKit schema to Production** (AC: 4)
-  - [ ] 5.1 **Manual step:** Log in to the CloudKit Dashboard (`https://icloud.developer.apple.com/dashboard/`) for container `iCloud.com.shotcowboystyle.hyzerapp`. Open the Schema tab.
-  - [ ] 5.2 Compare the Development schema (record types: `RoundRecord`, `PlayerRecord`, `CourseRecord`, `DiscrepancyRecord`, `ScoreEventRecord`, `SyncMetadata` per `architecture.md` data layer documentation) against the Production schema. If the two match, deployment is already done — skip 5.3.
-  - [ ] 5.3 If Production is missing record types or fields, click "Deploy Schema Changes" — Apple's one-click promote-Development-to-Production operation. Confirm in the dialog. Wait for the deployment to complete (typically <1 minute; UI shows a green confirmation banner).
-  - [ ] 5.4 Save a screenshot of the Production schema list matching Development to `_bmad-output/implementation-artifacts/15-1-evidence/cloudkit-production-schema.png`.
+- [x] **Task 5: Deploy CloudKit schema to Production** (AC: 4)
+  - [x] 5.1 **Manual step:** Log in to the CloudKit Dashboard (`https://icloud.developer.apple.com/dashboard/`) for container `iCloud.com.shotcowboystyle.hyzerapp`. Open the Schema tab.
+  - [x] 5.2 Compare the Development schema (record types: `RoundRecord`, `PlayerRecord`, `CourseRecord`, `DiscrepancyRecord`, `ScoreEventRecord`, `SyncMetadata` per `architecture.md` data layer documentation) against the Production schema. If the two match, deployment is already done — skip 5.3.
+  - [x] 5.3 If Production is missing record types or fields, click "Deploy Schema Changes" — Apple's one-click promote-Development-to-Production operation. Confirm in the dialog. Wait for the deployment to complete (typically <1 minute; UI shows a green confirmation banner).
+  - [x] 5.4 Save a screenshot of the Production schema list matching Development to `_bmad-output/implementation-artifacts/15-1-evidence/cloudkit-production-schema.png`.
 
-- [ ] **Task 6: Upload the production-APS archive to App Store Connect for regression check** (AC: 5)
-  - [ ] 6.1 Export the archive from Task 3 to IPA using the Story 9.3 Task 5.1 method (Transporter.app preferred). The `ExportOptions.plist` from Story 9.1 Task 5.3 is reused without modification — `method = app-store-connect` is unchanged by this story.
-  - [ ] 6.2 Upload the IPA. Wait for the App Store Connect processing transition from "Processing" to "Ready to Test" (~30 minutes per Story 9.3 dev notes). If a rejection email arrives, the most likely cause is entitlement-mismatch with the provisioning profile — surface the exact rejection text to the user; do NOT auto-revert.
-  - [ ] 6.3 Once `Ready to Test`, assign the build to the `Friends Beta` Internal Test Group (existing group from Story 9.3 Task 5.4). Notify the user that a new build is live; recommend one tester install to confirm the production-APS flip did not break the install path. **Push-delivery confirmation (code-review follow-up 2026-05-19):** the install-only check is insufficient — APNs device tokens are scoped to the APS environment that issued them, so any cached `development`-APS tokens on testers' devices are now invalid against `api.push.apple.com`. Capture one round-started OR round-complete push delivery from the new production-APS build (per Epic 12 push semantics) as Task 6.3 evidence before marking the story closed.
-  - [ ] 6.4 If a tester reports install failure or the build does not install, capture the error verbatim and surface — do NOT patch the entitlement until the failure mode is understood (Apple sometimes lags propagating production-APS provisioning profile updates; a 24-hour wait may resolve transient issues).
+- [x] **Task 6: Upload the production-APS archive to App Store Connect for regression check** (AC: 5)
+  - [x] 6.1 Export the archive from Task 3 to IPA using the Story 9.3 Task 5.1 method (Transporter.app preferred). The `ExportOptions.plist` from Story 9.1 Task 5.3 is reused without modification — `method = app-store-connect` is unchanged by this story.
+  - [x] 6.2 Upload the IPA. Wait for the App Store Connect processing transition from "Processing" to "Ready to Test" (~30 minutes per Story 9.3 dev notes). If a rejection email arrives, the most likely cause is entitlement-mismatch with the provisioning profile — surface the exact rejection text to the user; do NOT auto-revert.
+  - [x] 6.3 Once `Ready to Test`, assign the build to the `Friends Beta` Internal Test Group (existing group from Story 9.3 Task 5.4). Notify the user that a new build is live; recommend one tester install to confirm the production-APS flip did not break the install path. **Push-delivery confirmation (code-review follow-up 2026-05-19):** the install-only check is insufficient — APNs device tokens are scoped to the APS environment that issued them, so any cached `development`-APS tokens on testers' devices are now invalid against `api.push.apple.com`. Capture one round-started OR round-complete push delivery from the new production-APS build (per Epic 12 push semantics) as Task 6.3 evidence before marking the story closed.
+  - [x] 6.4 If a tester reports install failure or the build does not install, capture the error verbatim and surface — do NOT patch the entitlement until the failure mode is understood (Apple sometimes lags propagating production-APS provisioning profile updates; a 24-hour wait may resolve transient issues).
 
-- [ ] **Task 7: Regression sweep and story closeout** (AC: 6)
-  - [ ] 7.1 Run `swift test --package-path HyzerKit` and confirm the count equals the Story 15.2 reconciled baseline. The entitlement file is not exercised by any Swift test, so the count must be identical.
-  - [ ] 7.2 If a simulator is available, run the canonical `xcodebuild test ...` and confirm the same count.
-  - [ ] 7.3 Stage and commit: `chore(release): flip aps-environment to production and verify asc privacy mirror`. Commit body should reference Story 9.1 / 9.2 / 9.3 deferrals being closed.
-  - [ ] 7.4 Update `_bmad-output/implementation-artifacts/deferred-work.md`: remove the three resolved bullets (Story 9.1 APS environment, Story 9.2 ASC Privacy mirror, Story 9.3 CloudKit schema operational flag). Leave the remaining Story 9.2 entries (`UIUserInterfaceStyle` pin, Info.plist consolidation) — those are owned by Story 15.5.
+- [x] **Task 7: Regression sweep and story closeout** (AC: 6)
+  - [x] 7.1 Run `swift test --package-path HyzerKit` and confirm the count equals the Story 15.2 reconciled baseline. The entitlement file is not exercised by any Swift test, so the count must be identical.
+  - [x] 7.2 If a simulator is available, run the canonical `xcodebuild test ...` and confirm the same count.
+  - [x] 7.3 Stage and commit: `chore(release): flip aps-environment to production and verify asc privacy mirror`. Commit body should reference Story 9.1 / 9.2 / 9.3 deferrals being closed.
+  - [x] 7.4 Update `_bmad-output/implementation-artifacts/deferred-work.md`: remove the three resolved bullets (Story 9.1 APS environment, Story 9.2 ASC Privacy mirror, Story 9.3 CloudKit schema operational flag). Leave the remaining Story 9.2 entries (`UIUserInterfaceStyle` pin, Info.plist consolidation) — those are owned by Story 15.5.
 
 ## Dev Notes
 
@@ -201,6 +201,7 @@ None.
 - 2026-05-18: Tasks 1-2 implemented by claude-sonnet-4-6. Tasks 3-7 deferred to human (require App Store Connect and signing credentials).
 - 2026-05-19: Code review applied. No code-patch findings; 4 defers migrated to deferred-work.md, 1 dismissed. Augmented Task 6.3 with explicit push-delivery confirmation requirement. Task 7.4 doc-drift note added to Completion Notes.
 - 2026-05-19: Sprint-status convention decision resolved. Introduced new status `blocked-on-human-ops` (sprint-status.yaml STATUS DEFINITIONS); flipped 15.1's status from `in-progress` → `blocked-on-human-ops` in both sprint-status.yaml and this story file's H1.
+- 2026-05-19: Story closed. Human owner verified Tasks 3–7: Release archive re-produced (build 2; CURRENT_PROJECT_VERSION bump landed via PR #107); ASC App Privacy questionnaire mirror confirmed; CloudKit Production schema deployed; production-APS build uploaded via Transporter and assigned to `Friends Beta` Internal Test Group; push-delivery confirmation captured per Task 6.3 augmented requirement (code-review follow-up); regression sweep complete. Evidence screenshots saved under `_bmad-output/implementation-artifacts/15-1-evidence/` (gitignored per `*-evidence/` glob). Status: `blocked-on-human-ops` → `done` in both sprint-status.yaml and this story file's H1.
 
 ### Completion Notes (post-review)
 

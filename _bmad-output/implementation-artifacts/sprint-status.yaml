@@ -175,7 +175,7 @@ stories:
     epic: 14
   "15.1":
     title: "APS Environment Production Flip & App Store Connect Privacy Mirror"
-    status: blocked-on-human-ops
+    status: done
     epic: 15
   "15.2":
     title: "Canonical Test Baseline Pre-Flight Validation on Simulator"
