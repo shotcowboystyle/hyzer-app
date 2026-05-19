@@ -184,7 +184,7 @@ stories:
     epic: 15
   "15.6":
     title: "Stale Planning Artifact Cleanup (ColorTokens.border Reference Purge & Frozen-Artifact Policy)"
-    status: ready-for-dev
+    status: done
     epic: 15
   "15.7":
     title: "Extract Shared TestSupport SPM Target (ValueCollector, MockNotificationService, MockNearbyDiscoveryClient)"

@@ -132,6 +132,16 @@ These patterns were caught repeatedly in code review across 8 epics. Treat viola
 
 Stories, epics, and sprint state live in `_bmad-output/`. The canonical architecture document is `_bmad-output/planning-artifacts/architecture.md` — read it before making significant architectural decisions. Story files are in `_bmad-output/implementation-artifacts/`. GitHub issues (via `github-issue-map.json`) are the source of truth for story completion status.
 
+### Frozen Artifact Policy
+
+Retrospectives and sign-off planning artifacts (e.g., `_bmad-output/implementation-artifacts/epics-*-retro-*.md`, `_bmad-output/planning-artifacts/epics*.md`, `_bmad-output/planning-artifacts/prd.md`, `_bmad-output/planning-artifacts/architecture.md`) are **append-only historical snapshots**. They document a point-in-time team consensus. When you find an outdated claim in one of these documents:
+
+- Append a single italicized annotation line under the outdated claim referencing the resolving story (format: `_Resolved by Story X.Y — <one-line summary>. (Story <cleanup-story>, YYYY-MM-DD)_`).
+- Do NOT rewrite the original text or remove the outdated claim.
+- Story files themselves (`_bmad-output/implementation-artifacts/<n>-<m>-*.md`) and `sprint-status.yaml` are NOT frozen — they are status records that should reflect current reality.
+
+The intent: preserve the historical record AND surface current truth via cross-references, without destructive edits.
+
 ### Project Documentation
 
 Comprehensive docs generated from deep scan live in `docs/`:
