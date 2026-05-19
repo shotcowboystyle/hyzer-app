@@ -1,6 +1,6 @@
 # Story 15.1: APS Environment Production Flip & App Store Connect Privacy Mirror
 
-Status: in-progress
+Status: blocked-on-human-ops
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -199,7 +199,8 @@ None.
 ### Change Log
 
 - 2026-05-18: Tasks 1-2 implemented by claude-sonnet-4-6. Tasks 3-7 deferred to human (require App Store Connect and signing credentials).
-- 2026-05-19: Code review applied. No code-patch findings; 1 decision-needed (sprint-status convention for partly-manual ops stories — left open for team decision), 4 defers migrated to deferred-work.md, 1 dismissed. Augmented Task 6.3 with explicit push-delivery confirmation requirement. Task 7.4 doc-drift note added to Completion Notes.
+- 2026-05-19: Code review applied. No code-patch findings; 4 defers migrated to deferred-work.md, 1 dismissed. Augmented Task 6.3 with explicit push-delivery confirmation requirement. Task 7.4 doc-drift note added to Completion Notes.
+- 2026-05-19: Sprint-status convention decision resolved. Introduced new status `blocked-on-human-ops` (sprint-status.yaml STATUS DEFINITIONS); flipped 15.1's status from `in-progress` → `blocked-on-human-ops` in both sprint-status.yaml and this story file's H1.
 
 ### Completion Notes (post-review)
 
@@ -209,7 +210,7 @@ None.
 
 Source: `_bmad-output/implementation-artifacts/review-15-1-findings.md` (code-reviewer subagent, 2026-05-18). Verdict: 🟡 patch-and-ship. Triage: 0 patch, 1 decision-needed, 4 defer, 1 dismissed.
 
-- [ ] [Review][Decision] Sprint-status convention for partly-manual ops stories — Story 15.1 is the first operational story in Epic 15 where ACs 2/3/4/5/6 cannot be discharged from Claude Code (archive needs signing creds; ASC/CloudKit are web UI; TestFlight upload is Transporter). Decision needed: introduce a `blocked-on-human-ops` status, or document explicitly in `sprint-status.yaml` that `in-progress` for operational stories means "automatable portion complete, awaiting human ops." The precedent set here will be reused by future operational stories. Left open for team decision.
+- [x] [Review][Decision] Sprint-status convention for partly-manual ops stories — **Resolved 2026-05-19**: introduced new status `blocked-on-human-ops` for stories where the automatable portion is complete but remaining tasks require signing creds / Apple-web-UI access / Transporter. Documented in `sprint-status.yaml` STATUS DEFINITIONS comment block; Story 15.1 status flipped from `in-progress` → `blocked-on-human-ops`; story file H1 status line updated to match. Stories in this state are NOT eligible for dev-agent pickup. The convention will be reused by future operational stories.
 - [x] [Review][Defer] Spec Task 7.4 references a third deferral bullet that does not exist in `deferred-work.md` — captured in Completion Notes (post-review) above. No further action.
 - [x] [Review][Defer] Spec Task 7.3 canonical commit message convention — applies only when the human closes out Tasks 3–7. Documented for closeout awareness; out of scope for this automated portion.
 - [x] [Review][Defer][Augmented] Once-merged, APS production flip invalidates cached development device tokens — augmented Task 6.3 evidence requirement (above) to include one round-started or round-complete push delivery confirmation from the new production-APS build before closing the story.
