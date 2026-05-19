@@ -18,38 +18,6 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_hyzer-rounds._tcp</string>
-	</array>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Hyzer uses your local network to discover other Hyzer players' active rounds nearby — so your group's round appears instantly without waiting for a server push.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Hyzer uses your microphone to record disc golf scores when you speak them aloud during a round.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Hyzer recognizes scores on-device from your voice. Audio is not sent to a server.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string>LaunchBackground</string>
-	</dict>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
 	<key>UIUserInterfaceStyle</key>
 	<string>Dark</string>
 </dict>

@@ -44,6 +44,8 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes:
+          - remote-notification
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
@@ -54,8 +56,6 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIUserInterfaceStyle: Dark
-        UIBackgroundModes:
-          - remote-notification
         NSLocalNetworkUsageDescription: "Hyzer uses your local network to discover other Hyzer players' active rounds nearby — so your group's round appears instantly without waiting for a server push."
         NSBonjourServices:
           - _hyzer-rounds._tcp
