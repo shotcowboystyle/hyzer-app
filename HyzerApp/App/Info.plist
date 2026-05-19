@@ -20,12 +20,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Hyzer uses your local network to discover other Hyzer players' active rounds nearby — so your group's round appears instantly without waiting for a server push.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_hyzer-rounds._tcp</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Hyzer uses your local network to discover other Hyzer players' active rounds nearby — so your group's round appears instantly without waiting for a server push.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Hyzer uses your microphone to record disc golf scores when you speak them aloud during a round.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
@@ -50,5 +50,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 </dict>
 </plist>
