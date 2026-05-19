@@ -164,7 +164,7 @@ stories:
     epic: 14
   "15.1":
     title: "APS Environment Production Flip & App Store Connect Privacy Mirror"
-    status: ready-for-dev
+    status: in-progress
     epic: 15
   "15.2":
     title: "Canonical 407-Test Baseline Pre-Flight Validation on Simulator"
