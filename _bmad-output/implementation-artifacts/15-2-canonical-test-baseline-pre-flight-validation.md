@@ -1,6 +1,6 @@
 # Story 15.2: Canonical Test Baseline Pre-Flight Validation on Simulator
 
-Status: done
+Status: blocked-on-human-ops
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -197,6 +197,7 @@ Evidence: `_bmad-output/implementation-artifacts/15-2-evidence/canonical-test-ru
 
 - 2026-05-18: Story 15.2 implemented by claude-sonnet-4-6.
 - 2026-05-19: Code-review patch pass applied (see Review Findings section below). Decision-needed findings (xcodebuild Swift-Testing zero-discovery gate, AC #1 simulator gate closure) remain unresolved — BLOCKER verdict stands until reviewer with simulator access closes them.
+- 2026-05-19: PR #94 follow-up — root cause of the `0 tests in 28 suites` / `** TEST FAILED **` clarified. **It is NOT a Swift-Testing discovery bug or an Xcode 16 heterogeneous-output quirk; the HyzerApp build target requires iOS 18.2, which is not installed on macOS 15.7.x (current local environment AND GitHub Actions `macos-15` runner image).** `xcodebuild test` returns "Unable to find a destination" before any test runner starts. CI's `Tests` workflow has been reporting `pass` for the `HyzerApp ViewModel Tests (xcodebuild)` job despite the underlying `xcodebuild test` failing — the `| tee` pipe in `.github/workflows/test.yml:121` swallows the exit code, masking the failure. CLAUDE.md "Project Status" updated to state the constraint honestly; story status flipped from `done` → `blocked-on-human-ops` (convention from PR #100); Pending Handoff section added below with the three concrete remediation paths.
 
 ## Review Findings
 
@@ -223,12 +224,13 @@ The story closed with the canonical xcodebuild test reporting `** TEST FAILED **
 
 ### Findings
 
-- [ ] **[HIGH] [decision_needed] Story closed despite canonical simulator gate failing AC #1**
+- [x] **[HIGH] [decision_needed → reframed] Story closed despite canonical simulator gate failing AC #1** — **Reframed 2026-05-19 (PR #94 follow-up).**
   - **Source:** auditor
-  - **Location:** `hyzer-wt-15-2/_bmad-output/implementation-artifacts/15-2-evidence/canonical-test-run.txt` (tail) + `sprint-status.yaml:170-171`
-  - **AC violated:** AC #1, AC #4
-  - **Detail:** AC #1 mandates `** TEST SUCCEEDED **`. The captured evidence log ends with `Test run with 0 tests in 28 suites passed after 0.009 seconds.` followed by `** TEST FAILED **`. AC #4 explicitly forbids closing on `swift test --package-path HyzerKit` alone — calling that pattern out as "the half-measure that's been used for five stories in a row." The dev agent invoked the "Xcode 16 heterogeneous test-target output quirk" Dev-Notes clause as cover, but that quirk covers `** TEST FAILED **` when suites individually pass; it does NOT cover `0 tests in 28 suites` (no methods discovered). HyzerAppTests source contains 285 `@Test` annotations — none ran on the iOS simulator.
-  - **Suggested fix:** Reopen the story (`sprint-status.yaml` → `review` or `ready-for-dev`). Either defer to a reviewer with a working iOS Swift-Testing discovery configuration per AC #4, or file the xcodebuild test-discovery gap as a blocker bug-fix story and re-run 15.2 after fix per Task 2.2.
+  - **Location:** `hyzer-wt-15-2/_bmad-output/implementation-artifacts/15-2-evidence/canonical-test-run.txt` (tail) + `sprint-status.yaml`
+  - **Original AC violation:** AC #1, AC #4
+  - **Original framing:** "HyzerAppTests Swift-Testing methods report 0 discovered" → diagnosed as a discovery bug.
+  - **Revised root cause:** the failure is environmental, not code-side. The HyzerApp scheme targets iOS 18.2; iOS 18.2 simulator runtime is not installed on macOS 15.7.x (current local AND GitHub Actions `macos-15` runner image). `xcodebuild test` returns "Unable to find a destination" before any test runner is invoked, so HyzerAppTests' 285 `@Test` methods cannot be discovered or executed regardless of code correctness. Verified by inspecting CI logs for runs 26105830593 (PR #96) and 26106263598 (post-#96 main push) — both show "Unable to find a destination matching ... iOS 18.2 is not installed."
+  - **Resolution:** Story status flipped from `done` → `blocked-on-human-ops` (PR #100 convention). AC #1's `** TEST SUCCEEDED **` requirement cannot be satisfied in the current environment and is not a code fix; it requires either an iOS-18.2 simulator runtime install, a build-target downgrade, or a runner-image upgrade. See **Pending Handoff** section below for the three concrete remediation paths.
 
 - [ ] **[HIGH] [patch] CLAUDE.md baseline omits HyzerAppTests breakdown required by AC #6** — SKIPPED in this patch pass. Suggested fix is explicitly conditional on resolving the BLOCKER decision_needed first ("Complete the simulator gate first").
   - **Source:** blind
@@ -288,3 +290,34 @@ The story closed with the canonical xcodebuild test reporting `** TEST FAILED **
 
 - **Branch contains no commits — changes are uncommitted** — Aggregator-verified false. `git log main..HEAD` shows `f6e9d39 chore(docs): reconcile canonical test baseline (Story 15.2)` exists. Subagent methodological error.
 - **Evidence README content variance vs. Task 3.3 wording** — Gitignored file; non-blocking; spec wording is illustrative.
+
+## Pending Handoff
+
+Story 15.2's canonical-baseline goal (AC #1 / AC #6 with a verified `N1 HyzerKit + N2 HyzerAppTests + N3 HyzerWatch` count) is **unverifiable in the current build environment**. The HyzerApp scheme targets iOS 18.2; iOS 18.2 simulator runtime is not installed on macOS 15.7.x (the current local dev environment AND GitHub Actions `macos-15` runner image). `xcodebuild test` fails with "Unable to find a destination matching … iOS 18.2 is not installed" before any test discovery happens.
+
+### What IS verified
+
+- **HyzerKit: 413 tests** — measured via `swift test --package-path HyzerKit`. This path does not depend on the iOS simulator runtime and is environment-portable. Reproducible everywhere.
+- **HyzerWatch: 0 tests** — no HyzerWatch test target exists in `project.yml`. Confirmed by inspection.
+
+### What is NOT verified
+
+- **HyzerAppTests count.** Source contains 285 `@Test` annotations across the test directory, but the test runner never reaches discovery; xcodebuild rejects the destination first.
+
+### Remediation paths (the named owner picks one)
+
+1. **Install iOS 18.2 simulator runtime on the runner image** — for local: `xcodebuild -downloadPlatform iOS` (Xcode 16.2) or via Xcode → Settings → Platforms; for CI: switch to a `macos-15` runner image variant that ships iOS 18.2, or add an `xcrun simctl runtime install` step before `Find simulator` in `.github/workflows/test.yml`. Lowest scope change but recurring cost (runner-image version pinning).
+2. **Downgrade build target iOS to 18.0 (or whatever the runner ships)** — edit `project.yml` (`deploymentTarget.iOS`) and regenerate. Test files referencing iOS 18.2-only APIs would need to be audited. Permanent fix but may shed iOS-18.2-specific features.
+3. **Wait for the macOS / runner image rev that ships iOS 18.2** — accept the gap, add a tracking bullet, retry the canonical baseline when the environment supports it. Lowest immediate effort, longest unknown wait.
+
+### Separate CI workflow finding (out-of-scope for this PR)
+
+The `Tests` workflow at `.github/workflows/test.yml:121` runs `xcodebuild test … 2>&1 | tee xcodebuild-test-output.txt`. Bash pipes do not preserve exit codes by default, and the workflow does not `set -o pipefail`. This means when `xcodebuild test` fails (as it has been on every recent CI run due to the destination issue), the pipeline's exit code is `tee`'s exit code (0), and the GitHub Actions step is reported as `pass`. **Six of the eight Wave 1 PRs merged in this session ran their `HyzerApp ViewModel Tests (xcodebuild)` check this way and were green despite the underlying xcodebuild failing.** This is independent of Story 15.2's scope and should be filed as its own follow-up bug story; suggested fix: add `set -o pipefail` to the run-script step, or check `${PIPESTATUS[0]}` explicitly.
+
+### Closeout criteria
+
+Story 15.2 closes (`blocked-on-human-ops` → `done`) when:
+1. One of the three remediation paths above has been chosen and applied
+2. `xcodebuild test` reports `** TEST SUCCEEDED **` with a non-zero HyzerAppTests count
+3. CLAUDE.md "Project Status" baseline rewritten in the AC #6 format: `**Test count baseline:** X tests — N1 HyzerKit + N2 HyzerAppTests + N3 HyzerWatch (as of <SHA> on YYYY-MM-DD).`
+4. The CI workflow `pipefail` follow-up bug story has been filed (separate from this story; track in `deferred-work.md`)
