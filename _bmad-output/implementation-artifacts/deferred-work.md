@@ -1,3 +1,7 @@
+## Deferred from: code review of story-15.6 (2026-05-19)
+
+- Story-spec text was rewritten in place rather than checkboxes simply checked — Task 1.1 elicitation prompt (and subtasks 1.1–1.3) were collapsed into a single "Policy decision pre-made by user: Policy A" line. Acceptable under the new Frozen Artifact Policy because story files are explicitly NOT frozen (they are status records), but the original Task 1.1 elicitation prose is now lost from the diff history. Flagged for traceability only; no remediation planned. (`_bmad-output/implementation-artifacts/15-6-stale-planning-artifact-cleanup.md:27-61`)
+
 ## Deferred from: code review of 14-2-generative-visual-round-signature-on-summary-card (2026-05-18)
 
 - Manual verification (Tasks 8.1–8.5) was not performed by the dev agent per Completion Notes. Includes the palette-on-`backgroundElevated` contrast spot-check (`Color.textSecondary`, `Color.backgroundTertiary` are at higher risk of failing 4.5:1 AA against the elevated background). Spec line 425 explicitly required this check before proceeding past Task 4. Recommend human verification on simulator (live + AirDrop PNG + VoiceOver + Reduce Motion) before merge.
@@ -50,11 +54,6 @@
 ## Deferred from: code review of 11-3-share-round-summary-via-system-share-sheet.md (2026-05-14)
 
 - Hardcoded English Strings (Localization Risk) in `RoundSummaryViewModel.swift` — The share caption is built using hardcoded string literals. This follows existing project patterns but should be addressed when localization is prioritized.
-
-## Deferred from: code review of 9-3-app-store-connect-record-testflight-test-group-and-border-token-debt.md (2026-05-17)
-
-- Stale retro entry — `_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md:97` still lists `ColorTokens.border` as open debt despite Story 9.3 resolving it. Retros are historical snapshots; needs explicit "frozen artifact" policy or a one-line "Resolved by 9.3" annotation, decided out-of-band.
-- Stale epic narrative — `_bmad-output/planning-artifacts/epics-post-mvp.md:81, 120, 156` still describes `ColorTokens.border` as an open blocker. Planning artifacts are typically frozen at sign-off; surface for explicit policy decision.
 
 ## Deferred from: code review of 12-1-notification-foundation-and-round-started-push.md (2026-05-17)
 

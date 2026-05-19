@@ -79,6 +79,7 @@ All requirements in this document use the **PMVP-** prefix to distinguish them f
 
 **Resolved tech debt (from CLAUDE.md, addressed alongside Post-MVP work):**
 - `ColorTokens.border` referenced but never defined — must be defined before any new components reference it.
+_Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. (Story 15.6, 2026-05-18)_
 
 ### UX Design Requirements
 
@@ -118,6 +119,7 @@ All requirements in this document use the **PMVP-** prefix to distinguish them f
 
 ### Epic 9: TestFlight Launch Readiness
 The friend group can install hyzer-app via TestFlight. Establishes build configuration, privacy manifest, Info.plist usage strings, app icons/launch screen, and the App Store Connect record needed to distribute outside development. Also resolves the `ColorTokens.border` tech debt blocker.
+_Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. (Story 15.6, 2026-05-18)_
 **PMVP-FRs covered:** PMVP-FR1, PMVP-FR2, PMVP-FR3, PMVP-FR4, PMVP-FR5
 **Dependencies:** Epics 1-8 (the codebase under test). No Post-MVP dependencies.
 
@@ -160,6 +162,7 @@ The remaining deferred work from `_bmad-output/implementation-artifacts/deferred
 ## Epic 9: TestFlight Launch Readiness
 
 The friend group can install hyzer-app via TestFlight. Establishes build configuration, privacy manifest, Info.plist usage strings, app icons/launch screen, and the App Store Connect record needed to distribute outside development. Also resolves the `ColorTokens.border` tech debt blocker.
+_Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. (Story 15.6, 2026-05-18)_
 
 ### Story 9.1: Release Build Configuration & Signing
 
@@ -218,6 +221,7 @@ I want to receive a TestFlight invitation and install hyzer-app on my device,
 So that I can play a round on real hardware before the developer ships further changes.
 
 **Scope:** App Store Connect record created for `com.shotcowboystyle.hyzerapp` with required metadata fields populated (app name, primary category Sports, support URL placeholder); TestFlight internal/external test group containing the six friend testers; first archive uploaded and processed; resolve `ColorTokens.border` tech debt (defined but never referenced — define it now if any new component will use it, or remove the reference if dead code).
+_Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. (Story 15.6, 2026-05-19)_
 
 **Acceptance Criteria:**
 
@@ -238,6 +242,7 @@ So that I can play a round on real hardware before the developer ships further c
 **Given** the HyzerKit `ColorTokens` API
 **When** the codebase is grep'd for `ColorTokens.border`
 **Then** either the token is defined and resolves to a hex value consistent with the dark-first palette, or all stale references have been removed (CLAUDE.md tech debt resolved)
+_Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. (Story 15.6, 2026-05-19)_
 
 ---
 
