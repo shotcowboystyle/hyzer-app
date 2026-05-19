@@ -23,7 +23,8 @@ public final class ScoreEvent {
     /// Origin: Story 13.x history services bound `fetchLimit = maxRounds * 20`.
     /// The multiplier covers the worst-case 18-hole round with several score
     /// corrections plus discrepancy resolution events (each appending a new
-    /// immutable event per event-sourcing semantics).
+    /// immutable event per event-sourcing semantics — see CLAUDE.md
+    /// "Data & Persistence" event-sourcing invariant).
     ///
     /// Used by PlayerTrendService, PersonalBestService, HeadToHeadService.
     public static let maxEventsPerRound: Int = 20

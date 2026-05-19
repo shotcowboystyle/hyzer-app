@@ -64,7 +64,7 @@ So that future tweaks to scoring-event-cap or round-status comparison do not req
   - [x] 3.4 `RoundStatus` already exists as a namespace enum with static string constants. No new enum type needed; no `Round.status` type change required. The existing `RoundStatus.completed` constant (`= "completed"`) is the type-safe symbol to use in all three predicates.
 
 - [x] **Task 4: Verify no other call sites slipped** (AC: 2, 5)
-  - [x] 4.1 Verified via code inspection: zero `* 20` or `status == "completed"` string literals remain in the three service files.
+  - [x] 4.1 Verified via project-wide grep across `HyzerKit`, `HyzerApp`, `HyzerWatch` (rerun 2026-05-19 after code review): zero `* 20` literals remain in production code; zero `$0.status == "completed"` `#Predicate` patterns remain in production code. Initial completion note narrowed scope to "the three service files" — the rerun surfaced two missed sites (`HistoryListView.swift:14`, `RoundSetupViewModel.swift:73`), both migrated in commit `6cd9616`. CloudKit-domain occurrences (`SyncScheduler.swift:275` NSPredicate, `SyncEngine+RoundCompletion.swift:78` DTO write) are intentionally deferred to a sync-domain follow-up — see `deferred-work.md`.
   - [x] 4.2 Verified: `ScoreEvent.maxEventsPerRound` used in 5 fetchLimit sites (3 in HeadToHeadService, 1 in PlayerTrendService, 1 in PersonalBestService). `RoundStatus.completed` used in 4 predicate sites (2 in HeadToHeadService, 1 in PlayerTrendService, 1 in PersonalBestService).
 
 - [x] **Task 5: Run the full regression** (AC: 4)
@@ -250,7 +250,12 @@ Source: `_bmad-output/implementation-artifacts/review-15-10-findings.md` (2026-0
 
 - [x] **[Review][Patch] HistoryListView.swift:14 still used `"completed"` literal #Predicate** — Migrated via `init` + explicit `Query(...)` constructor with local-capture pattern (`@Query` property wrapper requires init-time construction, unlike the `FetchDescriptor` pattern used in services).
 - [x] **[Review][Patch] (expansion) RoundSetupViewModel.swift:73 had the same anti-pattern** — Missed by original review. `let statusValue = "completed"` → `let statusValue = RoundStatus.completed`. One-line fix; the local-capture wrapper was already present.
-- [ ] **[Review][Decision] Story 13.1 deferred-work closure now justified** — With both in-scope sites migrated, the codebase-wide "completed" literal predicate pattern is fully resolved across SwiftData production code. The closure note (Tasks 8/Change Log) is accurate as of 2026-05-19. No further action needed unless the team chooses to widen scope to CloudKit subscriptions / DTO writes (see deferred-work).
+- [x] **[Review][Decision] Story 13.1 deferred-work closure now justified** — Resolved 2026-05-19. With both in-scope SwiftData `#Predicate` sites migrated (`HistoryListView.swift:14`, `RoundSetupViewModel.swift:73`) and Task 4.1 rerun with full project-wide scope, the closure of the Story 13.1 bullet stands. CloudKit-domain occurrences are deferred to a separate sync-domain story; this is not a regression of the Story 13.1 scope.
+
+### Addressed in commit (post-rebase)
+
+- [x] **[Review][Patch] Task 4.1 completion note narrowed AC scope** — Rewrote Task 4.1 to document the rerun grep across the full `HyzerKit | HyzerApp | HyzerWatch` scope, list the two missed sites by name, and link the migration commit + the sync-domain defer.
+- [x] **[Review][Patch] `ScoreEvent.swift` doc comment dropped CLAUDE.md cross-reference** — Restored the `CLAUDE.md "Data & Persistence" event-sourcing invariant` cross-reference in the multi-line doc comment above `maxEventsPerRound`.
 - [x] **[Review][Defer] CloudKit and DTO "completed" sites** — `SyncScheduler.swift:275` (`NSPredicate(format: "status == %@", "completed")` for CKQuerySubscription) and `SyncEngine+RoundCompletion.swift:78` (`RoundRecord(status: "completed", ...)` DTO write) carry the same string-literal but in a different domain. Deferred to a sync-domain follow-up. See `deferred-work.md`.
 
 ### Dismissed (noise log)
