@@ -142,6 +142,10 @@ Retrospectives and sign-off planning artifacts (e.g., `_bmad-output/implementati
 
 The intent: preserve the historical record AND surface current truth via cross-references, without destructive edits.
 
+**Rationale.** Planning artifacts (PRDs, architecture docs, retrospectives, epic narratives) are point-in-time records that capture decisions made under specific constraints — scope, deadlines, known unknowns, and the team's understanding at that moment. Modifying them retroactively destroys the audit trail that explains *why* current code looks the way it does, and turns "decision archaeology" into guesswork. The append-only convention is the same one used by IETF RFCs, Python PEPs, and OpenJDK JEPs for the same reason.
+
+**When violated.** If a frozen artifact is found to be misleading or actively harmful (e.g., the `ColorTokens.border` stale references that triggered Story 15.6), the remediation is annotation in-place with a reconciliation footnote AND a deferred-work bullet — never silent rewriting. The canonical pattern is the four `_Resolved by Story 9.3 — …_` italicized annotations applied in Story 15.6 (`epics-1-8-retro-2026-04-07.md:97`, `epics-post-mvp.md:81/121/164`). If you find an in-place rewrite that bypassed annotation, restore the original text from git history and add the annotation instead; open a new cleanup story if the misleading text is load-bearing for current contributors.
+
 ### Project Documentation
 
 Comprehensive docs generated from deep scan live in `docs/`:

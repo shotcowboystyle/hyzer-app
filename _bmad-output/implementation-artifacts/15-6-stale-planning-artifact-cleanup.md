@@ -183,3 +183,15 @@ None — doc-only story with no Swift changes.
 ### Change Log
 
 - 2026-05-18 (Story 15.6): Established Frozen Artifact Policy (Policy A) in CLAUDE.md; annotated 4 stale ColorTokens.border references; removed resolved deferred-work bullets.
+- 2026-05-19 (Story 15.6 review-patch): Applied 4 code-review patches — ran swift test regression + captured evidence, added Rationale and "When violated" clauses to Frozen Artifact Policy, annotated the two remaining `ColorTokens.border` mentions in Story 9.3 narrative (epics-post-mvp.md:223, :243).
+
+## Review Findings
+
+Full findings from `_bmad-output/implementation-artifacts/review-15-6-findings.md` (code-reviewer subagent, 2026-05-18). Triage: 4 patch, 1 decision_needed, 1 defer.
+
+- [x] [Review][Patch] AC #4 regression check not executed — ran `swift test --package-path HyzerKit` twice from worktree root; 412/413 pass, sole failure is the load-induced `WatchVoiceViewModel.auto-commit timer` flake already tracked as Story 15.8 (passes in isolation). SwiftLint CLI not available on agent machine (doc-only diff cannot regress lint). Evidence captured at `_bmad-output/implementation-artifacts/15-6-evidence/regression-2026-05-19.txt`.
+- [x] [Review][Patch] Frozen Artifact Policy missing rationale — appended a Rationale paragraph to CLAUDE.md explaining that planning artifacts are point-in-time records and retroactive modification destroys the decision-archaeology audit trail (IETF RFC / Python PEP / OpenJDK JEP precedent).
+- [x] [Review][Patch] Frozen Artifact Policy missing violation-remediation clause — appended a "When violated" clause to CLAUDE.md: misleading or harmful frozen text is remediated by annotation in-place plus a deferred-work bullet, never by silent rewriting. References the four Story-15.6 annotations as the canonical pattern; an in-place rewrite that bypassed annotation should be restored from git history.
+- [x] [Review][Patch] Two unannotated `ColorTokens.border` mentions in Story 9.3 narrative inside `epics-post-mvp.md` — annotated lines 223 (Scope) and 242 (Given/When AC) with the same `_Resolved by Story 9.3 — …_` footnote pattern used elsewhere in this cleanup. All 6 narrative mentions of the token in epics-post-mvp.md now carry an adjacent annotation.
+- [ ] [Review][Decision Needed] Policy lists `epics*.md` glob but not one-off planning reports (`implementation-readiness-report-*.md`). Edge Case Hunter flagged the report at `_bmad-output/planning-artifacts/implementation-readiness-report-2026-05-13.md` (lines 316 and 385) as carrying stale `ColorTokens.border` framing under a path not covered by the policy glob. Decision deferred: extend glob, or call one-off reports out-of-scope explicitly.
+- [x] [Review][Defer] Story-spec text was rewritten in place rather than checkboxes simply checked (Task 1.1 elicitation prompt collapsed). Acceptable under the Frozen Artifact Policy (story files are NOT frozen — they are status records). No action required; flagged in deferred-work for traceability.
