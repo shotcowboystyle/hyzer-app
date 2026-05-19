@@ -178,8 +178,8 @@ stories:
     status: blocked-on-human-ops
     epic: 15
   "15.2":
-    title: "Canonical 407-Test Baseline Pre-Flight Validation on Simulator"
-    status: ready-for-dev
+    title: "Canonical Test Baseline Pre-Flight Validation on Simulator"
+    status: blocked-on-human-ops
     epic: 15
   "15.3":
     title: "Story 14.2 Generative Signature Ship-Gate Manual Verification"

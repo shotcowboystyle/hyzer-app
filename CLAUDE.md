@@ -157,8 +157,8 @@ Comprehensive docs generated from deep scan live in `docs/`:
 - [Source Tree](docs/source-tree-analysis.md) — annotated directory structure
 - [Development Guide](docs/development-guide.md) — build, test, lint, conventions
 
-### Project Status (as of 2026-04-08)
+### Project Status (as of 2026-05-18)
 
-- **Epics 1–8 complete** — 23/23 stories, 407 tests
+- **Epics 1–14 complete** — Epic 15 (pre-launch hardening) in progress
 - **Not yet deployed** — no TestFlight or App Store builds
-- **Stabilization phase** — code review, test audit, tech debt cleanup in progress
+- **Test count baseline:** 413 HyzerKit tests — verified via `swift test --package-path HyzerKit` (the only environment-independent path; SPM does not depend on the iOS simulator runtime). HyzerAppTests count is **not verifiable in the current build environment**: the HyzerApp scheme targets iOS 18.2, which is not installed on macOS 15.7.x (current local dev and GitHub Actions `macos-15` runner image). `xcodebuild test` returns "Unable to find a destination" / `0 tests in 28 suites` until the build target / simulator runtime gap is closed. HyzerWatch has no test target. See Story 15.2 / PR #94 Pending Handoff for the path to a verified all-target baseline.

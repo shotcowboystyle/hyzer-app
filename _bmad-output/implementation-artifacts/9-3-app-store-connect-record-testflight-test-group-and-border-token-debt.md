@@ -2,6 +2,8 @@
 
 Status: done
 
+> _Note (Story 15.2 reconciliation, 2026-05-18): canonical HyzerKit baseline is 413 tests (`swift test --package-path HyzerKit`); the `407 tests` and `278 tests` figures referenced throughout this file (AC6, AC7, Tasks, Completion Notes) are historical snapshots from earlier epics. See also the per-section annotation at the Task 8 Completion Notes block._
+
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story
@@ -306,6 +308,7 @@ Claude Sonnet 4.6
 **Task 8 — Final regression (2026-05-17):**
 - `swift test --package-path HyzerKit`: 278 tests passed ✅
 - Simulator build (xcodebuild test, 407 tests): deferred to reviewer — simulator unavailable on dev machine (same pattern as 9.1 and 9.2)
+_Note (Story 15.2 reconciliation, 2026-05-18): canonical HyzerKit baseline is 413 tests (swift test --package-path HyzerKit); 407 and 278 are historical snapshots from earlier epics._
 - Code committed: `chore(docs): resolve ColorTokens.border tech debt and reconcile CLAUDE.md`
 
 **Summary of border token resolution (AC6):**
