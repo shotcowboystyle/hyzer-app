@@ -1,6 +1,6 @@
 # Story 15.5: Launch Screen Polish — `UIUserInterfaceStyle` Pin, Info.plist Consolidation, `LaunchBackground` Light/Dark Variants
 
-Status: in-progress
+Status: blocked-on-human-ops
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -256,15 +256,49 @@ None — configuration-only story, no runtime debugging required.
 
 - 2026-05-18: Story 15.5 implemented by claude-sonnet-4-6. Configuration-only changes: UIUserInterfaceStyle pinned Dark, Info.plist duplicates consolidated, LaunchBackground colorset updated with light/dark variants.
 - 2026-05-19: Code review patches applied (claude-opus-4-7). Info.plist source file stripped to CFBundle* + UIUserInterfaceStyle only; project.yml UI* keys reordered alphabetically; story Status reset to in-progress pending decision_needed items.
+- 2026-05-19: PR #96 follow-up — applied `blocked-on-human-ops` status convention (sprint-status + story file flipped from `done`/`in-progress` → `blocked-on-human-ops`); added Pending Handoff section naming 4 required AC#5/#6 evidence artifacts; resolved the XcodeGen Info.plist regenerate footgun by adding `HyzerApp/App/Info.plist` to `.gitignore` and untracking it via `git rm --cached` (CI runs `xcodegen generate` before `xcodebuild`, so the build is safe); demoted light-mode `#FFFFFF` from Decision-Needed to Defer with the conditional bullet migrated to deferred-work.md.
 
 ## Review Findings
 
 Findings from code review on 2026-05-18 (`_bmad-output/implementation-artifacts/review-15-5-findings.md`).
 
 - [x] [Review][Patch][HIGH] AC3 Info.plist consolidation not performed — duplicates still present. Stripped 8 duplicate keys (`ITSAppUsesNonExemptEncryption`, `NSBonjourServices`, `NSLocalNetworkUsageDescription`, `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`, `UIBackgroundModes`, `UILaunchScreen`, `UISupportedInterfaceOrientations`, `UISupportedInterfaceOrientations~ipad`) from `HyzerApp/App/Info.plist`. `project.yml info.properties` is now the sole editable source; XcodeGen regenerates the merged Info.plist at build time.
-- [ ] [Review][DecisionNeeded][HIGH] Sprint-status flipped to `done` without AC5/AC6 manual evidence. Out of scope for this patch pass; sprint-status.yaml unchanged.
+- [x] [Review][DecisionNeeded][HIGH] Sprint-status flipped to `done` without AC5/AC6 manual evidence. **Resolved 2026-05-19 (PR #96 follow-up):** applied the `blocked-on-human-ops` status convention introduced by Story 15.1 (PR #100, now canonical on `main`). sprint-status.yaml `done` → `blocked-on-human-ops`; story file `Status:` `in-progress` → `blocked-on-human-ops`. ACs #5/#6 manual launch-flash evidence (light + dark cold-launch screen captures + Release archive embedded-plist inspection) tracked in the Pending Handoff section below.
 - [x] [Review][Patch][MEDIUM] project.yml ordering does not satisfy "alphabetical among UI* keys". Reordered `UI*` keys: `UIBackgroundModes`, `UILaunchScreen`, `UISupportedInterfaceOrientations`, `UISupportedInterfaceOrientations~ipad`, `UIUserInterfaceStyle`.
-- [ ] [Review][DecisionNeeded][MEDIUM] Light-variant `#FFFFFF` hardcoded with no design-token reference. Permitted by AC4 fallback; tracking decision on whether to introduce `ColorTokens.backgroundPrimaryLight` if light-mode is ever un-pinned.
+- [x] [Review][DecisionNeeded → Defer][MEDIUM] Light-variant `#FFFFFF` hardcoded with no design-token reference. **Resolved 2026-05-19 (PR #96 follow-up):** demoted from Decision-Needed to Defer because (a) `UIUserInterfaceStyle = Dark` is pinned, so the light variant is unreachable in production; (b) the `#FFFFFF` literal is the CLAUDE.md-permitted fallback per AC4; (c) introducing `ColorTokens.backgroundPrimaryLight` now would be speculative token sprawl. Tracking item added to `deferred-work.md`: "if light-mode is ever un-pinned, introduce `ColorTokens.backgroundPrimaryLight` and regenerate `LaunchBackground.colorset` from that token rather than the literal."
 - [x] [Review][Patch][LOW] `UILaunchScreen` is itself a 6th duplicate between project.yml and Info.plist. Addressed as part of the HIGH AC3 patch above.
 - [x] [Review][Patch][LOW] Story-file `Status:` is `review` but sprint-status is `done`. Aligned by setting story `Status:` to `in-progress` (the more honest value while decision_needed items remain).
 - [x] [Review][Defer][INFO] `project.pbxproj` regeneration not present in diff. Re-ran `xcodegen generate` after the Info.plist strip; pbxproj had no delta (UI* key reorder does not affect pbxproj contents). Logged in `deferred-work.md`.
+
+## Pending Handoff
+
+Story 15.5 cannot close from a non-interactive agent. ACs #5 and #6 require human capture against a real simulator + Release archive build:
+
+### Required artifacts (capture under `_bmad-output/implementation-artifacts/15-5-evidence/`)
+
+1. **AC #5 — Cold-launch verification (dark mode).** Boot a dark-mode iPhone 17 simulator; cold-launch the Release-configuration build; capture `launch-dark.mov` (frame-stepping screen recording). Confirm: (a) no light-mode flash at launch, (b) launch background renders as `#0A0A0C` (backgroundPrimary), (c) status bar tint reads correctly against the dark background.
+2. **AC #5 — Cold-launch verification (light mode).** Boot a light-mode iPhone 17 simulator (Settings → Display & Brightness → Light); cold-launch the same build; capture `launch-light.mov`. Confirm the `UIUserInterfaceStyle = Dark` pin holds: the app interior is dark regardless of the simulator's system appearance. The launch background should still be dark (the `#FFFFFF` light variant in `LaunchBackground.colorset` is unreachable when the style is pinned).
+3. **AC #6 — Release archive embedded-plist inspection.** Build a Release archive via `xcodebuild archive`; locate the embedded `Info.plist` inside the `.app` bundle; run `plutil -p <path>/Info.plist` and confirm all 8 expected merged keys are present (`CFBundle*`, `UIApplicationSceneManifest`, `UILaunchScreen`, `UIUserInterfaceStyle`, `UISupportedInterfaceOrientations*`, `UIBackgroundModes`, `ITSAppUsesNonExemptEncryption`, `NS*UsageDescription`, `NSLocalNetworkUsageDescription`, `NSBonjourServices`). Save the `plutil -p` output as `archive-plist.txt`.
+4. **AC #5 / Task 7.2 — Canonical `xcodebuild test` regression.** Run `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'`; capture exit code + tail of output. This is partially blocked by the open Story 15.2 BLOCKER on HyzerAppTests Swift-Testing discovery — record `swift test --package-path HyzerKit` count as a fallback regression signal until 15.2 lands.
+
+### Closeout criteria
+
+Story 15.5 closes (`blocked-on-human-ops` → `done`) when:
+- All 4 required artifacts above are committed to `15-5-evidence/`
+- A line in this story's Change Log summarizes the verification result (pass/fail per AC, with screenshot/screencap references)
+- The XcodeGen Info.plist build-artifact decision is resolved (see Open Build-System Decision below)
+
+## Build-System Decision (Resolved 2026-05-19)
+
+XcodeGen's "Generating plists" step rewrites `HyzerApp/App/Info.plist` from the merged `project.yml info.properties` on every `xcodegen generate` run, so the stripped Info.plist would otherwise perpetually re-appear "modified" in every developer's working tree.
+
+**Resolution: Option 1 — `HyzerApp/App/Info.plist` added to `.gitignore`** and untracked via `git rm --cached`. The file is now treated as a build artifact, regenerated by `xcodegen generate` on every checkout. Safety checks:
+
+- **CI: green** — `.github/workflows/test.yml:92` runs `xcodegen generate` before `xcodebuild test`, so Info.plist is regenerated before any build step.
+- **Local dev: covered** — CLAUDE.md "Build & Test Commands" already documents `xcodegen generate` as the post-`project.yml`-change ritual; the project's local hook auto-regenerates on project.yml changes.
+- **Editable surface: project.yml** — all keys are authoritatively declared in `project.yml info.properties`. The on-disk Info.plist exists only as a build input.
+
+Alternative options considered and deferred:
+
+- Option 2 (XcodeGen merge target → build-dir location): structural fix, larger diff, risk of Xcode build-settings drift. Better as a separate story.
+- Option 3 (accept perpetual dirty diff + `git checkout` ritual): high ongoing friction.

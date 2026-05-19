@@ -191,7 +191,7 @@ stories:
     epic: 15
   "15.5":
     title: "Launch Screen Polish — UIUserInterfaceStyle Pin, Info.plist Consolidation, LaunchBackground Light/Dark Variants"
-    status: done
+    status: blocked-on-human-ops
     epic: 15
   "15.6":
     title: "Stale Planning Artifact Cleanup (ColorTokens.border Reference Purge & Frozen-Artifact Policy)"

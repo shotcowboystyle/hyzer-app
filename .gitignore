@@ -32,3 +32,9 @@ hyzer-design-system
 
 # Story evidence screenshots (local only — gitignored per story spec)
 _bmad-output/implementation-artifacts/*-evidence/
+
+# XcodeGen-generated Info.plist (Story 15.5 PR #96 — project.yml is the editable
+# source of truth; XcodeGen rewrites this file from `project.yml info.properties`
+# on every `xcodegen generate` run. Tracking it would produce perpetual dirty
+# diffs against the merged content.)
+HyzerApp/App/Info.plist
