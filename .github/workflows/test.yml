@@ -101,6 +101,9 @@ jobs:
           echo "===== xcodebuild -version ====="
           xcodebuild -version
           echo
+          echo "===== /Applications/Xcode_* (available Xcode installs) ====="
+          ls -d /Applications/Xcode* 2>&1 || true
+          echo
           echo "===== xcrun simctl list runtimes ====="
           xcrun simctl list runtimes
           echo
