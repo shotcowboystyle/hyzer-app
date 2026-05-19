@@ -134,7 +134,7 @@ Stories, epics, and sprint state live in `_bmad-output/`. The canonical architec
 
 ### Frozen Artifact Policy
 
-Retrospectives and sign-off planning artifacts (e.g., `_bmad-output/implementation-artifacts/epics-*-retro-*.md`, `_bmad-output/planning-artifacts/epics*.md`, `_bmad-output/planning-artifacts/prd.md`, `_bmad-output/planning-artifacts/architecture.md`) are **append-only historical snapshots**. They document a point-in-time team consensus. When you find an outdated claim in one of these documents:
+Retrospectives and sign-off planning artifacts (e.g., `_bmad-output/implementation-artifacts/epics-*-retro-*.md`, `_bmad-output/planning-artifacts/epics*.md`, `_bmad-output/planning-artifacts/prd.md`, `_bmad-output/planning-artifacts/architecture.md`, and one-off planning reports such as `_bmad-output/planning-artifacts/implementation-readiness-report-YYYY-MM-DD.md`) are **append-only historical snapshots**. They document a point-in-time team consensus. When you find an outdated claim in one of these documents:
 
 - Append a single italicized annotation line under the outdated claim referencing the resolving story (format: `_Resolved by Story X.Y — <one-line summary>. (Story <cleanup-story>, YYYY-MM-DD)_`).
 - Do NOT rewrite the original text or remove the outdated claim.

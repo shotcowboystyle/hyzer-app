@@ -317,6 +317,8 @@ Applied create-epics-and-stories standards to all 6 post-MVP epics and 16 storie
 | AC quality | ✅ Given/When/Then format used; ACs are testable |
 | Forward dependencies | ✅ None |
 
+_Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. The "Story 9.3 sizing" row above reflects the planning-time concern; the token-debt portion was completed within Story 9.3 rather than split. (Story 15.6, 2026-05-19)_
+
 #### Epic 10 — Round Setup Quick-Add & Scoring Attribution
 
 | Check | Result |
@@ -383,6 +385,7 @@ Applied create-epics-and-stories standards to all 6 post-MVP epics and 16 storie
 
 2. **Epic 14 bundles unrelated features.** Multipeer discovery (networking infrastructure with significant risk surface) and generative round signature (creative visual feature) have no shared dependencies, no shared review surface, and no shared user journey. Recommend split.
 3. **Story 9.3 mixes launch infrastructure with unrelated tech debt** (`ColorTokens.border`). The tech debt should be a separate story in the appropriate epic (likely Epic 11 since the polished history/summary cards would actually use the border token).
+   _Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. The recommended split did not occur; the token-debt portion was completed within Story 9.3. (Story 15.6, 2026-05-19)_
 4. **Story 9.2 bundles three concerns** (Privacy Manifest, Permission Strings, App Icons). Could be split into three smaller, cleaner stories.
 
 #### 🟡 Minor Concerns
@@ -461,6 +464,7 @@ Epic and story structure is generally **strong and rigorous**, with significantl
 6. **Epic 14 should be split** into Epic 14a (Multipeer Discovery) and Epic 14b (Visual Round Signature). The two features share no technical dependencies and have very different risk profiles.
 
 7. **Story 9.1 should be reframed** ("As the developer" violates user-value principle) or moved out of the story system entirely. Story 9.3 should drop the unrelated `ColorTokens.border` tech debt to a separate story.
+   _Resolved by Story 9.3 — Path A retained. ColorTokens.border defined and documented at HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift:51. The recommended drop-to-separate-story did not occur; the token-debt portion was completed within Story 9.3. (Story 15.6, 2026-05-19)_
 
 8. **Promote two implicit performance targets to formal PMVP-NFRs:** push notification delivery latency (~30s) and Multipeer discovery latency (~5s). Without NFR status, these are scattered AC assertions instead of contract-tested performance budgets.
 
