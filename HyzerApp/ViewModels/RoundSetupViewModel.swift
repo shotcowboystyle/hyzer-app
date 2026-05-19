@@ -70,7 +70,7 @@ final class RoundSetupViewModel {
     /// Loads player data from the most recent completed round the current user participated in.
     /// Receives ModelContext at call time — not via constructor — matching the CourseEditorViewModel pattern.
     func loadPreviousRoundPlayers(currentUserID: UUID, modelContext: ModelContext) {
-        let statusValue = "completed"
+        let statusValue = RoundStatus.completed
         var descriptor = FetchDescriptor<Round>(
             predicate: #Predicate { $0.status == statusValue },
             sortBy: [SortDescriptor(\Round.completedAt, order: .reverse)]

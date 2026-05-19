@@ -239,3 +239,20 @@ None.
 
 - 2026-05-18: Story 15.10 implemented by claude-sonnet-4-6.
 - 2026-05-18: Task 5 regression run: 413 tests, 1 known flake (WatchVoiceViewModel auto-commit timer — pre-existing, not a regression). #Predicate local-variable capture pattern required for RoundStatus.completed in all four predicate sites.
+- 2026-05-19: Code review applied. 1 patch (HistoryListView.swift) plus 1 in-scope expansion (RoundSetupViewModel.swift) — the original Blind Hunter + Edge Case Hunter passes missed both sites. Two additional CloudKit/DTO sites surfaced (`SyncScheduler.swift:275`, `SyncEngine+RoundCompletion.swift:78`) are out of AC #3 scope and deferred. Regression: 413 tests, same pre-existing `WatchVoiceViewModel` flake — no new failures.
+
+## Review Findings
+
+Source: `_bmad-output/implementation-artifacts/review-15-10-findings.md` (2026-05-18 code review)
+
+**Verdict:** 🟡 Patch and ship.
+**Triage:** decision_needed: 1 · patch: 1 (expanded to 2 in-scope on 2026-05-19) · defer: 1 · dismissed: 1
+
+- [x] **[Review][Patch] HistoryListView.swift:14 still used `"completed"` literal #Predicate** — Migrated via `init` + explicit `Query(...)` constructor with local-capture pattern (`@Query` property wrapper requires init-time construction, unlike the `FetchDescriptor` pattern used in services).
+- [x] **[Review][Patch] (expansion) RoundSetupViewModel.swift:73 had the same anti-pattern** — Missed by original review. `let statusValue = "completed"` → `let statusValue = RoundStatus.completed`. One-line fix; the local-capture wrapper was already present.
+- [ ] **[Review][Decision] Story 13.1 deferred-work closure now justified** — With both in-scope sites migrated, the codebase-wide "completed" literal predicate pattern is fully resolved across SwiftData production code. The closure note (Tasks 8/Change Log) is accurate as of 2026-05-19. No further action needed unless the team chooses to widen scope to CloudKit subscriptions / DTO writes (see deferred-work).
+- [x] **[Review][Defer] CloudKit and DTO "completed" sites** — `SyncScheduler.swift:275` (`NSPredicate(format: "status == %@", "completed")` for CKQuerySubscription) and `SyncEngine+RoundCompletion.swift:78` (`RoundRecord(status: "completed", ...)` DTO write) carry the same string-literal but in a different domain. Deferred to a sync-domain follow-up. See `deferred-work.md`.
+
+### Dismissed (noise log)
+
+- Style preference for free-function vs. static-on-Standing on `verboseScore` — out of scope for 15.10 (belongs to 15.9).

@@ -99,3 +99,8 @@
 - Round.playerIDs mid-game mutation does NOT re-advertise an updated TXT record — Story 14.1 spec line 514 explicitly out of scope; CloudKit subscription path (FR16b) handles late joiners. Re-evaluate if observed in field debugging.
 - `AppServicesNearbyDiscoveryTests` asserts on `cloudKit.fetchCallCount` as a proxy for `syncEngine.pullRecords()` invocations — couples test to transitive `SyncEngine` impl. Replace with a direct hook on `AppServices.pullTrigger` (closure seam) in a follow-up.
 - New tech-debt entries discovered during Story 14.1 implementation (mock duplication, flaky timing) were noted in Completion Notes but not appended to this file at PR time — retroactively captured above. Future stories: append in the same PR.
+
+## Deferred from: code review of story-15.10 (2026-05-19)
+
+- **CloudKit-side `"completed"` literal predicate (`HyzerKit/Sources/HyzerKit/Sync/SyncScheduler.swift:275`)** — `NSPredicate(format: "status == %@", "completed")` for the CKQuerySubscription on Round-status-completed. Same string-literal class as the SwiftData `#Predicate` sites this story closed, but a different domain (CloudKit subscriptions, not SwiftData queries). Trivially fixable to `RoundStatus.completed`. Defer to a sync-domain follow-up story; do not re-open Story 15.10 for this.
+- **DTO-write `"completed"` literal (`HyzerKit/Sources/HyzerKit/Sync/SyncEngine+RoundCompletion.swift:78`)** — `RoundRecord(... status: "completed", ...)` is a value write, not a comparison, so strictly outside AC #3 scope. Trivial substitution to `RoundStatus.completed` would tighten the symbol coupling without changing behavior. Bundle with the SyncScheduler fix above.
