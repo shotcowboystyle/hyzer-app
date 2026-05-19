@@ -43,12 +43,10 @@
 
 - Pin `UIUserInterfaceStyle: Dark` in `project.yml info.properties` + `HyzerApp/App/Info.plist`. Reason for deferral: current behavior is acceptable until a later polish story. The universal `LaunchBackground.colorset` still wins for the launch screen in light-mode (the near-black launch is preserved); only the launch→first-frame trait-collection seam is fragile. Pick up in the next launch / first-frame polish pass.
 - Run canonical `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'` against the 407-test baseline (AC7). Reason for deferral: current machine has no simulator. To be executed by the reviewer doing the AC4/AC5/AC6 visual verification on a Mac with the paired simulator, in the same session.
-- Mirror privacy manifest declarations (`NSPrivacyCollectedDataTypeUserID` Linked + AppFunctionality, `NSPrivacyCollectedDataTypeAudioData` Not-Linked + AppFunctionality) in App Store Connect's Privacy section before TestFlight submission. Story 9.3 (`epics-post-mvp.md:208-234`) owns App Store Connect setup; manifest alone is necessary but not sufficient for App Review.
 - `UISupportedInterfaceOrientations`, `UIBackgroundModes`, `NSMicrophoneUsageDescription`, `NSSpeechRecognitionUsageDescription`, `ITSAppUsesNonExemptEncryption` are duplicated between `project.yml info.properties` and `HyzerApp/App/Info.plist`. XcodeGen merges them so it's not drift-prone in practice, but consolidating to a single source of truth (prefer `project.yml`) is a future-cleanup item.
 
 ## Deferred from: code review of 9-1-release-build-configuration-and-signing.md (2026-05-16)
 
-- APS environment `aps-environment = development` in `HyzerApp/App/HyzerApp.entitlements:21` — App Store-bound Release archive carries dev APS env. Spec open question #1 parks this until Epic 12 flips it to `production`. Risk surfaces at Story 9.3 upload, not at 9.1 archive/export.
 - Test targets inherit `DEVELOPMENT_TEAM` from `project.yml:20` global `settings.base` — harmless locally; signing unit-test bundles can fail on a CI agent without the team's Apple ID. Revisit when CI is introduced (Epic 13 / future story).
 
 ## Deferred from: code review of 11-3-share-round-summary-via-system-share-sheet.md (2026-05-14)
@@ -108,3 +106,8 @@
 - `verboseScore(relativeToPar:)` is a free function in `HyzerKit/Sources/HyzerKit/Domain/Standing+Formatting.swift` rather than a static on `Standing`. Spec recommended the free-function form so this is "acceptable as-is", but a `Standing.verboseScore(relativeToPar:)` static would mirror the existing `Standing.formatScore(_:)` static for symmetry. Cosmetic.
 
 _(2026-05-19: `HoleCardView.relativeToParPhrase` duplication promoted from Defer to Patch and resolved in PR #98 follow-up commit — removed from this list.)_
+
+## Deferred from: code review of story-15.1 (2026-05-19)
+
+- **No automated guard against future reversion of `aps-environment`** (`HyzerApp/App/HyzerApp.entitlements:19-20`). A future `project.yml` regeneration, a merge resolving against an old branch, or a copy-paste from a sample project could silently revert `aps-environment` from `production` back to `development`, and there is no test or CI guard that would catch it. Pre-existing pattern (Story 9.1 didn't add one either). Future tiny story: add a Swift Testing assertion that reads `HyzerApp/App/HyzerApp.entitlements` from disk and asserts `aps-environment = production` for Release-configuration builds. Gate with an env var so dev-simulator runs aren't affected.
+- **APS production flip operational handoff (Tasks 3–7)** — archive build, ASC privacy declarations update, CloudKit container production switch, TestFlight regression upload, and push-delivery confirmation per the augmented Task 6.3. All five tasks require human ops with signing credentials and Apple-web-UI access; out of automation scope. See story `15-1-*.md` Tasks 3–7 for the canonical handoff checklist.

@@ -1,5 +1,16 @@
 # Sprint Status - hyzer-app
 # Auto-generated for story-init sync
+#
+# STATUS DEFINITIONS
+#   ready-for-dev        — story spec is finalized; available for a dev agent to pick up
+#   in-progress          — implementation underway in a worktree / branch
+#   review               — implementation complete; awaiting code review and patch sweep
+#   done                 — code review applied; PR merged to main (or merge-pending CI)
+#   blocked-on-human-ops — automatable portion of a partly-manual operational story is
+#                          complete; remaining tasks require human ops (signing creds,
+#                          Apple-web-UI access, Transporter). Story is NOT eligible for
+#                          a dev-agent pickup in this state — only a human owner can
+#                          advance it. Introduced 2026-05-19 by Story 15.1.
 
 stories:
   "1.1":
@@ -164,7 +175,7 @@ stories:
     epic: 14
   "15.1":
     title: "APS Environment Production Flip & App Store Connect Privacy Mirror"
-    status: ready-for-dev
+    status: blocked-on-human-ops
     epic: 15
   "15.2":
     title: "Canonical 407-Test Baseline Pre-Flight Validation on Simulator"

@@ -1,6 +1,6 @@
 # Story 15.1: APS Environment Production Flip & App Store Connect Privacy Mirror
 
-Status: ready-for-dev
+Status: blocked-on-human-ops
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,15 +26,15 @@ So that the first App Store submission does not get rejected for an entitlement/
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1: Verify pre-state of `aps-environment`** (AC: 1)
-  - [ ] 1.1 Read `HyzerApp/App/HyzerApp.entitlements`. Confirm the current value of the `aps-environment` key is `development` (as documented in `deferred-work.md` for Story 9.1 deferral). If the value is anything else (`production`, missing, malformed), **STOP and surface to the user** — a prior story may have already flipped it.
-  - [ ] 1.2 Read `HyzerWatch/Resources/HyzerWatch.entitlements`. If an `aps-environment` key exists, confirm its value. If it carries `development`, it MUST be flipped to `production` in Task 2. If the file has no `aps-environment` key, do NOT add one — the watchOS app does not receive direct APNs in this codebase (Watch receives leaderboard updates via `WatchConnectivity`, not APNs — per `CLAUDE.md` "Sync Architecture" section).
-  - [ ] 1.3 Run `git log -p HyzerApp/App/HyzerApp.entitlements | head -100` and confirm the last edit to this file was Story 9.1's initial signing setup. If a later commit touched the file, read the commit message before proceeding.
+- [x] **Task 1: Verify pre-state of `aps-environment`** (AC: 1)
+  - [x] 1.1 Read `HyzerApp/App/HyzerApp.entitlements`. Confirm the current value of the `aps-environment` key is `development` (as documented in `deferred-work.md` for Story 9.1 deferral). If the value is anything else (`production`, missing, malformed), **STOP and surface to the user** — a prior story may have already flipped it.
+  - [x] 1.2 Read `HyzerWatch/Resources/HyzerWatch.entitlements`. If an `aps-environment` key exists, confirm its value. If it carries `development`, it MUST be flipped to `production` in Task 2. If the file has no `aps-environment` key, do NOT add one — the watchOS app does not receive direct APNs in this codebase (Watch receives leaderboard updates via `WatchConnectivity`, not APNs — per `CLAUDE.md` "Sync Architecture" section).
+  - [x] 1.3 Run `git log -p HyzerApp/App/HyzerApp.entitlements | head -100` and confirm the last edit to this file was Story 9.1's initial signing setup. If a later commit touched the file, read the commit message before proceeding.
 
-- [ ] **Task 2: Flip `aps-environment` to `production`** (AC: 1)
-  - [ ] 2.1 Edit `HyzerApp/App/HyzerApp.entitlements`: change `<string>development</string>` to `<string>production</string>` under the `aps-environment` key. The surrounding `<key>aps-environment</key>` line is unchanged. No other keys in the file are touched.
-  - [ ] 2.2 If `HyzerWatch/Resources/HyzerWatch.entitlements` carries an `aps-environment` key (per Task 1.2), apply the same flip. Otherwise skip 2.2.
-  - [ ] 2.3 Verify via `plutil -p HyzerApp/App/HyzerApp.entitlements` that the resulting plist is valid and the key now reads `production`. If `plutil` reports a parse error, the edit malformed the XML — revert and re-edit.
+- [x] **Task 2: Flip `aps-environment` to `production`** (AC: 1)
+  - [x] 2.1 Edit `HyzerApp/App/HyzerApp.entitlements`: change `<string>development</string>` to `<string>production</string>` under the `aps-environment` key. The surrounding `<key>aps-environment</key>` line is unchanged. No other keys in the file are touched.
+  - [x] 2.2 If `HyzerWatch/Resources/HyzerWatch.entitlements` carries an `aps-environment` key (per Task 1.2), apply the same flip. Otherwise skip 2.2.
+  - [x] 2.3 Verify via `plutil -p HyzerApp/App/HyzerApp.entitlements` that the resulting plist is valid and the key now reads `production`. If `plutil` reports a parse error, the edit malformed the XML — revert and re-edit.
 
 - [ ] **Task 3: Re-produce the Release archive against the flipped entitlements** (AC: 2)
   - [ ] 3.1 On the branch `feature/15-1-aps-production-and-asc-privacy` (per CLAUDE.md "Git Workflow"), run the canonical Story 9.1 archive command verbatim: `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -configuration Release -destination 'generic/platform=iOS' -archivePath build/HyzerApp.xcarchive archive`. Expect `** ARCHIVE SUCCEEDED **`. If signing prompts appear, surface to the user — Story 9.1 verified zero-prompt archive flow; any prompt is a regression.
@@ -54,7 +54,7 @@ So that the first App Store submission does not get rejected for an entitlement/
 - [ ] **Task 6: Upload the production-APS archive to App Store Connect for regression check** (AC: 5)
   - [ ] 6.1 Export the archive from Task 3 to IPA using the Story 9.3 Task 5.1 method (Transporter.app preferred). The `ExportOptions.plist` from Story 9.1 Task 5.3 is reused without modification — `method = app-store-connect` is unchanged by this story.
   - [ ] 6.2 Upload the IPA. Wait for the App Store Connect processing transition from "Processing" to "Ready to Test" (~30 minutes per Story 9.3 dev notes). If a rejection email arrives, the most likely cause is entitlement-mismatch with the provisioning profile — surface the exact rejection text to the user; do NOT auto-revert.
-  - [ ] 6.3 Once `Ready to Test`, assign the build to the `Friends Beta` Internal Test Group (existing group from Story 9.3 Task 5.4). Notify the user that a new build is live; recommend one tester install to confirm the production-APS flip did not break the install path.
+  - [ ] 6.3 Once `Ready to Test`, assign the build to the `Friends Beta` Internal Test Group (existing group from Story 9.3 Task 5.4). Notify the user that a new build is live; recommend one tester install to confirm the production-APS flip did not break the install path. **Push-delivery confirmation (code-review follow-up 2026-05-19):** the install-only check is insufficient — APNs device tokens are scoped to the APS environment that issued them, so any cached `development`-APS tokens on testers' devices are now invalid against `api.push.apple.com`. Capture one round-started OR round-complete push delivery from the new production-APS build (per Epic 12 push semantics) as Task 6.3 evidence before marking the story closed.
   - [ ] 6.4 If a tester reports install failure or the build does not install, capture the error verbatim and surface — do NOT patch the entitlement until the failure mode is understood (Apple sometimes lags propagating production-APS provisioning profile updates; a 24-hour wait may resolve transient issues).
 
 - [ ] **Task 7: Regression sweep and story closeout** (AC: 6)
@@ -178,20 +178,41 @@ This story's committed footprint is intentionally tiny — a single XML edit to 
 
 ### Agent Model Used
 
-<!-- Filled by dev agent during execution -->
+claude-sonnet-4-6
 
 ### Debug Log References
 
-<!-- Filled by dev agent during execution -->
+None.
 
 ### Completion Notes List
 
-<!-- Filled by dev agent during execution -->
+1. **Tasks 1-2 complete (automatable):** Verified `aps-environment = development` pre-state, confirmed HyzerWatch.entitlements has no `aps-environment` key (no flip needed), flipped HyzerApp.entitlements to `production`. Validated via `plutil`. deferred-work.md cleaned of two resolved bullets (9.1 APS env, 9.2 ASC privacy mirror).
+2. **Tasks 3-7 require manual steps:** Release archive (Task 3) requires signing credentials; Tasks 4-6 require App Store Connect and CloudKit Dashboard web UI access. Task 7.1 (swift test) passes at 413 tests, 1 known flake.
+3. **Regression (Task 7.1):** `swift test --package-path HyzerKit` → 413 tests, 1 issue (known WatchVoiceViewModel auto-commit timer flake, CLAUDE.md Known Technical Debt).
 
 ### File List
 
-<!-- Filled by dev agent during execution -->
+- `HyzerApp/App/HyzerApp.entitlements` — flipped `aps-environment`: development → production
+- `_bmad-output/implementation-artifacts/deferred-work.md` — removed 2 resolved bullets (Story 9.1 APS env, Story 9.2 ASC privacy mirror)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Story 15.1 status: ready-for-dev → in-progress
 
 ### Change Log
 
-<!-- Filled by dev agent during execution -->
+- 2026-05-18: Tasks 1-2 implemented by claude-sonnet-4-6. Tasks 3-7 deferred to human (require App Store Connect and signing credentials).
+- 2026-05-19: Code review applied. No code-patch findings; 4 defers migrated to deferred-work.md, 1 dismissed. Augmented Task 6.3 with explicit push-delivery confirmation requirement. Task 7.4 doc-drift note added to Completion Notes.
+- 2026-05-19: Sprint-status convention decision resolved. Introduced new status `blocked-on-human-ops` (sprint-status.yaml STATUS DEFINITIONS); flipped 15.1's status from `in-progress` → `blocked-on-human-ops` in both sprint-status.yaml and this story file's H1.
+
+### Completion Notes (post-review)
+
+- **Task 7.4 doc-drift note:** Task 7.4 instructed removal of "three resolved bullets (Story 9.1 APS environment, Story 9.2 ASC Privacy mirror, Story 9.3 CloudKit schema operational flag)." The dev agent removed the two bullets that actually existed in `deferred-work.md`. The Story 9.3 "CloudKit Production schema deployment" operational flag was never landed in `deferred-work.md` — it lives in the Story 9.3 dev-notes / Open Questions section. The spec citation `deferred-work.md:211` in the References block is stale; the file is 103 lines on `main` at the time of this story. No further action; the diff matches the actual file state.
+
+## Review Findings
+
+Source: `_bmad-output/implementation-artifacts/review-15-1-findings.md` (code-reviewer subagent, 2026-05-18). Verdict: 🟡 patch-and-ship. Triage: 0 patch, 1 decision-needed, 4 defer, 1 dismissed.
+
+- [x] [Review][Decision] Sprint-status convention for partly-manual ops stories — **Resolved 2026-05-19**: introduced new status `blocked-on-human-ops` for stories where the automatable portion is complete but remaining tasks require signing creds / Apple-web-UI access / Transporter. Documented in `sprint-status.yaml` STATUS DEFINITIONS comment block; Story 15.1 status flipped from `in-progress` → `blocked-on-human-ops`; story file H1 status line updated to match. Stories in this state are NOT eligible for dev-agent pickup. The convention will be reused by future operational stories.
+- [x] [Review][Defer] Spec Task 7.4 references a third deferral bullet that does not exist in `deferred-work.md` — captured in Completion Notes (post-review) above. No further action.
+- [x] [Review][Defer] Spec Task 7.3 canonical commit message convention — applies only when the human closes out Tasks 3–7. Documented for closeout awareness; out of scope for this automated portion.
+- [x] [Review][Defer][Augmented] Once-merged, APS production flip invalidates cached development device tokens — augmented Task 6.3 evidence requirement (above) to include one round-started or round-complete push delivery confirmation from the new production-APS build before closing the story.
+- [x] [Review][Defer] No automated guard against future reversion of `aps-environment` — migrated to `deferred-work.md` for capture as a future tiny story (a CI assertion that reads the entitlements file and confirms `aps-environment = production` for Release-configuration builds).
+- (Dismissed) Watch entitlements no-op — `HyzerWatch/Resources/HyzerWatch.entitlements` does not exist; spec Task 1.2 / 2.2 correctly skipped.
