@@ -118,15 +118,7 @@ private struct StandingRowView: View {
     }
 
     private func accessibilityLabel(for standing: Standing) -> String {
-        let scoreDesc: String
-        let rel = standing.scoreRelativeToPar
-        if rel < 0 {
-            scoreDesc = "\(abs(rel)) under par"
-        } else if rel == 0 {
-            scoreDesc = "at par"
-        } else {
-            scoreDesc = "\(rel) over par"
-        }
+        let scoreDesc = verboseScore(relativeToPar: standing.scoreRelativeToPar)
         return "\(standing.playerName), position \(standing.position), \(scoreDesc)"
     }
 }

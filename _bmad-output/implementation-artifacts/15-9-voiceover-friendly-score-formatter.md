@@ -198,3 +198,35 @@ None.
 ### Change Log
 
 - 2026-05-18: Story 15.9 implemented by claude-sonnet-4-6. Formatter added, tests written, call sites migrated.
+- 2026-05-19: Code-review patches applied — `HistoryRoundCard`, `PlayerTrendView` chart points, `WatchLeaderboardView`, `PlayerHoleBreakdownView` migrated to `verboseScore`. Added 7 regression tests for the migrated call-site compositions.
+
+## Review Findings
+
+Source: `_bmad-output/implementation-artifacts/review-15-9-findings.md` (reviewer: code-reviewer subagent, 2026-05-18). Verdict: "Patch and ship." Triage counts: decision_needed 0, patch 4, defer 2, dismissed 2.
+
+### Patches applied (2026-05-19)
+
+- [x] [Review][HIGH][patch] AC #5 — `HistoryRoundCard` accessibility label not migrated. Plumbed `winnerScoreRelativeToPar` and `userScoreRelativeToPar` through `HistoryRoundCardData`; `accessibilityLabel(data:)` in `HistoryListView.swift` now calls `verboseScore(relativeToPar:)`. Visual rendering unchanged.
+- [x] [Review][HIGH][patch] AC #5 — `PlayerTrendView` per-point chart used `Standing.formatScore` in `PointMark` annotation. Wrapped chart in `.accessibilityElement(children: .ignore)` so VoiceOver speaks only `vm.accessibilityChartSummary` (matches `HoleCardView` pattern). Tick-label axis formatting at line 185 left as-is (visual only).
+- [x] [Review][HIGH][patch] `WatchLeaderboardView.accessibilityLabel(for:)` replaced ad-hoc "1 under par" / "at par" / "1 over par" phrasing with a single `verboseScore(relativeToPar:)` call.
+- [x] [Review][HIGH][patch] `PlayerHoleBreakdownView` — `accessibilityRelativeToPar(_:)` deleted and call sites migrated to `verboseScore(relativeToPar:)` (trailing " par" concatenation removed since the helper already includes the suffix). `accessibilitySummary` migrated likewise.
+
+### Deferred (tracked in `deferred-work.md`)
+
+- [x] [Review][Defer][LOW] `HoleCardView.relativeToParPhrase` (HyzerApp/Views/Scoring/HoleCardView.swift:172-181) duplicates `verboseScore` and silently disagrees beyond ±1. Replace with a one-line delegation.
+- [x] [Review][Defer][LOW] Free function vs static-on-Standing — `verboseScore(relativeToPar:)` could mirror `Standing.formatScore(_:)` as a static for symmetry. Acceptable as-is; cosmetic.
+
+### Dismissed (logged, no action)
+
+- Rounding `-0.4` differential to `0` reads as "even par" — consistent with the visual `Standing.formatScore` path; intentional.
+- No test for mid-range negative (e.g., `-7`) — implementation is symmetric by construction; ±1, ±20, ±21 + mid-range +7 cover the matrix.
+
+### Verification
+
+- `swift test --package-path HyzerKit --filter "VerboseScore"` — 15 tests pass (8 original + 7 new call-site composition regression tests).
+- Full suite: 427 of 428 pass; the lone failure (`WatchVoiceViewModelTests.auto-commit timer fires in confirming state`) is a pre-existing flaky timing test (CLAUDE.md known tech debt) — passes when re-run in isolation. Unrelated to this story.
+- `swiftlint` CLI not available on the patch machine; pre-build script runs on Xcode build. Manual line-length scan of all edited files confirms no lines exceed the 160-char rule.
+
+### Test-coverage gap acknowledgement
+
+UI a11y label assertions for `HistoryRoundCard` etc. would require constructing live `HistoryRoundCardData` and exercising the `View`'s private `accessibilityLabel(data:)`. The 7 new tests in `ScoreFormatterTests.swift` instead assert the **call-site composition string** — the exact `"\(prefix), \(verboseScore(...))"` pattern each surface uses — which is the same regression surface a UI test would catch and avoids the ViewModel-construction overhead.

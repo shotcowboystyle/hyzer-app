@@ -118,6 +118,10 @@ struct PlayerTrendView: View {
         .frame(height: 240)
         .padding(.horizontal, SpacingTokens.lg)
         .padding(.vertical, SpacingTokens.xl)
+        // Suppress per-point a11y so VoiceOver speaks only the verbose chart summary.
+        // Each `PointMark` would otherwise surface `Standing.formatScore` ("E"/"+3"), the
+        // compact form this story exists to keep out of accessibility labels.
+        .accessibilityElement(children: .ignore)
         .accessibilityChartDescriptor(TrendChartDescriptor(trend: trend, playerName: playerName))
         .accessibilityLabel(vm.accessibilityChartSummary)
     }
