@@ -170,14 +170,7 @@ struct HoleCardView: View {
     }
 
     private func relativeToParPhrase(strokes: Int, par: Int) -> String {
-        let delta = strokes - par
-        switch delta {
-        case ..<(-1): return "\(abs(delta)) under par"
-        case -1:      return "one under par"
-        case 0:       return "even par"
-        case 1:       return "one over par"
-        default:      return "\(delta) over par"
-        }
+        verboseScore(relativeToPar: strokes - par)
     }
 
 }

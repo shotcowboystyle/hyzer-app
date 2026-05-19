@@ -213,8 +213,8 @@ Source: `_bmad-output/implementation-artifacts/review-15-9-findings.md` (reviewe
 
 ### Deferred (tracked in `deferred-work.md`)
 
-- [x] [Review][Defer][LOW] `HoleCardView.relativeToParPhrase` (HyzerApp/Views/Scoring/HoleCardView.swift:172-181) duplicates `verboseScore` and silently disagrees beyond ±1. Replace with a one-line delegation.
-- [x] [Review][Defer][LOW] Free function vs static-on-Standing — `verboseScore(relativeToPar:)` could mirror `Standing.formatScore(_:)` as a static for symmetry. Acceptable as-is; cosmetic.
+- [x] [Review][Patch][LOW] `HoleCardView.relativeToParPhrase` (HyzerApp/Views/Scoring/HoleCardView.swift:172-181) duplicated `verboseScore` and silently disagreed beyond ±1 (said "2 under par" with digits where `verboseScore` says "two under par"). **Resolved 2026-05-19**: switch body replaced with `verboseScore(relativeToPar: strokes - par)`; test mirror in `HoleCardViewTests.swift` updated accordingly; the two tests pinning the old digit-form output (`test_relativeToParPhrase_twoUnder`, `test_relativeToParPhrase_doubleBogey`) updated to expect verbose phrasing. Promoted from Defer to Patch because the cross-view inconsistency contradicts AC #5's intent.
+- [x] [Review][Defer][LOW] Free function vs static-on-Standing — `verboseScore(relativeToPar:)` could mirror `Standing.formatScore(_:)` as a static for symmetry. Acceptable as-is; cosmetic. Tracked in `deferred-work.md`.
 
 ### Dismissed (logged, no action)
 

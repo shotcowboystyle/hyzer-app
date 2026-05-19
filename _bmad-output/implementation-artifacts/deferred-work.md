@@ -106,5 +106,6 @@
 
 ## Deferred from: code review of story-15.9 (2026-05-19)
 
-- `HoleCardView.relativeToParPhrase(strokes:par:)` (`HyzerApp/Views/Scoring/HoleCardView.swift:172-181`) duplicates the new `verboseScore(relativeToPar:)` helper and silently disagrees beyond ±1 (says "2 under par" via digits where `verboseScore` would say "two under par"). Replace with `private func relativeToParPhrase(strokes: Int, par: Int) -> String { verboseScore(relativeToPar: strokes - par) }`. Deferred from Story 15.9 code review — LOW severity (existing call site says "one under par" / "even par" correctly at ±1/0; only ±2+ diverge).
 - `verboseScore(relativeToPar:)` is a free function in `HyzerKit/Sources/HyzerKit/Domain/Standing+Formatting.swift` rather than a static on `Standing`. Spec recommended the free-function form so this is "acceptable as-is", but a `Standing.verboseScore(relativeToPar:)` static would mirror the existing `Standing.formatScore(_:)` static for symmetry. Cosmetic.
+
+_(2026-05-19: `HoleCardView.relativeToParPhrase` duplication promoted from Defer to Patch and resolved in PR #98 follow-up commit — removed from this list.)_
