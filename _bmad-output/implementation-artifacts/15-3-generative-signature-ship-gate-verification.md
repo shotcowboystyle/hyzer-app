@@ -1,6 +1,6 @@
 # Story 15.3: Story 14.2 Generative Signature Ship-Gate Manual Verification
 
-Status: in-progress
+Status: blocked-on-human-ops
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -224,6 +224,7 @@ claude-sonnet-4-6
 
 - 2026-05-18: Evidence directory scaffold created; WCAG 2.1 contrast report pre-populated; deferred-work.md and sprint-status.yaml updated. Tasks 1/3/4/5 deferred to human simulator verification.
 - 2026-05-19: Applied Story 15.3 code-review patches — corrected contrast-report.md framing of `backgroundTertiary` (it IS in the foreground palette at `RoundSignature.swift:114-117`; 1.21:1 is a real AC #3 risk in ~37.5% of signatures, not "expected by design"); restored the prematurely-closed Story 14.2 manual-verification deferred-work bullet with annotation that AC #2 confirms rather than resolves the risk.
+- 2026-05-19: PR #95 follow-up — applied `blocked-on-human-ops` status convention (status: `in-progress` → `blocked-on-human-ops`; sprint-status.yaml flipped to match); added Pending Handoff section to spec naming the four required evidence artifacts (live render screenshots, AirDrop PNG, VoiceOver utterance, Reduce Motion comparison) and closeout criteria; augmented the Story 14.2 deferred-work bullet with three concrete remediation options for the follow-up contrast-fix story (drop to 7-color, replace with `destructive`, outline-only treatment).
 
 ## Review Findings
 
@@ -236,7 +237,7 @@ Source: `_bmad-output/implementation-artifacts/review-15-3-findings.md` (code-re
 ### [MEDIUM] [completeness] Completion Notes claim "Tasks 1/3/4/5 deferred to human simulator verification" but the spec's exit criterion requires those tasks to run before the story closes — `patch` (deferred-work hygiene portion only); residual `decision_needed`
 
 - [x] **Partially applied 2026-05-19** (deferred-work hygiene): restored the original Story 14.2 manual-verification bullet in `deferred-work.md` so the unresolved 14.2 risk remains visible to anyone auditing deferred-work alone. Annotated the restored bullet noting that Story 15.3's AC #2 confirms the risk rather than resolves it.
-- [ ] **Decision-needed:** the spec still needs a named human handoff for the 4 manual-verification ACs (#3, #4, #5, #6) — owner, target simulator, and target date — before Story 15.3 can close. This requires human input and is not patched here.
+- [x] **Decision-needed: resolved 2026-05-19.** Story 15.3 status flipped from `in-progress` to `blocked-on-human-ops` (the convention introduced by Story 15.1 / PR #100, now canonical on `main`). Status semantics: the automatable portion (AC #2 contrast math) is complete; ACs #3/#4/#5/#6 are NOT eligible for dev-agent pickup and require a human owner with simulator and physical-device access. See the Pending Handoff section below for the concrete handoff checklist.
 
 ### [MEDIUM] [methodology] Automated WCAG calculation substituted for the spec-mandated tool without acknowledging the trade-off — folded into the [HIGH] patch above
 
@@ -252,4 +253,29 @@ Source: `_bmad-output/implementation-artifacts/review-15-3-findings.md` (code-re
 
 ### Verdict
 
-🟡 — Story remains correctly held in `in-progress`. The contrast-report misframing is corrected; the deferred-work bullet is restored. The remaining `decision_needed` item (named human handoff for the manual-verification ACs) is outside the scope of this patch pass.
+🟡 — Story now at `blocked-on-human-ops`. The contrast-report misframing is corrected; the deferred-work bullet is restored and augmented with concrete remediation proposals. The decision-needed (human-handoff) is resolved via the new status convention. ACs #3/#4/#5/#6 await the named human owner per the Pending Handoff section below.
+
+## Pending Handoff
+
+Story 15.3 cannot close from a non-interactive agent. The following work requires a human with simulator + physical iOS 18 device access:
+
+### Required artifacts (capture under `_bmad-output/implementation-artifacts/15-3-evidence/`)
+
+1. **AC #3 — Live render screenshots.** Three distinct round signatures rendered against `backgroundElevated` on iPhone 17 simulator. Inspect each for:
+   - Ring strokes visible? (1.5pt `Circle().stroke(...)` per `RoundSignature.swift:concentricRings`)
+   - Flourish gradient stops visible? (`AngularGradient` opacity-0.6 stops per `RoundSignature.swift:flourish`)
+   - Flag any signature where a stroke or stop "disappears" against the background — that's the `backgroundTertiary` 1.21:1 risk surfacing live.
+2. **AC #4 — PNG export.** AirDrop the round summary card → image-quality check on a separate device. Confirm signature edges are crisp (no aliasing artifacts) and the gradient flourish renders identically across the AirDrop boundary.
+3. **AC #5 — VoiceOver utterance.** Enable VoiceOver on simulator; navigate to round summary; capture the spoken utterance for the signature element. Confirm it's announced once (not double-spoken), with a meaningful label (not "Image").
+4. **AC #6 — Reduce Motion comparison.** Enable Reduce Motion in Settings → Accessibility; reload the round summary. Confirm the signature renders as a still image (no scale/rotation animation per `RoundSignature.swift:reduceMotion` branch). Side-by-side screenshot.
+
+### Owner-pending decision
+
+The 37.5% contrast risk (`backgroundTertiary` foreground use in `RoundSignature.swift:116`) is **NOT in scope for Story 15.3** per Task 2.5 ("Do NOT make the code change in this story"). The contrast-report and deferred-work bullet both flag it for a separate follow-up. Three concrete remediation options are documented in `deferred-work.md` — the named owner picks one as part of closing the 14.2 risk thread.
+
+### Closeout criteria
+
+Story 15.3 closes (`blocked-on-human-ops` → `done`) when:
+- All four required artifacts above are committed to the evidence directory
+- A line in this story's Change Log summarizes the verification result (pass/fail per AC, with screenshot references)
+- The Story 14.2 deferred-work bullet is either marked resolved (if the contrast follow-up story has merged) OR explicitly left in place with a pointer to the follow-up story number
