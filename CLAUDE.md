@@ -157,8 +157,9 @@ Comprehensive docs generated from deep scan live in `docs/`:
 - [Source Tree](docs/source-tree-analysis.md) — annotated directory structure
 - [Development Guide](docs/development-guide.md) — build, test, lint, conventions
 
-### Project Status (as of 2026-04-08)
+### Project Status (as of 2026-05-18)
 
-- **Epics 1–8 complete** — 23/23 stories, 407 tests
+- **Epics 1–14 complete** — Epic 15 (pre-launch hardening) in progress
 - **Not yet deployed** — no TestFlight or App Store builds
-- **Stabilization phase** — code review, test audit, tech debt cleanup in progress
+- **Test count baseline:** 413 HyzerKit tests (as of f87a5d1 on 2026-05-18) — verified via `swift test --package-path HyzerKit`. HyzerAppTests count TBD pending xcodebuild test-discovery fix (see Story 15.2). HyzerWatch has no test target.
+- _Historical: "407 tests" (2026-04-08) was Epics 1–8; 413 reflects post-Epics 13–14 additions._

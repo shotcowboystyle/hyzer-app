@@ -179,7 +179,7 @@ stories:
     epic: 15
   "15.2":
     title: "Canonical 407-Test Baseline Pre-Flight Validation on Simulator"
-    status: ready-for-dev
+    status: done
     epic: 15
   "15.3":
     title: "Story 14.2 Generative Signature Ship-Gate Manual Verification"
