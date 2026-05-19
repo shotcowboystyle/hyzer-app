@@ -54,7 +54,7 @@ So that the first App Store submission does not get rejected for an entitlement/
 - [ ] **Task 6: Upload the production-APS archive to App Store Connect for regression check** (AC: 5)
   - [ ] 6.1 Export the archive from Task 3 to IPA using the Story 9.3 Task 5.1 method (Transporter.app preferred). The `ExportOptions.plist` from Story 9.1 Task 5.3 is reused without modification — `method = app-store-connect` is unchanged by this story.
   - [ ] 6.2 Upload the IPA. Wait for the App Store Connect processing transition from "Processing" to "Ready to Test" (~30 minutes per Story 9.3 dev notes). If a rejection email arrives, the most likely cause is entitlement-mismatch with the provisioning profile — surface the exact rejection text to the user; do NOT auto-revert.
-  - [ ] 6.3 Once `Ready to Test`, assign the build to the `Friends Beta` Internal Test Group (existing group from Story 9.3 Task 5.4). Notify the user that a new build is live; recommend one tester install to confirm the production-APS flip did not break the install path.
+  - [ ] 6.3 Once `Ready to Test`, assign the build to the `Friends Beta` Internal Test Group (existing group from Story 9.3 Task 5.4). Notify the user that a new build is live; recommend one tester install to confirm the production-APS flip did not break the install path. **Push-delivery confirmation (code-review follow-up 2026-05-19):** the install-only check is insufficient — APNs device tokens are scoped to the APS environment that issued them, so any cached `development`-APS tokens on testers' devices are now invalid against `api.push.apple.com`. Capture one round-started OR round-complete push delivery from the new production-APS build (per Epic 12 push semantics) as Task 6.3 evidence before marking the story closed.
   - [ ] 6.4 If a tester reports install failure or the build does not install, capture the error verbatim and surface — do NOT patch the entitlement until the failure mode is understood (Apple sometimes lags propagating production-APS provisioning profile updates; a 24-hour wait may resolve transient issues).
 
 - [ ] **Task 7: Regression sweep and story closeout** (AC: 6)
@@ -199,7 +199,19 @@ None.
 ### Change Log
 
 - 2026-05-18: Tasks 1-2 implemented by claude-sonnet-4-6. Tasks 3-7 deferred to human (require App Store Connect and signing credentials).
+- 2026-05-19: Code review applied. No code-patch findings; 1 decision-needed (sprint-status convention for partly-manual ops stories — left open for team decision), 4 defers migrated to deferred-work.md, 1 dismissed. Augmented Task 6.3 with explicit push-delivery confirmation requirement. Task 7.4 doc-drift note added to Completion Notes.
 
-### Change Log
+### Completion Notes (post-review)
 
-<!-- Filled by dev agent during execution -->
+- **Task 7.4 doc-drift note:** Task 7.4 instructed removal of "three resolved bullets (Story 9.1 APS environment, Story 9.2 ASC Privacy mirror, Story 9.3 CloudKit schema operational flag)." The dev agent removed the two bullets that actually existed in `deferred-work.md`. The Story 9.3 "CloudKit Production schema deployment" operational flag was never landed in `deferred-work.md` — it lives in the Story 9.3 dev-notes / Open Questions section. The spec citation `deferred-work.md:211` in the References block is stale; the file is 103 lines on `main` at the time of this story. No further action; the diff matches the actual file state.
+
+## Review Findings
+
+Source: `_bmad-output/implementation-artifacts/review-15-1-findings.md` (code-reviewer subagent, 2026-05-18). Verdict: 🟡 patch-and-ship. Triage: 0 patch, 1 decision-needed, 4 defer, 1 dismissed.
+
+- [ ] [Review][Decision] Sprint-status convention for partly-manual ops stories — Story 15.1 is the first operational story in Epic 15 where ACs 2/3/4/5/6 cannot be discharged from Claude Code (archive needs signing creds; ASC/CloudKit are web UI; TestFlight upload is Transporter). Decision needed: introduce a `blocked-on-human-ops` status, or document explicitly in `sprint-status.yaml` that `in-progress` for operational stories means "automatable portion complete, awaiting human ops." The precedent set here will be reused by future operational stories. Left open for team decision.
+- [x] [Review][Defer] Spec Task 7.4 references a third deferral bullet that does not exist in `deferred-work.md` — captured in Completion Notes (post-review) above. No further action.
+- [x] [Review][Defer] Spec Task 7.3 canonical commit message convention — applies only when the human closes out Tasks 3–7. Documented for closeout awareness; out of scope for this automated portion.
+- [x] [Review][Defer][Augmented] Once-merged, APS production flip invalidates cached development device tokens — augmented Task 6.3 evidence requirement (above) to include one round-started or round-complete push delivery confirmation from the new production-APS build before closing the story.
+- [x] [Review][Defer] No automated guard against future reversion of `aps-environment` — migrated to `deferred-work.md` for capture as a future tiny story (a CI assertion that reads the entitlements file and confirms `aps-environment = production` for Release-configuration builds).
+- (Dismissed) Watch entitlements no-op — `HyzerWatch/Resources/HyzerWatch.entitlements` does not exist; spec Task 1.2 / 2.2 correctly skipped.

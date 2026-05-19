@@ -106,3 +106,8 @@
 - `verboseScore(relativeToPar:)` is a free function in `HyzerKit/Sources/HyzerKit/Domain/Standing+Formatting.swift` rather than a static on `Standing`. Spec recommended the free-function form so this is "acceptable as-is", but a `Standing.verboseScore(relativeToPar:)` static would mirror the existing `Standing.formatScore(_:)` static for symmetry. Cosmetic.
 
 _(2026-05-19: `HoleCardView.relativeToParPhrase` duplication promoted from Defer to Patch and resolved in PR #98 follow-up commit — removed from this list.)_
+
+## Deferred from: code review of story-15.1 (2026-05-19)
+
+- **No automated guard against future reversion of `aps-environment`** (`HyzerApp/App/HyzerApp.entitlements:19-20`). A future `project.yml` regeneration, a merge resolving against an old branch, or a copy-paste from a sample project could silently revert `aps-environment` from `production` back to `development`, and there is no test or CI guard that would catch it. Pre-existing pattern (Story 9.1 didn't add one either). Future tiny story: add a Swift Testing assertion that reads `HyzerApp/App/HyzerApp.entitlements` from disk and asserts `aps-environment = production` for Release-configuration builds. Gate with an env var so dev-simulator runs aren't affected.
+- **APS production flip operational handoff (Tasks 3–7)** — archive build, ASC privacy declarations update, CloudKit container production switch, TestFlight regression upload, and push-delivery confirmation per the augmented Task 6.3. All five tasks require human ops with signing credentials and Apple-web-UI access; out of automation scope. See story `15-1-*.md` Tasks 3–7 for the canonical handoff checklist.
