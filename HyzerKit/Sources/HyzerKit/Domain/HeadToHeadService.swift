@@ -86,7 +86,7 @@ public final class HeadToHeadService: HeadToHeadServicing {
             predicate: #Predicate { $0.playerID == playerAIDLocal },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        eventsADesc.fetchLimit = maxRounds * 20
+        eventsADesc.fetchLimit = maxRounds * ScoreEvent.maxEventsPerRound
         let eventsA: [ScoreEvent]
         do {
             eventsA = try modelContext.fetch(eventsADesc)
@@ -99,7 +99,7 @@ public final class HeadToHeadService: HeadToHeadServicing {
             predicate: #Predicate { $0.playerID == playerBIDLocal },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        eventsBDesc.fetchLimit = maxRounds * 20
+        eventsBDesc.fetchLimit = maxRounds * ScoreEvent.maxEventsPerRound
         let eventsB: [ScoreEvent]
         do {
             eventsB = try modelContext.fetch(eventsBDesc)
@@ -121,8 +121,9 @@ public final class HeadToHeadService: HeadToHeadServicing {
             )
         }
 
+        let completedStatus = RoundStatus.completed
         var roundDesc = FetchDescriptor<Round>(
-            predicate: #Predicate { sharedRoundIDs.contains($0.id) && $0.status == "completed" },
+            predicate: #Predicate { sharedRoundIDs.contains($0.id) && $0.status == completedStatus },
             sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
         )
         roundDesc.fetchLimit = maxRounds
@@ -197,7 +198,7 @@ public final class HeadToHeadService: HeadToHeadServicing {
             predicate: #Predicate { $0.playerID == playerAIDLocal },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
-        eventsADesc.fetchLimit = maxRounds * 20
+        eventsADesc.fetchLimit = maxRounds * ScoreEvent.maxEventsPerRound
         let eventsA: [ScoreEvent]
         do {
             eventsA = try modelContext.fetch(eventsADesc)
@@ -209,8 +210,9 @@ public final class HeadToHeadService: HeadToHeadServicing {
         let roundIDsA = Array(Set(eventsA.map(\.roundID)))
         guard !roundIDsA.isEmpty else { return [] }
 
+        let completedStatus = RoundStatus.completed
         var roundDesc = FetchDescriptor<Round>(
-            predicate: #Predicate { roundIDsA.contains($0.id) && $0.status == "completed" },
+            predicate: #Predicate { roundIDsA.contains($0.id) && $0.status == completedStatus },
             sortBy: [SortDescriptor(\.completedAt, order: .reverse)]
         )
         roundDesc.fetchLimit = maxRounds

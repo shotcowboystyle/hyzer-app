@@ -10,14 +10,23 @@ import HyzerKit
 struct HistoryListView: View {
     let currentPlayerID: String
 
-    @Query(
-        filter: #Predicate<Round> { $0.status == "completed" },
-        sort: \Round.completedAt,
-        order: .reverse
-    ) private var completedRounds: [Round]
+    @Query private var completedRounds: [Round]
 
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: HistoryListViewModel?
+
+    init(currentPlayerID: String) {
+        self.currentPlayerID = currentPlayerID
+        // Local-capture workaround: `#Predicate` cannot reference a static member
+        // (`RoundStatus.completed`) directly. Mirrors the pattern in
+        // `PlayerTrendService`, `PersonalBestService`, `HeadToHeadService`.
+        let completedStatus = RoundStatus.completed
+        _completedRounds = Query(
+            filter: #Predicate<Round> { $0.status == completedStatus },
+            sort: \Round.completedAt,
+            order: .reverse
+        )
+    }
 
     var body: some View {
         NavigationStack {

@@ -18,6 +18,17 @@ import SwiftData
 /// synced field. Use `GuestIdentifier` for construction and name resolution.
 @Model
 public final class ScoreEvent {
+    /// Upper bound on the number of ScoreEvent rows per Round per Player.
+    ///
+    /// Origin: Story 13.x history services bound `fetchLimit = maxRounds * 20`.
+    /// The multiplier covers the worst-case 18-hole round with several score
+    /// corrections plus discrepancy resolution events (each appending a new
+    /// immutable event per event-sourcing semantics — see CLAUDE.md
+    /// "Data & Persistence" event-sourcing invariant).
+    ///
+    /// Used by PlayerTrendService, PersonalBestService, HeadToHeadService.
+    public static let maxEventsPerRound: Int = 20
+
     public var id: UUID = UUID()
     /// Flat FK to Round. Denormalized for CloudKit sync (Amendment A8).
     public var roundID: UUID = UUID()

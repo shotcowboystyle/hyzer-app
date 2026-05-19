@@ -200,7 +200,7 @@ stories:
     epic: 15
   "15.10":
     title: "Centralize History-Service Constants (ScoreEvent.maxEventsPerRound, RoundStatus.completed)"
-    status: ready-for-dev
+    status: done
     epic: 15
 
 # Parallelization plan for active wave (Epics 10 & 11)
