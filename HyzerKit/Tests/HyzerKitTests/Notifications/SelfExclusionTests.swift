@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 @testable import HyzerKit
+import TestSupport
 
 /// Tests for the self-exclusion gate (AC #5): the round organizer must not receive
 /// a "Round Started" banner on their own device.

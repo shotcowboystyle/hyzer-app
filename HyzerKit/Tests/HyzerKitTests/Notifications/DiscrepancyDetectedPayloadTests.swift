@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 @testable import HyzerKit
+import TestSupport
 
 /// Tests for the `DiscrepancyDetectedPayload` value type and its mock parser contract.
 ///

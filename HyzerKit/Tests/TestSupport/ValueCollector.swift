@@ -11,12 +11,14 @@
 /// // ... trigger events ...
 /// let values = await collector.values
 /// ```
-actor ValueCollector<T> {
-    private(set) var values: [T] = []
+public actor ValueCollector<T> {
+    public private(set) var values: [T] = []
 
-    var count: Int { values.count }
+    public var count: Int { values.count }
 
-    func append(_ value: T) {
+    public init() {}
+
+    public func append(_ value: T) {
         values.append(value)
     }
 }

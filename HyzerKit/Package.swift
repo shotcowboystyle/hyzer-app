@@ -9,7 +9,8 @@ let package = Package(
         .macOS(.v14)   // Required for `swift test` on macOS host
     ],
     products: [
-        .library(name: "HyzerKit", targets: ["HyzerKit"])
+        .library(name: "HyzerKit", targets: ["HyzerKit"]),
+        .library(name: "TestSupport", targets: ["TestSupport"])
     ],
     targets: [
         .target(
@@ -20,9 +21,14 @@ let package = Package(
                 .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
+        .target(
+            name: "TestSupport",
+            dependencies: ["HyzerKit"],
+            path: "Tests/TestSupport"
+        ),
         .testTarget(
             name: "HyzerKitTests",
-            dependencies: ["HyzerKit"],
+            dependencies: ["HyzerKit", "TestSupport"],
             path: "Tests/HyzerKitTests"
         )
     ]

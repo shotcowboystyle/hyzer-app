@@ -46,8 +46,8 @@
 		58FA343D3CDA32A3BBEDB9C0 /* LeaderboardExpandedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46C43F8D9BA1A412FA48DB61 /* LeaderboardExpandedView.swift */; };
 		596A35E4701C525655211716 /* CourseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EC7DCB75B63B758D964D2B /* CourseDetailView.swift */; };
 		5D8E4A77A4DDD95955B5F8D7 /* VoiceOverlayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0179A787B752A224A7B38E /* VoiceOverlayViewModel.swift */; };
-		5DE82CF7F408827D47669F2E /* MockNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8CD7CF9330B29C97364DED1 /* MockNotificationService.swift */; };
 		602AE7FE552BCAAB9A145495 /* HyzerKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6AEC89D27BF2CC224C8D55BB /* HyzerKit */; };
+		603B6FC574DBFC18AA856CD1 /* TestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CB657E8D6E74C6E6C7789E9D /* TestSupport */; };
 		64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D25A260E0DBDD3FFD58E9A3 /* SyncIndicatorView.swift */; };
 		689356B498827861015A14A4 /* LiveNetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EAF2CE8A78AA9A463585BB /* LiveNetworkMonitor.swift */; };
 		6995CC037A2E94E70DA23AD0 /* PlayerHoleBreakdownScoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D409A9A1DA1E58BB604EC7D4 /* PlayerHoleBreakdownScoreTests.swift */; };
@@ -56,7 +56,6 @@
 		7291F41C97A3E4697FEBB72B /* ICloudIdentityResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8964B40A6E0FDB412508C /* ICloudIdentityResolutionTests.swift */; };
 		72DE69DD9F80755684565BA2 /* HeadToHeadViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E699B93CD7521982868E601 /* HeadToHeadViewModelTests.swift */; };
 		734C7E3EA5321A842087E881 /* RoundCompletionPushTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F6FBA41DD2C667740488872 /* RoundCompletionPushTests.swift */; };
-		7691995AA04ABB5E80EFCFD3 /* MockNearbyDiscoveryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF0A9F64F278D5DBF1816B3E /* MockNearbyDiscoveryClient.swift */; };
 		7786FCF97AD45E381EA39B83 /* MockVoiceRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C98688BE6063C2F5A47B1BEF /* MockVoiceRecognitionService.swift */; };
 		7823F1D6F90939B940EFAD1F /* LiveCloudKitClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BEC27ED6A658066DE3B9F9 /* LiveCloudKitClient.swift */; };
 		7AFE21046FB4C4217D9E3778 /* HeadToHeadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E53587689ED41C6D15B5B9E /* HeadToHeadView.swift */; };
@@ -239,9 +238,7 @@
 		D4822CF60B9D57B665F8209C /* HistoryListViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListViewModelTests.swift; sourceTree = "<group>"; };
 		D4DFB1F9AC07FE1B019DC349 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		D567388ADB189B6F28DF15C2 /* CourseListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseListView.swift; sourceTree = "<group>"; };
-		D8CD7CF9330B29C97364DED1 /* MockNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNotificationService.swift; sourceTree = "<group>"; };
 		D931AE0A2DAE33CD82121208 /* DiscrepancyViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscrepancyViewModel.swift; sourceTree = "<group>"; };
-		DF0A9F64F278D5DBF1816B3E /* MockNearbyDiscoveryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockNearbyDiscoveryClient.swift; sourceTree = "<group>"; };
 		E08DEC276FB87D2CD8DBB11A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		E63536A325A8FD3F5E743896 /* RoundSummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummaryView.swift; sourceTree = "<group>"; };
 		E856407E92DD3E7E4EC458BC /* LiveNearbyDiscoveryClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNearbyDiscoveryClientTests.swift; sourceTree = "<group>"; };
@@ -274,6 +271,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93BDDE9BB3DD4F18A7A26E3F /* HyzerKit in Frameworks */,
+				603B6FC574DBFC18AA856CD1 /* TestSupport in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,8 +395,6 @@
 		A328280BAEB8C4DC952A5113 /* Mocks */ = {
 			isa = PBXGroup;
 			children = (
-				DF0A9F64F278D5DBF1816B3E /* MockNearbyDiscoveryClient.swift */,
-				D8CD7CF9330B29C97364DED1 /* MockNotificationService.swift */,
 				C98688BE6063C2F5A47B1BEF /* MockVoiceRecognitionService.swift */,
 			);
 			path = Mocks;
@@ -626,6 +622,7 @@
 			name = HyzerAppTests;
 			packageProductDependencies = (
 				FBF7E3B49360BEFE78202833 /* HyzerKit */,
+				CB657E8D6E74C6E6C7789E9D /* TestSupport */,
 			);
 			productName = HyzerAppTests;
 			productReference = 1C7BA35CCB400F30E2359CFE /* HyzerAppTests.xctest */;
@@ -788,8 +785,6 @@
 				17C5DF72F791C9BF1580C6F6 /* LiveNearbyDiscoveryClientEncodingTests.swift in Sources */,
 				A01F23D80E414679314750B0 /* LiveNearbyDiscoveryClientTests.swift in Sources */,
 				712031849A9C1ACCA62FF22B /* LiveNotificationServiceTests.swift in Sources */,
-				7691995AA04ABB5E80EFCFD3 /* MockNearbyDiscoveryClient.swift in Sources */,
-				5DE82CF7F408827D47669F2E /* MockNotificationService.swift in Sources */,
 				7786FCF97AD45E381EA39B83 /* MockVoiceRecognitionService.swift in Sources */,
 				A96BC87130D06BB117DA9903 /* OnboardingViewModelTests.swift in Sources */,
 				87094E64AE09659B8AED57C0 /* PersonalBestViewModelTests.swift in Sources */,
@@ -1210,6 +1205,10 @@
 		BAC383C18DE2169D84F62B75 /* HyzerKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = HyzerKit;
+		};
+		CB657E8D6E74C6E6C7789E9D /* TestSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TestSupport;
 		};
 		FBF7E3B49360BEFE78202833 /* HyzerKit */ = {
 			isa = XCSwiftPackageProductDependency;
