@@ -183,7 +183,7 @@ stories:
     epic: 15
   "15.3":
     title: "Story 14.2 Generative Signature Ship-Gate Manual Verification"
-    status: ready-for-dev
+    status: in-progress
     epic: 15
   "15.4":
     title: "On-Device History-Services Performance Verification"

@@ -1,6 +1,6 @@
 # Story 15.3: Story 14.2 Generative Signature Ship-Gate Manual Verification
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -33,19 +33,19 @@ So that the merged feature is verified by observation, not inferred from code st
   - [ ] 1.4 Once the round transitions to `.completed`, the round summary card appears. Verify visually that the signature is present between the standings divider and the metadata divider — this confirms Story 14.2 Task 6.2 wiring is intact.
   - [ ] 1.5 Capture a screenshot of the live round summary view (signature visible) to `_bmad-output/implementation-artifacts/15-3-evidence/live-signature-render.png`. Use the simulator's native screenshot command (`Cmd-S` or `xcrun simctl io booted screenshot`).
 
-- [ ] **Task 2: Palette contrast spot-check against `backgroundElevated`** (AC: 2)
-  - [ ] 2.1 Open Apple's Color Contrast Analyzer (free, from `https://developer.apple.com/design/human-interface-guidelines/color`) or another 4.5:1-validating tool. Story 14.2 dev notes also reference this as the verification method (line 455).
-  - [ ] 2.2 Read the 8 palette colors from `HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift` to capture their actual hex values (the tokens reference dark-first specs; confirm by reading the file). The 8 tokens to check are listed in Story 14.2 Task 3.1: `scoreUnderPar`, `scoreAtPar`, `scoreOverPar`, `scoreWayOver`, `accentPrimary`, `textPrimary`, `textSecondary`, `backgroundTertiary`.
-  - [ ] 2.3 Read the `backgroundElevated` value from the same file (expected: `#1C1C1E` per Story 14.2 dev notes line 455).
-  - [ ] 2.4 Measure each foreground/background pair. Record results in a markdown table at `_bmad-output/implementation-artifacts/15-3-evidence/contrast-report.md`:
+- [~] **Task 2: Palette contrast spot-check against `backgroundElevated`** (AC: 2)
+  - [~] 2.1 Open Apple's Color Contrast Analyzer (free, from `https://developer.apple.com/design/human-interface-guidelines/color`) or another 4.5:1-validating tool. Story 14.2 dev notes also reference this as the verification method (line 455). (Automated: WCAG 2.1 formula applied programmatically from hex values; CA tool not opened interactively.)
+  - [x] 2.2 Read the 8 palette colors from `HyzerKit/Sources/HyzerKit/Design/ColorTokens.swift` to capture their actual hex values (the tokens reference dark-first specs; confirm by reading the file). The 8 tokens to check are listed in Story 14.2 Task 3.1: `scoreUnderPar`, `scoreAtPar`, `scoreOverPar`, `scoreWayOver`, `accentPrimary`, `textPrimary`, `textSecondary`, `backgroundTertiary`.
+  - [x] 2.3 Read the `backgroundElevated` value from the same file (expected: `#1C1C1E` per Story 14.2 dev notes line 455). Confirmed: #1C1C1E.
+  - [x] 2.4 Measure each foreground/background pair. Record results in a markdown table at `_bmad-output/implementation-artifacts/15-3-evidence/contrast-report.md`:
     ```
     | Token | Hex | Contrast vs. backgroundElevated (#1C1C1E) | Result |
     |---|---|---|---|
     | scoreUnderPar | #... | X.YZ:1 | 🟩 PASS / 🟥 FAIL |
     | ... | ... | ... | ... |
     ```
-  - [ ] 2.5 For every entry that falls below 4.5:1, append a short follow-up note documenting one of two options: (a) replace the token in the signature palette with an alternative that passes, OR (b) constrain the failing token to outline-only treatment in `RoundSignature` (which has lower contrast requirements than a solid fill). Do NOT make the code change in this story — file the follow-up as a separate issue per Story 14.2 review-findings deferral.
-  - [ ] 2.6 If ALL entries pass, note in Completion Notes: `"All 8 palette entries clear 4.5:1 against backgroundElevated. No follow-up required."`
+  - [x] 2.5 For every entry that falls below 4.5:1, append a short follow-up note documenting one of two options: (a) replace the token in the signature palette with an alternative that passes, OR (b) constrain the failing token to outline-only treatment in `RoundSignature` (which has lower contrast requirements than a solid fill). Do NOT make the code change in this story — file the follow-up as a separate issue per Story 14.2 review-findings deferral. (backgroundTertiary FAIL documented with proposed fix in contrast-report.md.)
+  - [x] 2.6 If ALL entries pass, note in Completion Notes: `"All 8 palette entries clear 4.5:1 against backgroundElevated. No follow-up required."` (7/8 foreground tokens pass; backgroundTertiary is background-layer token — see contrast-report.md notes.)
 
 - [ ] **Task 3: PNG export and AirDrop verification** (AC: 3)
   - [ ] 3.1 From the round summary view in Task 1.4, tap "Share Results" (the bottom-of-card primary CTA per Story 11.3). The system share sheet appears.
@@ -201,7 +201,7 @@ This story is a verification story: it produces evidence, not code. The committe
 
 ### Agent Model Used
 
-<!-- Filled by dev agent during execution -->
+claude-sonnet-4-6
 
 ### Debug Log References
 
@@ -209,12 +209,17 @@ This story is a verification story: it produces evidence, not code. The committe
 
 ### Completion Notes List
 
-<!-- Filled by dev agent during execution -->
+- Contrast calculations complete — see contrast-report.md in evidence dir. 7 of 8 palette tokens pass WCAG 2.1 AA (≥4.5:1) against backgroundElevated (#1C1C1E). The single failing entry is backgroundTertiary (#2C2C2E, 1.21:1), a background-layer token whose near-1:1 contrast against backgroundElevated is expected by design; a usage-role audit in RoundSignature.swift is recommended before filing a follow-up issue.
+- Tasks 1 (live render screenshot), 3 (PNG export + AirDrop), 4 (VoiceOver utterance), 5 (Reduce Motion comparison) require human simulator interaction and cannot be automated in a non-interactive execution context. Story status: in-progress pending human verification.
 
 ### File List
 
-<!-- Filled by dev agent during execution -->
+- `_bmad-output/implementation-artifacts/15-3-evidence/README.md` [NEW — evidence directory scaffold]
+- `_bmad-output/implementation-artifacts/15-3-evidence/contrast-report.md` [NEW — WCAG 2.1 contrast ratios, 8-token table, fail notes]
+- `_bmad-output/implementation-artifacts/deferred-work.md` [EDIT — replaced Story 14.2 manual-verification bullet with Story 15.3 in-progress note]
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` [EDIT — Story 15.3 status: ready-for-dev → in-progress]
+- `_bmad-output/implementation-artifacts/15-3-generative-signature-ship-gate-verification.md` [EDIT — this file, agent record fields populated]
 
 ### Change Log
 
-<!-- Filled by dev agent during execution -->
+- 2026-05-18: Evidence directory scaffold created; WCAG 2.1 contrast report pre-populated; deferred-work.md and sprint-status.yaml updated. Tasks 1/3/4/5 deferred to human simulator verification.
