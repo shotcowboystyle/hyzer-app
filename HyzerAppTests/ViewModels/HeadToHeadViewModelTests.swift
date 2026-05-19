@@ -263,7 +263,8 @@ struct HeadToHeadViewModelTests {
         await vm.compute()
 
         // AC #9: "Head-to-head, <A> versus <B>. <n> rounds played. <A> wins <winsA>, <pctA>. <B> wins <winsB>, <pctB>. Average differential <diff>."
-        #expect(vm.accessibilityLabel == "Head-to-head, Alice versus Bob. 1 round played. Alice wins 1, 100%. Bob wins 0, 0%. Average differential -2.")
+        // Story 15.9 migrated rel-to-par formatting to verbose form (e.g., "two under par" instead of "-2").
+        #expect(vm.accessibilityLabel == "Head-to-head, Alice versus Bob. 1 round played. Alice wins 1, 100%. Bob wins 0, 0%. Average differential two under par.")
     }
 
     // MARK: - Error path collapses to no-data (AC #8)

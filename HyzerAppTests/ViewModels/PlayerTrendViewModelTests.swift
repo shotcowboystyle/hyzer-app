@@ -169,8 +169,10 @@ struct PlayerTrendViewModelTests {
         let vm = PlayerTrendViewModel(modelContext: context, playerID: playerID, playerName: "Mike")
         await vm.compute()
 
-        // scores: -3, -1, 0, +2, +5 → best=-3, worst=+5, avg=3/5=0.6 → rounds to 1 → "+1"
-        let expected = "Score trend for Mike: 5 rounds, best -3, worst +5, average +1"
+        // scores: -3, -1, 0, +2, +5 → best=-3, worst=+5, avg=3/5=0.6 → rounds to 1.
+        // Story 15.9 migrated the chart-summary rel-to-par formatting to verbose form
+        // (e.g., "three under par" instead of "-3").
+        let expected = "Score trend for Mike: 5 rounds, best three under par, worst five over par, average one over par"
         #expect(vm.accessibilityChartSummary == expected)
     }
 
