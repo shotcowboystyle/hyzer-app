@@ -188,7 +188,7 @@ stories:
     epic: 15
   "15.7":
     title: "Extract Shared TestSupport SPM Target (ValueCollector, MockNotificationService, MockNearbyDiscoveryClient)"
-    status: ready-for-dev
+    status: done
     epic: 15
   "15.8":
     title: "Deterministic-Wait Test Helper (Task.sleep Replacement)"

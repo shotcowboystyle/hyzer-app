@@ -112,7 +112,7 @@ Branch protection enforces Git Flow. Branches must follow: `feature/<name>`, `re
 
 From the Epics 1–8 retrospective (`_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md`):
 
-- `ValueCollector` test helper duplicated across multiple test files — needs extraction to shared utility
+- `ValueCollector`, `MockNotificationService`, and `MockNearbyDiscoveryClient` consolidated into `HyzerKit/Tests/TestSupport/` (shared SPM target, resolved by Story 15.7). **New shared helpers go here.**
 - `Task.sleep(for: .milliseconds(100))` flaky timing pattern in tests — replace with deterministic waits
 - `ShareSheetRepresentable` duplicated in two History views — extract to shared component
 - `ConflictResult` missing `Equatable` conformance

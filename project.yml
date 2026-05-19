@@ -110,6 +110,8 @@ targets:
       - target: HyzerApp
       - package: HyzerKit
         product: HyzerKit
+      - package: HyzerKit
+        product: TestSupport
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.shotcowboystyle.hyzerapp.tests

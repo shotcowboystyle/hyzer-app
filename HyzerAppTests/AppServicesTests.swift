@@ -5,6 +5,7 @@ import Foundation
 import UIKit
 @testable import HyzerKit
 @testable import HyzerApp
+import TestSupport
 
 // MARK: - Test stubs
 

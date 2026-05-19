@@ -3,6 +3,7 @@ import Foundation
 import SwiftData
 import CloudKit
 @testable import HyzerKit
+import TestSupport
 
 // MARK: - SyncRecoveryTests
 
