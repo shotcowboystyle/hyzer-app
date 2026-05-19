@@ -65,13 +65,27 @@ struct HyzerApp: App {
     /// 2. If the domain store fails, delete both stores and recreate them
     ///    (safe: CloudKit holds the full event history; SyncEngine will re-pull).
     private static func makeModelContainer() -> ModelContainer {
+        // Explicitly disable SwiftData's built-in CloudKit mirroring on both
+        // stores. CLAUDE.md "Data & Persistence" makes this an architectural
+        // requirement ("SwiftData's built-in `.cloudKit` sync is intentionally
+        // NOT used — only supports private DB; this app needs the public DB
+        // for shared rounds"); the manual CloudKit push/pull lives in
+        // `CloudKitClient` / `SyncEngine`. Without `cloudKitDatabase: .none`,
+        // SwiftData defaults to `.automatic`, which (since the iCloud
+        // entitlement is present) triggers `NSPersistentCloudKitContainer`
+        // mirroring at store init and fails on any device without an iCloud
+        // account (e.g., CI simulators: `CKAccountStatusNoAccount`). The
+        // failure is recorded as a system issue in the xcresult and marks
+        // `xcodebuild test` as FAILED even when every test suite passes.
         let domainConfig = ModelConfiguration(
             "DomainStore",
-            schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self])
+            schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self]),
+            cloudKitDatabase: .none
         )
         let operationalConfig = ModelConfiguration(
             "OperationalStore",
-            schema: Schema([SyncMetadata.self])
+            schema: Schema([SyncMetadata.self]),
+            cloudKitDatabase: .none
         )
 
         // Attempt 1: normal startup with both stores
@@ -85,7 +99,8 @@ struct HyzerApp: App {
             deleteStore(named: "OperationalStore")
             let freshOperational = ModelConfiguration(
                 "OperationalStore",
-                schema: Schema([SyncMetadata.self])
+                schema: Schema([SyncMetadata.self]),
+                cloudKitDatabase: .none
             )
             do {
                 return try ModelContainer(
@@ -99,11 +114,13 @@ struct HyzerApp: App {
                 deleteStore(named: "OperationalStore")
                 let freshDomain = ModelConfiguration(
                     "DomainStore",
-                    schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self])
+                    schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, Discrepancy.self]),
+                    cloudKitDatabase: .none
                 )
                 let freshOp = ModelConfiguration(
                     "OperationalStore",
-                    schema: Schema([SyncMetadata.self])
+                    schema: Schema([SyncMetadata.self]),
+                    cloudKitDatabase: .none
                 )
                 do {
                     return try ModelContainer(

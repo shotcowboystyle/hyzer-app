@@ -115,6 +115,17 @@ jobs:
           xcrun simctl boot "$DEVICE_ID" || true
 
       - name: Run HyzerApp tests
+        # NOTE on code signing for the simulator:
+        # The prior `CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO`
+        # triple disabled code signing entirely, which silently strips
+        # entitlements from the simulator build. HyzerApp needs
+        # `com.apple.developer.icloud-services` at runtime (CloudKit container)
+        # — without it, `CKContainer` errors and the test host signal-traps
+        # before tests run (Story 15.2 layer-6 bootstrap-crash deferred-work
+        # entry). Switch to ad-hoc signing (`CODE_SIGN_IDENTITY=-`, the "Sign
+        # to Run Locally" identity) so the simulator build still receives the
+        # entitlements without requiring a real Apple Development certificate
+        # on the runner.
         run: |
           set -o pipefail
           xcodebuild test \
@@ -123,9 +134,10 @@ jobs:
             -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.device_id }}" \
             -resultBundlePath TestResults.xcresult \
             -enableCodeCoverage YES \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
             2>&1 | tee xcodebuild-test-output.txt
 
       - name: Upload test results on failure

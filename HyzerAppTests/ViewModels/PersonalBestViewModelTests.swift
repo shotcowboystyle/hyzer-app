@@ -204,7 +204,9 @@ struct PersonalBestViewModelTests {
         expectedFormatter.dateStyle = .medium
         expectedFormatter.timeStyle = .none
         let dateString = expectedFormatter.string(from: fixedDate)
-        let expected = "Your personal best: 6 strokes, -3, on \(dateString)"
+        // Story 15.9 migrated the PB rel-to-par a11y formatting to verbose form
+        // (e.g., "three under par" instead of "-3").
+        let expected = "Your personal best: 6 strokes, three under par, on \(dateString)"
         #expect(vm.accessibilityLabel == expected)
     }
 
