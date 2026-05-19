@@ -93,6 +93,33 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      - name: Diagnose simulator/runtime environment
+        run: |
+          echo "===== xcode-select -p ====="
+          xcode-select -p
+          echo
+          echo "===== xcodebuild -version ====="
+          xcodebuild -version
+          echo
+          echo "===== xcrun simctl list runtimes ====="
+          xcrun simctl list runtimes
+          echo
+          echo "===== xcrun simctl list runtimes -j (JSON for parsing) ====="
+          xcrun simctl list runtimes -j
+          echo
+          echo "===== xcrun simctl list devices available ====="
+          xcrun simctl list devices available
+          echo
+          echo "===== Available SDKs ====="
+          xcodebuild -showsdks
+          echo
+          echo "===== HyzerApp scheme destinations ====="
+          xcodebuild -showdestinations -project HyzerApp.xcodeproj -scheme HyzerApp 2>&1 | head -50
+          echo
+          echo "===== Available platforms ====="
+          ls /Applications/Xcode_16.2.app/Contents/Developer/Platforms/ 2>&1 || true
+          ls /Library/Developer/CoreSimulator/Profiles/Runtimes/ 2>&1 || true
+
       - name: Find simulator
         id: sim
         run: |
