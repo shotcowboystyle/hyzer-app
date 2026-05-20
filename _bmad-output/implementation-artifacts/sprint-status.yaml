@@ -203,7 +203,7 @@ stories:
     epic: 15
   "15.8":
     title: "Deterministic-Wait Test Helper (Task.sleep Replacement)"
-    status: ready-for-dev
+    status: review
     epic: 15
   "15.9":
     title: "VoiceOver-Friendly Score Formatter (E → even par)"

@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 @testable import HyzerKit
+import TestSupport
 
 @Suite("WatchVoiceViewModel")
 @MainActor
@@ -205,16 +206,14 @@ struct WatchVoiceViewModelTests {
         let result = WatchVoiceResult(result: .success(candidates), holeNumber: holeNumber, roundID: roundID)
         vm.handleVoiceResult(result)
 
-        // Use deterministic polling — exits as soon as condition is met, with 8s safety budget.
-        let committed = await awaitCondition(timeout: .seconds(8)) {
-            if case .committed = vm.state { return true }
-            return false
-        }
-
-        guard committed else {
-            Issue.record("Expected .committed state after auto-commit timer (4s budget)")
-            return
-        }
+        // waitUntil polls until .committed — exits as soon as condition is met.
+        // 15s budget accounts for MainActor scheduling pressure under full-suite parallelism.
+        // Note: the timer itself fires after 1.5s; the extra budget is CI headroom only.
+        try await waitUntil(
+            { if case .committed = vm.state { return true }; return false },
+            timeout: .seconds(15),
+            conditionDescription: "auto-commit timer fires and transitions to .committed"
+        )
         #expect(client.transferredMessages.count == 1)
     }
 

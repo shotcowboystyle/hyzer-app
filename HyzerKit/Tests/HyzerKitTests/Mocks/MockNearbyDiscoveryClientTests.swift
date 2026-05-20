@@ -7,29 +7,28 @@ import TestSupport
 struct MockNearbyDiscoveryClientTests {
 
     @Test("simulateFoundPeer yields payload on stream")
-    func test_simulateFoundPeer_yieldsPayloadOnStream() async {
+    func test_simulateFoundPeer_yieldsPayloadOnStream() async throws {
         let mock = MockNearbyDiscoveryClient()
         let roundID = UUID()
         let playerIDs = ["player-1", "player-2"]
-        var received: DiscoveredRoundPayload?
+        let collector = ValueCollector<DiscoveredRoundPayload>()
 
-        // Start consuming the stream before simulating. The Task captures the
-        // continuation assignment which happens synchronously in the AsyncStream block.
+        // Start consuming the stream before simulating. The MockNearbyDiscoveryClient
+        // uses unbounded AsyncStream buffering so events injected before subscription
+        // are buffered — one yield is enough to start the consuming task.
         let task = Task {
             for await payload in mock.discoveredRounds {
-                received = payload
+                await collector.append(payload)
                 return
             }
         }
 
-        // Brief yield to allow the Task to subscribe before we inject.
-        // Deferred work: replace with deterministic wait once the project-wide
-        // flaky-timing pattern (CLAUDE.md "Task.sleep pattern") is resolved.
-        try? await Task.sleep(for: .milliseconds(20))
+        await Task.yield()
         mock.simulateFoundPeer(roundID: roundID, playerIDs: playerIDs)
-        try? await Task.sleep(for: .milliseconds(20))
+        try await waitUntil({ await collector.count >= 1 }, conditionDescription: "stream yields payload")
         task.cancel()
 
+        let received = await collector.values.first
         #expect(received?.roundID == roundID)
         #expect(received?.playerIDs == playerIDs)
     }

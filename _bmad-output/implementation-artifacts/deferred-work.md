@@ -115,7 +115,7 @@ This is the residual layer of the CI-honesty onion peeled in PR #104. Five layer
 ## Deferred from: code review of 14-1-multipeerconnectivity-nearby-active-round-discovery (2026-05-18)
 
 - ~~Duplicate `MockNearbyDiscoveryClient` files~~ — resolved by Story 15.7. Canonical location: `HyzerKit/Tests/TestSupport/`.
-- Tests use `for _ in 0..<20 { await Task.yield() }` and `try? await Task.sleep(for: .milliseconds(20))` to wait for async pipeline propagation — CLAUDE.md known flaky-timing tech debt, authorized by Story 14.1 spec line 390. Needs deterministic-wait helper.
+- ~~Tests use `for _ in 0..<20 { await Task.yield() }` and `try? await Task.sleep(for: .milliseconds(20))` to wait for async pipeline propagation — CLAUDE.md known flaky-timing tech debt.~~ _Resolved by Story 15.8 — `waitUntil` deterministic-wait helper added to TestSupport; flaky patterns migrated. (2026-05-19)_
 - `test_handleDiscoveredRound_throttleWindow_secondCallAfter30sTriggersAgain` missing — Story 14.1 spec Task 7.1 authorized deferral absent a controllable-clock seam on `AppServices`. Re-evaluate when `lastPullByRoundID` clock source is refactored to `ContinuousClock`.
 - Round.playerIDs mid-game mutation does NOT re-advertise an updated TXT record — Story 14.1 spec line 514 explicitly out of scope; CloudKit subscription path (FR16b) handles late joiners. Re-evaluate if observed in field debugging.
 - `AppServicesNearbyDiscoveryTests` asserts on `cloudKit.fetchCallCount` as a proxy for `syncEngine.pullRecords()` invocations — couples test to transitive `SyncEngine` impl. Replace with a direct hook on `AppServices.pullTrigger` (closure seam) in a follow-up.

@@ -112,7 +112,10 @@ struct AppServicesNearbyDiscoveryTests {
         _ = localID // local player is in the context; payload deliberately excludes them
 
         let syncTask = Task { @MainActor in await services.startSync() }
-        for _ in 0..<20 { await Task.yield() }
+        try await waitUntil(
+            { cloudKit.fetchCallCount > 0 },
+            conditionDescription: "startSync completes initial pull"
+        )
 
         // Capture fetch count AFTER startSync's initial pullRecords has settled — this
         // isolates the assertion to the effect of `simulateFoundPeer` alone.
@@ -121,6 +124,8 @@ struct AppServicesNearbyDiscoveryTests {
         // Inject a payload where local user is NOT in the playerIDs list.
         let differentPlayerID = UUID().uuidString
         mockNearby.simulateFoundPeer(roundID: UUID(), playerIDs: [differentPlayerID])
+        // Deliberate guard: allow the async pipeline to process this ignored event.
+        // Negative assertion — waitUntil requires a positive condition to poll.
         for _ in 0..<20 { await Task.yield() }
 
         syncTask.cancel()
@@ -149,13 +154,18 @@ struct AppServicesNearbyDiscoveryTests {
         try container.mainContext.save()
 
         let syncTask = Task { @MainActor in await services.startSync() }
-        for _ in 0..<20 { await Task.yield() }
+        try await waitUntil(
+            { cloudKit.fetchCallCount > 0 },
+            conditionDescription: "startSync completes initial pull"
+        )
 
         // Capture fetch count AFTER startSync's initial pullRecords has settled — this
         // isolates the assertion to the effect of `simulateFoundPeer` alone.
         let baselineFetchCount = cloudKit.fetchCallCount
 
         mockNearby.simulateFoundPeer(roundID: round.id, playerIDs: [localID.uuidString])
+        // Deliberate guard: allow the async pipeline to process this ignored event.
+        // Negative assertion — waitUntil requires a positive condition to poll.
         for _ in 0..<20 { await Task.yield() }
 
         syncTask.cancel()
@@ -180,7 +190,10 @@ struct AppServicesNearbyDiscoveryTests {
         let roundID = UUID()
 
         let syncTask = Task { @MainActor in await services.startSync() }
-        for _ in 0..<20 { await Task.yield() }
+        try await waitUntil(
+            { cloudKit.fetchCallCount > 0 },
+            conditionDescription: "startSync completes initial pull"
+        )
 
         // Capture fetch count AFTER startSync's initial pullRecords has settled — this
         // isolates the assertion to the effect of `simulateFoundPeer` alone.
@@ -188,10 +201,15 @@ struct AppServicesNearbyDiscoveryTests {
 
         // First injection: round is not in SwiftData → should pull (one new fetch).
         mockNearby.simulateFoundPeer(roundID: roundID, playerIDs: [localID.uuidString])
-        for _ in 0..<20 { await Task.yield() }
+        try await waitUntil(
+            { cloudKit.fetchCallCount > baselineFetchCount },
+            conditionDescription: "first peer discovery triggers pull"
+        )
 
         // Second injection within 30s: throttle should suppress (no new fetch).
         mockNearby.simulateFoundPeer(roundID: roundID, playerIDs: [localID.uuidString])
+        // Deliberate guard: allow the async pipeline to process the throttled event.
+        // Negative assertion — waitUntil requires a positive condition to poll.
         for _ in 0..<20 { await Task.yield() }
 
         syncTask.cancel()

@@ -131,8 +131,8 @@ struct AppServicesTests {
         let mockNotif = MockNotificationService()
         let services = try makeServices(notificationService: mockNotif)
 
-        // Run startSync; yield deterministically to let internal awaits make progress
-        // without a timing-based Task.sleep (retro-debt rule from CLAUDE.md).
+        // Deliberate guard: allow startSync to run far enough to confirm no authorization request.
+        // Negative assertion — waitUntil requires a positive condition; use yield turns instead.
         let task = Task { @MainActor in
             await services.startSync()
         }

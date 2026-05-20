@@ -113,7 +113,7 @@ Branch protection enforces Git Flow. Branches must follow: `feature/<name>`, `re
 From the Epics 1–8 retrospective (`_bmad-output/implementation-artifacts/epics-1-8-retro-2026-04-07.md`):
 
 - `ValueCollector`, `MockNotificationService`, and `MockNearbyDiscoveryClient` consolidated into `HyzerKit/Tests/TestSupport/` (shared SPM target, resolved by Story 15.7). **New shared helpers go here.**
-- `Task.sleep(for: .milliseconds(100))` flaky timing pattern in tests — replace with deterministic waits
+- Deterministic wait helper: use `TestSupport.waitUntil` for async-pipeline propagation tests; see `HyzerKit/Tests/TestSupport/WaitUntil.swift` doc comment for when-to-use vs. when-not-to-use guidance. (Resolved by Story 15.8)
 - `ShareSheetRepresentable` duplicated in two History views — extract to shared component
 - `ConflictResult` missing `Equatable` conformance
 - `SyncScheduler` uses `UserDefaults.standard` directly — testability concern
