@@ -14,8 +14,10 @@ struct WaitUntilTests {
     @Test("returns after several polls when condition becomes true on the Nth call")
     func test_waitUntil_returns_whenConditionBecomesTrueAfterSeveralPolls() async throws {
         var callCount = 0
-        // Generous timeout: under full 432-test parallel load, MainActor re-acquisition
-        // after each clock.sleep can take several seconds. 3 polls at any rate is fast.
+        // 30s timeout is load-bearing: under full 432-test parallel load, MainActor
+        // re-acquisition after each clock.sleep can take 1–3 seconds. A measured run
+        // at 5s timed out at ~10s elapsed for just 3 polls. Do NOT tighten without
+        // first removing the parallel-load source (e.g., `@Suite(.serialized)`).
         try await waitUntil(
             {
                 callCount += 1
@@ -38,7 +40,7 @@ struct WaitUntilTests {
             )
             Issue.record("Expected waitUntil to throw WaitUntilError.timeout")
         } catch let error as WaitUntilError {
-            if case .timeout(_, let condition) = error {
+            if case .timeout(_, let condition, _) = error {
                 #expect(condition == "never-true condition")
             } else {
                 Issue.record("Unexpected WaitUntilError case: \(error)")
@@ -48,8 +50,12 @@ struct WaitUntilTests {
         }
     }
 
-    /// Time-based test — may flake under extreme CI load. Loose bounds (≥2 polls in 100ms)
-    /// should be robust; if it flakes consistently, mark `.disabled` and note follow-up.
+    /// Time-based test — loose bounds (`>= 2` polls) are load-bearing. Under full
+    /// 432-test parallel suite, each `clock.sleep(20ms)` can take ~50ms+ due to
+    /// MainActor pressure, so the helper completes only 2 polls in a 100ms window.
+    /// A broken impl polling every 49ms would also pass `>= 2`; the strict regression
+    /// detector here is the CancellationError catch — it asserts the helper does not
+    /// silently swallow cancellation as a timeout.
     @Test("respects pollInterval timing approximately")
     func test_waitUntil_respectsPollInterval() async throws {
         var pollCount = 0
@@ -65,12 +71,15 @@ struct WaitUntilTests {
                 pollInterval: .milliseconds(20),
                 conditionDescription: "counting polls"
             )
+            Issue.record("Expected waitUntil to throw WaitUntilError.timeout")
         } catch is WaitUntilError {
             // Expected timeout
+        } catch is CancellationError {
+            Issue.record("Unexpected CancellationError — test task should not be cancelled")
+            return
         }
 
         let elapsed = ContinuousClock.now - start
-        // With 100ms timeout and 20ms polls: expect ≥2 polls even under CI load.
         #expect(pollCount >= 2, "expected at least 2 polls in 100ms window, got \(pollCount)")
         #expect(elapsed >= .milliseconds(80), "elapsed \(elapsed) should be at least 80ms")
     }

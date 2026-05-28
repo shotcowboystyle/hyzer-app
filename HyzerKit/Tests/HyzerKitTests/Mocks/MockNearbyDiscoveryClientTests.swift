@@ -13,9 +13,10 @@ struct MockNearbyDiscoveryClientTests {
         let playerIDs = ["player-1", "player-2"]
         let collector = ValueCollector<DiscoveredRoundPayload>()
 
-        // Start consuming the stream before simulating. The MockNearbyDiscoveryClient
-        // uses unbounded AsyncStream buffering so events injected before subscription
-        // are buffered — one yield is enough to start the consuming task.
+        // MockNearbyDiscoveryClient uses the default unbounded AsyncStream buffering
+        // (see MockNearbyDiscoveryClient.swift:32 — `AsyncStream.makeStream` default),
+        // so the order of subscription and injection is irrelevant: events injected
+        // before subscription are buffered until the consumer subscribes.
         let task = Task {
             for await payload in mock.discoveredRounds {
                 await collector.append(payload)
@@ -23,7 +24,6 @@ struct MockNearbyDiscoveryClientTests {
             }
         }
 
-        await Task.yield()
         mock.simulateFoundPeer(roundID: roundID, playerIDs: playerIDs)
         try await waitUntil({ await collector.count >= 1 }, conditionDescription: "stream yields payload")
         task.cancel()
