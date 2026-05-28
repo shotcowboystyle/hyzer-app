@@ -131,12 +131,21 @@ struct AppServicesTests {
         let mockNotif = MockNotificationService()
         let services = try makeServices(notificationService: mockNotif)
 
-        // Deliberate guard: allow startSync to run far enough to confirm no authorization request.
-        // Negative assertion — waitUntil requires a positive condition; use yield turns instead.
         let task = Task { @MainActor in
             await services.startSync()
         }
-        for _ in 0..<20 { await Task.yield() }
+        // Inverted waitUntil: poll for the (unwanted) authorization call — if it
+        // DOES fire within 200ms the trailing #expect fails; if not, lazy-permission
+        // contract is upheld.
+        do {
+            try await waitUntil(
+                { mockNotif.requestAuthorizationCallCount > 0 },
+                timeout: .milliseconds(200),
+                conditionDescription: "startSync must NOT invoke requestAuthorization"
+            )
+        } catch is WaitUntilError {
+            // Expected: lazy-permission contract held during the suppression window.
+        }
         task.cancel()
 
         #expect(mockNotif.requestAuthorizationCallCount == 0)

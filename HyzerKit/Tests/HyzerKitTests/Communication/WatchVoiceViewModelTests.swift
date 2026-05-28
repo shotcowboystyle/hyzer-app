@@ -207,13 +207,20 @@ struct WatchVoiceViewModelTests {
         vm.handleVoiceResult(result)
 
         // waitUntil polls until .committed — exits as soon as condition is met.
-        // 15s budget accounts for MainActor scheduling pressure under full-suite parallelism.
-        // Note: the timer itself fires after 1.5s; the extra budget is CI headroom only.
+        // 15s budget is CI headroom; the timer itself fires after 1.5s. Upper-bound
+        // assertion below catches catastrophic regressions (timer growing past the
+        // budget envelope) without being so tight that MainActor scheduling slack
+        // under full-suite parallel load causes false-positive failures. Measured
+        // under load: elapsed ≈ 11s for the 1.5s timer; 14s bound catches a 10x+
+        // regression that pushes elapsed near the 15s timeout ceiling.
+        let start = ContinuousClock.now
         try await waitUntil(
             { if case .committed = vm.state { return true }; return false },
             timeout: .seconds(15),
             conditionDescription: "auto-commit timer fires and transitions to .committed"
         )
+        let elapsed = ContinuousClock.now - start
+        #expect(elapsed < .seconds(14), "auto-commit took \(elapsed); expected < 14s (timer fires at 1.5s; bound catches budget-saturating regressions)")
         #expect(client.transferredMessages.count == 1)
     }
 

@@ -2,11 +2,11 @@ import Foundation
 import Testing
 
 public enum WaitUntilError: Error, CustomStringConvertible {
-    case timeout(elapsed: Duration, condition: String)
+    case timeout(elapsed: Duration, condition: String, sourceLocation: SourceLocation)
 
     public var description: String {
         switch self {
-        case .timeout(let elapsed, let condition):
+        case .timeout(let elapsed, let condition, _):
             return "waitUntil timed out after \(elapsed) while waiting for: \(condition)"
         }
     }
@@ -45,9 +45,11 @@ public func waitUntil(
     sourceLocation: SourceLocation = #_sourceLocation
 ) async throws {
     let clock = ContinuousClock()
-    let deadline = clock.now.advanced(by: timeout)
+    let start = clock.now
+    let deadline = start.advanced(by: timeout)
 
     while clock.now < deadline {
+        try Task.checkCancellation()
         if await condition() { return }
         try await clock.sleep(for: pollInterval)
     }
@@ -56,5 +58,14 @@ public func waitUntil(
     // the condition becomes true precisely at the deadline.
     if await condition() { return }
 
-    throw WaitUntilError.timeout(elapsed: timeout, condition: conditionDescription)
+    let elapsed = clock.now - start
+    // Attach sourceLocation to the error so callers who catch the timeout (e.g.,
+    // inverted-waitUntil negative assertions) can re-report it at their call site.
+    // For uncaught throws, Swift Testing attributes the failure to the test
+    // function — which is already the caller's file:line.
+    throw WaitUntilError.timeout(
+        elapsed: elapsed,
+        condition: conditionDescription,
+        sourceLocation: sourceLocation
+    )
 }

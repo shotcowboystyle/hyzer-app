@@ -124,9 +124,18 @@ struct AppServicesNearbyDiscoveryTests {
         // Inject a payload where local user is NOT in the playerIDs list.
         let differentPlayerID = UUID().uuidString
         mockNearby.simulateFoundPeer(roundID: UUID(), playerIDs: [differentPlayerID])
-        // Deliberate guard: allow the async pipeline to process this ignored event.
-        // Negative assertion — waitUntil requires a positive condition to poll.
-        for _ in 0..<20 { await Task.yield() }
+        // Inverted waitUntil: poll for the (unwanted) positive — if a fetch DOES
+        // fire within 200ms, waitUntil returns and the trailing #expect fails;
+        // if it doesn't, waitUntil throws and we proceed to the assertion.
+        do {
+            try await waitUntil(
+                { cloudKit.fetchCallCount > baselineFetchCount },
+                timeout: .milliseconds(200),
+                conditionDescription: "filtered payload must NOT trigger pull"
+            )
+        } catch is WaitUntilError {
+            // Expected: no pull fired within the suppression window.
+        }
 
         syncTask.cancel()
         #expect(
@@ -164,9 +173,18 @@ struct AppServicesNearbyDiscoveryTests {
         let baselineFetchCount = cloudKit.fetchCallCount
 
         mockNearby.simulateFoundPeer(roundID: round.id, playerIDs: [localID.uuidString])
-        // Deliberate guard: allow the async pipeline to process this ignored event.
-        // Negative assertion — waitUntil requires a positive condition to poll.
-        for _ in 0..<20 { await Task.yield() }
+        // Inverted waitUntil: poll for the (unwanted) positive — if a fetch DOES
+        // fire within 200ms, waitUntil returns and the trailing #expect fails;
+        // if it doesn't, waitUntil throws and we proceed to the assertion.
+        do {
+            try await waitUntil(
+                { cloudKit.fetchCallCount > baselineFetchCount },
+                timeout: .milliseconds(200),
+                conditionDescription: "already-materialized round must NOT trigger pull"
+            )
+        } catch is WaitUntilError {
+            // Expected: no pull fired within the suppression window.
+        }
 
         syncTask.cancel()
         #expect(
@@ -207,10 +225,20 @@ struct AppServicesNearbyDiscoveryTests {
         )
 
         // Second injection within 30s: throttle should suppress (no new fetch).
+        let afterFirstPullFetchCount = cloudKit.fetchCallCount
         mockNearby.simulateFoundPeer(roundID: roundID, playerIDs: [localID.uuidString])
-        // Deliberate guard: allow the async pipeline to process the throttled event.
-        // Negative assertion — waitUntil requires a positive condition to poll.
-        for _ in 0..<20 { await Task.yield() }
+        // Inverted waitUntil: poll for the (unwanted) second pull — if a second
+        // fetch DOES fire within 200ms, the throttle is broken; if not, the
+        // trailing #expect verifies exactly-one-pull behavior.
+        do {
+            try await waitUntil(
+                { cloudKit.fetchCallCount > afterFirstPullFetchCount },
+                timeout: .milliseconds(200),
+                conditionDescription: "throttled second peer discovery must NOT trigger pull"
+            )
+        } catch is WaitUntilError {
+            // Expected: throttle suppressed the second pull within the window.
+        }
 
         syncTask.cancel()
         #expect(
