@@ -17,11 +17,13 @@
 
 ## Quick Reference
 
-**Build:** `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build`
+**Build:** `xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=HyzerApp,OS=18.4' build`
 
 **Test (fast):** `swift test --package-path HyzerKit`
 
-**Test (full):** `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'`
+**Test (full):** `xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=HyzerApp,OS=18.4'`
+
+> The `HyzerApp` destination is a paired iOS 18.4 + watchOS 11.4 simulator. It is a one-time local setup on macOS 15 + Xcode 26 — see [Development Guide → macOS 15 Note](./development-guide.md#macos-15-note) for the install recipe. The `OS=18.4` pin is required because xcodebuild's default `OS=latest` resolves to iOS 26.x, which the `HyzerApp` device does not host.
 
 **Regenerate project:** `xcodegen generate`
 

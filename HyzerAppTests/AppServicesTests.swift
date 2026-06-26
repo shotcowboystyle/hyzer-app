@@ -7,37 +7,6 @@ import UIKit
 @testable import HyzerApp
 import TestSupport
 
-// MARK: - Test stubs
-
-private final class StubCloudKitClientApp: CloudKitClient, @unchecked Sendable {
-    /// Count of `fetch(matching:in:)` invocations. Used as a proxy for `SyncEngine.pullRecords()` calls.
-    private(set) var fetchCallCount = 0
-    func save(_ records: [CKRecord]) async throws -> [CKRecord] { [] }
-    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] { [] }
-    func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] {
-        fetchCallCount += 1
-        return []
-    }
-    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
-    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
-    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
-    func subscribeWithAlert(
-        to recordType: CKRecord.RecordType,
-        predicate: NSPredicate,
-        subscriptionID: CKSubscription.ID,
-        notificationInfo: CKSubscription.NotificationInfo
-    ) async throws -> CKSubscription.ID { subscriptionID }
-}
-
-private struct StubNetworkMonitorApp: NetworkMonitor {
-    var isConnected: Bool { true }
-    var pathUpdates: AsyncStream<Bool> { AsyncStream { _ in } }
-}
-
-private struct StubICloudIdentityProvider: ICloudIdentityProvider, @unchecked Sendable {
-    func resolveIdentity() async throws -> ICloudIdentityResult { .unavailable(reason: .couldNotDetermine) }
-}
-
 // MARK: - AppServicesTests
 
 @Suite("AppServices")
@@ -46,7 +15,7 @@ struct AppServicesTests {
 
     private func makeServices(
         notificationService: MockNotificationService = MockNotificationService(),
-        cloudKitClient: StubCloudKitClientApp = StubCloudKitClientApp()
+        cloudKitClient: StubCloudKitClient = StubCloudKitClient()
     ) throws -> AppServices {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -57,7 +26,7 @@ struct AppServicesTests {
             modelContainer: container,
             iCloudIdentityProvider: StubICloudIdentityProvider(),
             cloudKitClient: cloudKitClient,
-            networkMonitor: StubNetworkMonitorApp(),
+            networkMonitor: StubNetworkMonitor(),
             notificationService: notificationService
         )
     }
@@ -67,7 +36,7 @@ struct AppServicesTests {
     @Test("handleRoundStartedNotification does NOT set pendingDeepLink (and does NOT trigger pullRecords) when organizer matches local player")
     func test_handleRoundStartedNotification_selfExclusion_doesNotSetDeepLink() async throws {
         let mockNotif = MockNotificationService()
-        let cloudKit = StubCloudKitClientApp()
+        let cloudKit = StubCloudKitClient()
         let services = try makeServices(notificationService: mockNotif, cloudKitClient: cloudKit)
 
         let organizerID = UUID()
@@ -216,7 +185,7 @@ struct AppServicesTests {
     @Test("handleRoundCompleteNotification retries pull once when round missing after first pull")
     func test_handleRoundCompleteNotification_retriesPullOnce_whenRoundMissing() async throws {
         let mockNotif = MockNotificationService()
-        let cloudKit = StubCloudKitClientApp()
+        let cloudKit = StubCloudKitClient()
         let services = try makeServices(notificationService: mockNotif, cloudKitClient: cloudKit)
 
         let roundID = UUID()
@@ -231,7 +200,7 @@ struct AppServicesTests {
         await services.handleRoundCompleteNotification(["test": "value"])
 
         // Round was never inserted → two fetch calls (initial pull + one-shot retry).
-        // StubCloudKitClientApp.fetchCallCount tracks fetch(matching:in:) calls.
+        // StubCloudKitClient.fetchCallCount tracks fetch(matching:in:) calls.
         #expect(cloudKit.fetchCallCount == 2)
     }
 
@@ -347,7 +316,7 @@ struct AppServicesTests {
     @Test("handleDiscrepancyDetectedNotification retries pullRecords exactly once when Discrepancy is missing")
     func test_handleDiscrepancyDetectedNotification_retriesPullOnce_whenDiscrepancyMissing() async throws {
         let mockNotif = MockNotificationService()
-        let cloudKit = StubCloudKitClientApp()
+        let cloudKit = StubCloudKitClient()
         let services = try makeServices(notificationService: mockNotif, cloudKitClient: cloudKit)
 
         mockNotif.discrepancyPayloadToReturn = DiscrepancyDetectedPayload(

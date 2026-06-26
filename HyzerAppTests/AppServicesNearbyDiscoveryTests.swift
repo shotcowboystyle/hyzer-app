@@ -7,41 +7,6 @@ import UIKit
 @testable import HyzerApp
 import TestSupport
 
-// MARK: - Stubs
-
-private final class CountingCloudKitClient: CloudKitClient, @unchecked Sendable {
-    private(set) var fetchCallCount = 0
-    func save(_ records: [CKRecord]) async throws -> [CKRecord] { [] }
-    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] { [] }
-    func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] {
-        fetchCallCount += 1
-        return []
-    }
-    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
-    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
-    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
-    func subscribeWithAlert(
-        to recordType: CKRecord.RecordType,
-        predicate: NSPredicate,
-        subscriptionID: CKSubscription.ID,
-        notificationInfo: CKSubscription.NotificationInfo
-    ) async throws -> CKSubscription.ID { subscriptionID }
-}
-
-private struct NeverConnectedNetworkMonitor: NetworkMonitor {
-    var isConnected: Bool { true }
-    var pathUpdates: AsyncStream<Bool> { AsyncStream { _ in } }
-}
-
-private struct ReturnsAvailableIdentityProvider: ICloudIdentityProvider, @unchecked Sendable {
-    let recordName: String
-    func resolveIdentity() async throws -> ICloudIdentityResult { .available(recordName: recordName) }
-}
-
-private struct UnavailableIdentityProvider: ICloudIdentityProvider, @unchecked Sendable {
-    func resolveIdentity() async throws -> ICloudIdentityResult { .unavailable(reason: .couldNotDetermine) }
-}
-
 // MARK: - AppServicesNearbyDiscoveryTests
 
 @Suite("AppServices — Nearby Discovery")
@@ -51,10 +16,10 @@ struct AppServicesNearbyDiscoveryTests {
     // MARK: - Helpers
 
     private func makeServices(
-        cloudKitClient: CountingCloudKitClient = CountingCloudKitClient(),
+        cloudKitClient: StubCloudKitClient = StubCloudKitClient(),
         nearbyDiscoveryClient: MockNearbyDiscoveryClient = MockNearbyDiscoveryClient(),
-        iCloudIdentityProvider: any ICloudIdentityProvider = UnavailableIdentityProvider()
-    ) throws -> (AppServices, ModelContainer, CountingCloudKitClient, MockNearbyDiscoveryClient) {
+        iCloudIdentityProvider: any ICloudIdentityProvider = StubICloudIdentityProvider.unavailable()
+    ) throws -> (AppServices, ModelContainer, StubCloudKitClient, MockNearbyDiscoveryClient) {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self, Discrepancy.self,
@@ -64,7 +29,7 @@ struct AppServicesNearbyDiscoveryTests {
             modelContainer: container,
             iCloudIdentityProvider: iCloudIdentityProvider,
             cloudKitClient: cloudKitClient,
-            networkMonitor: NeverConnectedNetworkMonitor(),
+            networkMonitor: StubNetworkMonitor(),
             nearbyDiscoveryClient: nearbyDiscoveryClient
         )
         return (services, container, cloudKitClient, nearbyDiscoveryClient)
@@ -101,7 +66,7 @@ struct AppServicesNearbyDiscoveryTests {
 
     @Test("handleDiscoveredRound: local player not in payload — skips pull")
     func test_handleDiscoveredRound_localPlayerNotInPayload_skipsPull() async throws {
-        let cloudKit = CountingCloudKitClient()
+        let cloudKit = StubCloudKitClient()
         let mockNearby = MockNearbyDiscoveryClient()
         let (services, container, _, _) = try makeServices(
             cloudKitClient: cloudKit,
@@ -148,7 +113,7 @@ struct AppServicesNearbyDiscoveryTests {
 
     @Test("handleDiscoveredRound: round already in SwiftData — skips pull")
     func test_handleDiscoveredRound_roundAlreadyMaterialized_skipsPull() async throws {
-        let cloudKit = CountingCloudKitClient()
+        let cloudKit = StubCloudKitClient()
         let mockNearby = MockNearbyDiscoveryClient()
         let (services, container, _, _) = try makeServices(
             cloudKitClient: cloudKit,
@@ -197,7 +162,7 @@ struct AppServicesNearbyDiscoveryTests {
 
     @Test("handleDiscoveredRound: two rapid payloads for the same roundID trigger only one pull")
     func test_handleDiscoveredRound_throttleWindow_secondCallWithin30sIsSkipped() async throws {
-        let cloudKit = CountingCloudKitClient()
+        let cloudKit = StubCloudKitClient()
         let mockNearby = MockNearbyDiscoveryClient()
         let (services, container, _, _) = try makeServices(
             cloudKitClient: cloudKit,
@@ -317,7 +282,7 @@ struct AppServicesNearbyDiscoveryTests {
         let iCloudID = UUID().uuidString
         let (services, container, _, _) = try makeServices(
             nearbyDiscoveryClient: mockNearby,
-            iCloudIdentityProvider: ReturnsAvailableIdentityProvider(recordName: iCloudID)
+            iCloudIdentityProvider: StubICloudIdentityProvider.available(recordName: iCloudID)
         )
 
         // Insert a Player (no iCloudRecordName yet) so resolveICloudIdentity can update it.
