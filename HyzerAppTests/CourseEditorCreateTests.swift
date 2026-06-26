@@ -18,7 +18,7 @@ struct CourseEditorCreateTests {
         #expect(!vm.canSave)
     }
 
-    @Test("canSave is false when name is whitespace-only")
+    @Test("canSave is false when name is whitespace-only")    
     func test_canSave_whitespaceOnly_isFalse() {
         let vm = CourseEditorViewModel()
         vm.courseName = "   "
