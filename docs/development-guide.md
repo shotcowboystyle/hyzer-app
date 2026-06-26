@@ -42,7 +42,7 @@ Select the `HyzerApp` scheme for iOS development or `HyzerWatch` for watchOS.
 
 ```sh
 xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp \
-  -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build
+  -destination 'platform=iOS Simulator,name=HyzerApp,OS=18.4' build
 ```
 
 ### watchOS App
@@ -66,8 +66,10 @@ swift build --package-path HyzerKit
 
 ```sh
 xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp \
-  -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'
+  -destination 'platform=iOS Simulator,name=HyzerApp,OS=18.4'
 ```
+
+The `HyzerApp` destination is a paired `iPhone` (iOS 18.4) + `Apple Watch` (watchOS 11.4) simulator — see the macOS 15 Note below for the install recipe. The `OS=18.4` pin is required because the device-name lookup defaults to `OS=latest` (iOS 26.x), which the `HyzerApp` device does not support.
 
 ### HyzerKit Tests Only (No Simulator — Fastest)
 
@@ -85,7 +87,24 @@ swift test --package-path HyzerKit --filter SyncEngineTests
 
 ### macOS 15 Note
 
-iOS 26 Simulator requires macOS 26 (Tahoe) to launch apps. On macOS 15, the simulator build compiles but cannot run. Use `swift test --package-path HyzerKit` for all HyzerKit/domain tests during development.
+The canonical `HyzerApp` test destination is an iOS 18.4 simulator paired with a watchOS 11.4 Apple Watch — this combination is macOS-15-compatible (in contrast to the iOS 26.x simulators that ship with Xcode 26, which require macOS 26 / Tahoe).
+
+Two loops are available:
+
+1. **Fast loop (no simulator) — HyzerKit only.** Use `swift test --package-path HyzerKit` for all HyzerKit/domain/integration tests. This is the recommended default for day-to-day development.
+2. **Full app/UI loop — the `HyzerApp` paired simulator.** One-time setup on macOS 15 + Xcode 26:
+
+   ```sh
+   xcodebuild -downloadPlatform iOS -buildVersion 18.4
+   xcodebuild -downloadPlatform watchOS -buildVersion 11.4
+   xcrun simctl list runtimes available   # confirm iOS 18.4 and watchOS 11.4 are listed
+   ```
+
+   Then in Xcode → Window → Devices and Simulators → Simulators → `+`, create an iPhone device on the **iOS 18.4** runtime named `HyzerApp` and pair it with an `Apple Watch` on **watchOS 11.4**. Select that paired simulator as the run destination and Cmd+R / Cmd+U work normally.
+
+   The build/test examples above use `name=HyzerApp,OS=18.4` against this paired simulator. The project's deployment targets (`iOS 18.0`, `watchOS 11.0` — see `project.yml`) already match these runtimes; no project changes are required.
+
+   If you used a different sim name when creating it, substitute that name in the destination string. The `iPhone 17 with Watch` simulator that previously appeared in this guide ran iOS 26.3 and is **not** usable on macOS 15 — Xcode shows it as available but `xcodebuild test` against it triggers the macOS dialog *"HyzerApp can not be run on this version of MacOS."*
 
 ---
 

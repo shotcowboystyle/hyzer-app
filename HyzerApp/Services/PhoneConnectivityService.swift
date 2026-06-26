@@ -159,6 +159,10 @@ final class PhoneConnectivityService: WatchConnectivityClient {
             logger.error("Failed to decode incoming WatchMessage: \(error)")
             return
         }
+        dispatchIncomingMessage(message)
+    }
+
+    private func dispatchIncomingMessage(_ message: WatchMessage) {
         switch message {
         case .standingsUpdate:
             break // Phone never receives standings updates from Watch
@@ -172,6 +176,16 @@ final class PhoneConnectivityService: WatchConnectivityClient {
         case .voiceResult:
             break // Phone never receives voice results — it sends them
         }
+    }
+
+    /// Test-only seam: routes a `WatchMessage` through the same dispatch path the
+    /// WCSession delegate uses after decoding. Production callers must use the
+    /// WCSession delegate path; this exists so HyzerAppTests/Integration/ can
+    /// exercise the Watch-score-arrival pipeline without `WCSession`.
+    ///
+    /// Added in Story 15.11 — see `HyzerAppTests/Integration/WatchPhoneSyncTests.swift`.
+    func _testInjectIncomingMessage(_ message: WatchMessage) {
+        dispatchIncomingMessage(message)
     }
 
     private func handleWatchVoiceRequest(_ request: WatchVoiceRequest) async {

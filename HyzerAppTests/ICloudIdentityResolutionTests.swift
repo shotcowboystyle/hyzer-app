@@ -4,30 +4,6 @@ import CloudKit
 @testable import HyzerKit
 @testable import HyzerApp
 
-// MARK: - Test Stubs
-
-/// Minimal no-op stub for AppServices construction in iCloud identity tests.
-private struct StubCloudKitClient: CloudKitClient, @unchecked Sendable {
-    func save(_ records: [CKRecord]) async throws -> [CKRecord] { [] }
-    func save(_ records: [CKRecord], savePolicy: CKModifyRecordsOperation.RecordSavePolicy) async throws -> [CKRecord] { [] }
-    func fetch(matching query: CKQuery, in zone: CKRecordZone.ID?) async throws -> [CKRecord] { [] }
-    func subscribe(to recordType: CKRecord.RecordType, predicate: NSPredicate) async throws -> CKSubscription.ID { "" }
-    func deleteSubscription(_ subscriptionID: CKSubscription.ID) async throws {}
-    func fetchAllSubscriptionIDs() async throws -> [CKSubscription.ID] { [] }
-    func subscribeWithAlert(
-        to recordType: CKRecord.RecordType,
-        predicate: NSPredicate,
-        subscriptionID: CKSubscription.ID,
-        notificationInfo: CKSubscription.NotificationInfo
-    ) async throws -> CKSubscription.ID { subscriptionID }
-}
-
-/// Minimal no-op stub for AppServices construction in iCloud identity tests.
-private struct StubNetworkMonitor: NetworkMonitor {
-    var isConnected: Bool { true }
-    var pathUpdates: AsyncStream<Bool> { AsyncStream { _ in } }
-}
-
 // MARK: - Test Mock
 
 /// Local mock for HyzerAppTests — ICloudIdentityProvider protocol from HyzerKit.

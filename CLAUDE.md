@@ -15,15 +15,15 @@ xcodegen generate
 
 **Build (CLI):**
 ```sh
-xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch' build
+xcodebuild -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=HyzerApp,OS=18.4' build
 ```
 
 **Run all tests:**
 ```sh
-xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=iPhone 17 with Watch'
+xcodebuild test -project HyzerApp.xcodeproj -scheme HyzerApp -destination 'platform=iOS Simulator,name=HyzerApp,OS=18.4'
 ```
 
-> **Note:** The paired simulator `iPhone 17 with Watch` enables testing both the iOS app and watchOS companion in a single session.
+> **Note:** The paired simulator `HyzerApp` (iOS 18.4 + watchOS 11.4) enables testing both the iOS app and watchOS companion in a single session. The `OS=18.4` pin is required because xcodebuild's default `OS=latest` resolves to iOS 26.x, which the `HyzerApp` device does not support. The simulator is a one-time local setup — see Project Status "Local-run workaround" below for the install recipe. (Pre-2026-06-22 the canonical destination was `iPhone 17 with Watch`, an iOS 26.3 simulator; that target only runs on macOS 26.)
 
 **Run HyzerKit tests only (faster, no simulator needed):**
 ```sh
@@ -162,3 +162,4 @@ Comprehensive docs generated from deep scan live in `docs/`:
 - **Epics 1–14 complete** — Epic 15 (pre-launch hardening) in progress
 - **Not yet deployed** — no TestFlight or App Store builds
 - **Test count baseline:** 432 HyzerKit tests (Story 15.2 baseline 413 + Story 15.7 added 15 TestSupport tests + Story 15.8 added 4 WaitUntil self-tests) — verified via `swift test --package-path HyzerKit` (the only environment-independent path; SPM does not depend on the iOS simulator runtime). HyzerAppTests count is **not verifiable in the current build environment**: the HyzerApp scheme targets iOS 18.2, which is not installed on macOS 15.7.x (current local dev and GitHub Actions `macos-15` runner image). `xcodebuild test` returns "Unable to find a destination" / `0 tests in 28 suites` until the build target / simulator runtime gap is closed. HyzerWatch has no test target. See Story 15.2 / PR #94 Pending Handoff for the path to a verified all-target baseline.
+- **Local-run setup (macOS 15 + Xcode 26):** install an iOS 18.x + watchOS 11.x simulator runtime alongside Xcode 26 (`xcodebuild -downloadPlatform iOS -buildVersion 18.4` and the watchOS equivalent), then create a paired simulator named `HyzerApp` (iOS 18.4 iPhone + watchOS 11.4 Apple Watch) in Xcode → Devices & Simulators. This is the destination the build/test examples elsewhere in this file (and the `scripts/ci-local.sh` Stage 3) target. Without the iOS 18.x runtime + matching sim, running the app against `iPhone 17 with Watch` (iOS 26.3) fails with the macOS dialog *"HyzerApp can not be run on this version of MacOS."* See `docs/development-guide.md` "macOS 15 Note" for the full recipe.
