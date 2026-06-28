@@ -38,7 +38,7 @@ struct ScoreEventModelTests {
     @Test("ScoreEvent persists and fetches correctly in SwiftData")
     @MainActor
     func test_scoreEvent_persistsAndFetches() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config
@@ -94,7 +94,7 @@ struct ScoreEventModelTests {
     @Test("multiple ScoreEvents for same round/hole/player all persist (append-only)")
     @MainActor
     func test_appendOnly_multipleEventsCoexist() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config

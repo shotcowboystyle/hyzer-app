@@ -74,7 +74,7 @@ struct RoundModelTests {
     @Test("Round persists and fetches correctly in SwiftData")
     @MainActor
     func test_round_persistsAndFetches() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Round.self, configurations: config)
         let context = ModelContext(container)
 

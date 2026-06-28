@@ -184,6 +184,7 @@ final class PhoneConnectivityService: WatchConnectivityClient {
     /// exercise the Watch-score-arrival pipeline without `WCSession`.
     ///
     /// Added in Story 15.11 — see `HyzerAppTests/Integration/WatchPhoneSyncTests.swift`.
+    // swiftlint:disable:next identifier_name
     func _testInjectIncomingMessage(_ message: WatchMessage) {
         dispatchIncomingMessage(message)
     }

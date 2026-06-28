@@ -33,12 +33,19 @@ struct HyzerApp: App {
                 .environment(appServices)
                 .modelContainer(appServices.modelContainer)
                 .task {
+                    // Skip live identity/seed/sync when hosting xctest bundles —
+                    // tests own service wiring via `IntegrationTestHarness`, and
+                    // the host's real `LiveCloudKitClient` + `SyncScheduler` racing
+                    // the test suites' in-memory SwiftData contexts crashes the
+                    // process with SIGILL mid-run (Story 15.2 / PR #106 lineage).
+                    guard !Self.isHostingTests else { return }
                     // Sequential: identity must resolve before seeds, seeds before sync
                     await appServices.resolveICloudIdentity()
                     await appServices.seedCoursesIfNeeded()
                     await appServices.startSync()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
+                    guard !Self.isHostingTests else { return }
                     switch newPhase {
                     case .active:
                         Task { await appServices.performForegroundDiscovery() }
@@ -132,6 +139,13 @@ struct HyzerApp: App {
                 }
             }
         }
+    }
+
+    /// `true` when the host app is hosting an xctest bundle. Detected via
+    /// `XCTestConfigurationFilePath`, which Xcode injects into the test process
+    /// environment before `@main` runs.
+    private static var isHostingTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
     private static func deleteStore(named name: String) {

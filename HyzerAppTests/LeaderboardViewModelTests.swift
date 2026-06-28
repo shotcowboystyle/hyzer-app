@@ -14,7 +14,7 @@ struct LeaderboardViewModelTests {
     private func makeContextAndEngine() throws -> (ModelContext, StandingsEngine) {
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
         let context = ModelContext(container)
         let engine = StandingsEngine(modelContext: context)

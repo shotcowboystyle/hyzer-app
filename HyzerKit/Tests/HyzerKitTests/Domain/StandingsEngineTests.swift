@@ -13,7 +13,7 @@ struct StandingsEngineTests {
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         )
     }
 

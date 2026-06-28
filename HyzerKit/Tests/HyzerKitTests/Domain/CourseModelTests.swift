@@ -34,7 +34,7 @@ struct CourseModelTests {
     @Test("test_fetchHolesByCourseID_returnsCorrectHoles")
     @MainActor
     func test_fetchHolesByCourseID_returnsCorrectHoles() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -71,7 +71,7 @@ struct CourseModelTests {
     @Test("test_course_persistsAndRoundTrips")
     @MainActor
     func test_course_persistsAndRoundTrips() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, configurations: config)
         let context = ModelContext(container)
 

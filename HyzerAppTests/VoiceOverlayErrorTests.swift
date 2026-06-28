@@ -15,7 +15,7 @@ struct VoiceOverlayErrorTests {
     // MARK: - Helpers
 
     private func makeContext() throws -> (ModelContainer, ModelContext) {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config

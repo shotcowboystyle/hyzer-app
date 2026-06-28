@@ -30,7 +30,7 @@ struct ICloudIdentityResolutionTests {
     private func makeServices(
         provider: MockICloudIdentityProvider = MockICloudIdentityProvider()
     ) throws -> (AppServices, ModelContext) {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let services = AppServices(
             modelContainer: container,

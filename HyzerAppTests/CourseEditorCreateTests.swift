@@ -97,7 +97,7 @@ struct CourseEditorCreateTests {
 
     @Test("saveCourse creates one Course with isSeeded false and correct hole count")
     func test_saveCourse_createsCorrectCourse() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -115,7 +115,7 @@ struct CourseEditorCreateTests {
 
     @Test("saveCourse creates Hole records with correct courseID, number, and par values")
     func test_saveCourse_createsHoleRecords() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 

@@ -299,12 +299,14 @@ struct SyncEngineTests {
         let domainConfig = ModelConfiguration(
             "domain",
             schema: Schema([Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self]),
-            isStoredInMemoryOnly: true
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
         )
         let operationalConfig = ModelConfiguration(
             "operational",
             schema: Schema([SyncMetadata.self]),
-            isStoredInMemoryOnly: true
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
         )
 
         let container = try ModelContainer(

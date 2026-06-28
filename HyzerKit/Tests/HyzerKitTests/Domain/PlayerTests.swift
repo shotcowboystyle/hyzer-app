@@ -30,7 +30,7 @@ struct PlayerTests {
 
     @Test("test_persist_inMemoryStore_roundTrips")
     func test_persist_inMemoryStore_roundTrips() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let context = ModelContext(container)
 

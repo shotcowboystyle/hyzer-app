@@ -69,7 +69,7 @@ struct SyncMetadataTests {
     @Test("SyncMetadata persists and fetches in SwiftData (in-memory)")
     @MainActor
     func test_syncMetadata_persistsAndFetches() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: SyncMetadata.self, configurations: config)
         let context = ModelContext(container)
 
@@ -88,7 +88,7 @@ struct SyncMetadataTests {
     @Test("multiple SyncMetadata entries for different records coexist")
     @MainActor
     func test_syncMetadata_multipleEntriesCoexist() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: SyncMetadata.self, configurations: config)
         let context = ModelContext(container)
 
