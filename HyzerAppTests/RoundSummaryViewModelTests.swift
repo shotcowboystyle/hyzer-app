@@ -261,7 +261,7 @@ struct RoundSummaryViewModelTests {
 
     @Test("ScorecardViewModel.isRoundCompleted is true after finalizeRound succeeds")
     func test_scorecardVM_isRoundCompleted_afterFinalizeRound() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config
@@ -537,7 +537,7 @@ struct RoundSummaryViewModelTests {
 
     @Test("ScorecardViewModel.isRoundCompleted is true after finishRound(force: true) succeeds")
     func test_scorecardVM_isRoundCompleted_afterForcedFinish() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config

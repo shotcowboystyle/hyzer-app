@@ -14,7 +14,7 @@ struct PlayerHoleBreakdownColorTests {
     // MARK: - Container setup
 
     private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config

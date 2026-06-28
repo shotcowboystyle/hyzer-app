@@ -13,7 +13,7 @@ struct CourseEditorDeleteTests {
 
     @Test("deleteCourse removes Course and all associated Holes from context")
     func test_deleteCourse_removesCourseAndHoles() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -34,7 +34,7 @@ struct CourseEditorDeleteTests {
 
     @Test("deleteCourse only removes holes for the deleted course, not other courses")
     func test_deleteCourse_onlyDeletesTargetCourseHoles() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 

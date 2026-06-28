@@ -19,7 +19,7 @@ struct CourseEditorEditTests {
 
     @Test("isEditing is true when initialized with an existing course")
     func test_isEditing_withCourse_isTrue() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -35,7 +35,7 @@ struct CourseEditorEditTests {
 
     @Test("init with existing course pre-populates courseName, holeCount, and holePars")
     func test_init_withCourse_prePopulatesFields() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -60,7 +60,7 @@ struct CourseEditorEditTests {
 
     @Test("saveCourse in edit mode updates existing course without creating a new one")
     func test_saveCourse_editMode_updatesExistingCourse() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -88,7 +88,7 @@ struct CourseEditorEditTests {
 
     @Test("saveCourse edit mode decreasing hole count from 18 to 9 deletes excess holes")
     func test_saveCourse_editMode_holeCountDecrease_deletesExcessHoles() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -120,7 +120,7 @@ struct CourseEditorEditTests {
 
     @Test("saveCourse edit mode increasing hole count from 9 to 18 creates 9 new holes with par 3")
     func test_saveCourse_editMode_holeCountIncrease_createsNewHoles() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -159,7 +159,7 @@ struct CourseEditorEditTests {
 
     @Test("saveCourse edit mode with par change updates existing hole par values")
     func test_saveCourse_editMode_parChange_updatesHolePars() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 
@@ -194,7 +194,7 @@ struct CourseEditorEditTests {
 
     @Test("saveCourse in edit mode on seeded course preserves isSeeded flag")
     func test_saveCourse_editMode_seededCourse_preservesIsSeeded() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, Hole.self, configurations: config)
         let context = ModelContext(container)
 

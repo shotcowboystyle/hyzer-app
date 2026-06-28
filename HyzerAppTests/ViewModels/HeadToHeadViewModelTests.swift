@@ -14,7 +14,7 @@ struct HeadToHeadViewModelTests {
     // MARK: - Container
 
     private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config
@@ -317,7 +317,7 @@ private final class ThrowingHeadToHeadServiceStub: HeadToHeadServicing {
 struct HeadToHeadOpponentPickerViewModelTests {
 
     private func makeContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self,
             configurations: config

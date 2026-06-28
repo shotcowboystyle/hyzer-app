@@ -65,7 +65,7 @@ struct OnboardingViewModelTests {
 
     @Test("test_savePlayer_createsPlayerInContext")
     func test_savePlayer_createsPlayerInContext() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let context = ModelContext(container)
 
@@ -81,7 +81,7 @@ struct OnboardingViewModelTests {
 
     @Test("test_savePlayer_emptyName_doesNotCreatePlayer")
     func test_savePlayer_emptyName_doesNotCreatePlayer() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let context = ModelContext(container)
 
@@ -95,7 +95,7 @@ struct OnboardingViewModelTests {
 
     @Test("test_savePlayer_exceedsMaxLength_doesNotCreatePlayer")
     func test_savePlayer_exceedsMaxLength_doesNotCreatePlayer() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let context = ModelContext(container)
 
@@ -109,7 +109,7 @@ struct OnboardingViewModelTests {
 
     @Test("test_savePlayer_doubleTap_createsOnlyOnePlayer")
     func test_savePlayer_doubleTap_createsOnlyOnePlayer() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let context = ModelContext(container)
 
@@ -124,7 +124,7 @@ struct OnboardingViewModelTests {
 
     @Test("test_savePlayer_emojiName_succeeds")
     func test_savePlayer_emojiName_succeeds() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Player.self, configurations: config)
         let context = ModelContext(container)
 

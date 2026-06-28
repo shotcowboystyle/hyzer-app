@@ -63,7 +63,7 @@ struct RoundSetupViewModelTests {
 
     @Test("canStartRound is true when course is selected")
     func test_canStartRound_courseSelected_isTrue() throws {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: Course.self, configurations: config)
         let context = ModelContext(container)
 
@@ -205,7 +205,7 @@ struct RoundSetupViewModelTests {
 
     /// Container schema includes SyncMetadata so SyncEngine can persist metadata entries.
     private func makeStartRoundContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(for: Player.self, Course.self, Hole.self, Round.self, SyncMetadata.self, configurations: config)
     }
 
@@ -400,7 +400,7 @@ struct RoundSetupViewModelTests {
     // MARK: - loadPreviousRoundPlayers (Story 10.1)
 
     private func makeContainer10_1() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(for: Player.self, Course.self, Round.self, configurations: config)
     }
 

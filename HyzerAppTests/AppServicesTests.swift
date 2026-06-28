@@ -17,7 +17,7 @@ struct AppServicesTests {
         notificationService: MockNotificationService = MockNotificationService(),
         cloudKitClient: StubCloudKitClient = StubCloudKitClient()
     ) throws -> AppServices {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self, Discrepancy.self,
             configurations: config

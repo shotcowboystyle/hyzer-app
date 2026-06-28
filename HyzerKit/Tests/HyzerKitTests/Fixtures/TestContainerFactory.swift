@@ -8,7 +8,7 @@ enum TestContainerFactory {
     /// Container with all domain + operational models for sync tests.
     @MainActor
     static func makeSyncContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self,
             configurations: config
@@ -18,7 +18,7 @@ enum TestContainerFactory {
     /// Container with all domain + operational models INCLUDING Discrepancy for conflict tests.
     @MainActor
     static func makeConflictTestContainer() throws -> ModelContainer {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         return try ModelContainer(
             for: Player.self, Course.self, Hole.self, Round.self, ScoreEvent.self, SyncMetadata.self, Discrepancy.self,
             configurations: config
