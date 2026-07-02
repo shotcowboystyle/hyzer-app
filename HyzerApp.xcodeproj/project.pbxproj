@@ -76,6 +76,7 @@
 		902791983CB24E0EA4FA4D8A /* HistoryListQueryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CD64F9474CBE7ECC934D1B7 /* HistoryListQueryTests.swift */; };
 		915770F21BA9C30CDAC86B2B /* PhoneConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF27AB5613FDD66774D32B9 /* PhoneConnectivityService.swift */; };
 		93BDDE9BB3DD4F18A7A26E3F /* TestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = CB657E8D6E74C6E6C7789E9D /* TestSupport */; };
+		94A7D4998C23659B07ED2393 /* ScorecardHoleCardStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC15EA7B94B6458A6AC0AE7 /* ScorecardHoleCardStack.swift */; };
 		953A5AFD53D6DB75925EF04B /* DiscrepancyResolveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186E9E3D3F028244D0C5A241 /* DiscrepancyResolveTests.swift */; };
 		96AFB711CE6C6EC4DF5CE576 /* HyzerWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 1AFA4C5EA37270895D500678 /* HyzerWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		98858E89E1915B90C68829CB /* ShareSheetRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB2B4647E81F997607BBDE3 /* ShareSheetRepresentable.swift */; };
@@ -158,6 +159,7 @@
 		0271AF96B676CB2280840B30 /* ScorecardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardViewModel.swift; sourceTree = "<group>"; };
 		07389BA2B2E9434AE923CC28 /* WatchStaleIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStaleIndicatorView.swift; sourceTree = "<group>"; };
 		07943A8909080D9EEB547B64 /* HyzerKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = HyzerKit; path = HyzerKit; sourceTree = SOURCE_ROOT; };
+		0BC15EA7B94B6458A6AC0AE7 /* ScorecardHoleCardStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardHoleCardStack.swift; sourceTree = "<group>"; };
 		0CB3171CF658AC6851293F50 /* VoiceRecognitionServiceProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceRecognitionServiceProtocol.swift; sourceTree = "<group>"; };
 		0DB2B4647E81F997607BBDE3 /* ShareSheetRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetRepresentable.swift; sourceTree = "<group>"; };
 		0F654A8DF69B0F48A4399DA2 /* RoundSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSetupViewModel.swift; sourceTree = "<group>"; };
@@ -508,6 +510,7 @@
 				90C354EBCD57DD15505A91D0 /* HoleStripView.swift */,
 				E63536A325A8FD3F5E743896 /* RoundSummaryView.swift */,
 				4619B6CC10DE1F2616549B7E /* ScorecardContainerView.swift */,
+				0BC15EA7B94B6458A6AC0AE7 /* ScorecardHoleCardStack.swift */,
 				F7876535734787458D7B0129 /* ScoreInputView.swift */,
 				59FF87A290BB288FC3BDBD05 /* VoiceOverlayView.swift */,
 			);
@@ -919,6 +922,7 @@
 				2EE1BA225C700382D7BB4151 /* RoundSummaryViewModel.swift in Sources */,
 				6D665492C05385E1FB50E3B0 /* ScoreInputView.swift in Sources */,
 				079960697F1DB732A0FE5870 /* ScorecardContainerView.swift in Sources */,
+				94A7D4998C23659B07ED2393 /* ScorecardHoleCardStack.swift in Sources */,
 				264848715C0438CE283A1429 /* ScorecardViewModel.swift in Sources */,
 				98858E89E1915B90C68829CB /* ShareSheetRepresentable.swift in Sources */,
 				64457CFB0B3C54CCACB441C1 /* SyncIndicatorView.swift in Sources */,
