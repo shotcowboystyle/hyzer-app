@@ -31,7 +31,7 @@ struct RoundSetupView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Color.backgroundPrimary)
+            .background(sheetBackground)
             .navigationTitle("New Round")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search players")
@@ -40,11 +40,18 @@ struct RoundSetupView: View {
                     Button("Cancel") { dismiss() }
                         .foregroundStyle(Color.accentPrimary)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Start") { startRound() }
-                        .disabled(!viewModel.canStartRound)
-                        .foregroundStyle(viewModel.canStartRound ? Color.accentPrimary : Color.textSecondary)
-                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                GradientPrimaryButton(
+                    "Start Round",
+                    isEnabled: viewModel.canStartRound,
+                    action: startRound
+                )
+                .padding(.horizontal, SpacingTokens.lg)
+                .padding(.top, SpacingTokens.sm)
+                .padding(.bottom, SpacingTokens.md)
+                .background(LinearGradient.hyzerFooterScrim)
+                .accessibilityLabel("Start round")
             }
             .alert("Unable to Start Round", isPresented: $isShowingError) {
                 Button("OK", role: .cancel) { }
@@ -55,6 +62,13 @@ struct RoundSetupView: View {
                 viewModel.loadPreviousRoundPlayers(currentUserID: organizer.id, modelContext: modelContext)
             }
         }
+    }
+
+    // MARK: - Background
+
+    private var sheetBackground: some View {
+        LinearGradient.hyzerSheet
+            .ignoresSafeArea()
     }
 
     // MARK: - Sections

@@ -81,11 +81,19 @@ struct WatchScoringView: View {
 
     private var scoreDisplay: some View {
         Text("\(viewModel.currentScore)")
-            .font(TypographyTokens.hero)
+            .font(.system(size: TypographyTokens.watchScoreBaseSize, weight: .bold, design: .monospaced))
             .foregroundStyle(viewModel.scoreColor)
+            .contentTransition(.numericText())
             .animation(
                 AnimationCoordinator.animation(
                     .linear(duration: AnimationTokens.scoreEntryDuration),
+                    reduceMotion: reduceMotion
+                ),
+                value: viewModel.currentScore
+            )
+            .animation(
+                AnimationCoordinator.animation(
+                    .easeInOut(duration: AnimationTokens.easeStandardDuration),
                     reduceMotion: reduceMotion
                 ),
                 value: viewModel.scoreColor

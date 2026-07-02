@@ -40,6 +40,7 @@ struct LeaderboardPillView: View {
                 .background(.ultraThinMaterial)
                 .background(Color.backgroundElevated.opacity(0.5))
                 .clipShape(Capsule())
+                .shadow(color: Color.black.opacity(0.65), radius: 20, x: 0, y: 10)
                 .contentShape(Capsule())
                 .onTapGesture {
                     viewModel.isExpanded = true

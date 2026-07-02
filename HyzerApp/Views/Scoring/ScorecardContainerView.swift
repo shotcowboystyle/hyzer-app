@@ -160,29 +160,41 @@ struct ScorecardContainerView: View {
     @ViewBuilder
     private var scoringContent: some View {
         ZStack(alignment: .top) {
-            ScorecardHoleCardStack(
-                round: round,
-                holeCount: round.holeCount,
-                courseHoles: courseHoles,
-                courseName: courseName,
-                scorecardPlayers: scorecardPlayers,
-                roundScoreEvents: roundScoreEvents,
-                playerNamesByID: playerNamesByID,
-                currentHole: $currentHole,
-                onScore: { playerID, holeNumber, strokeCount in
-                    enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
-                },
-                onCorrection: { playerID, previousEventID, holeNumber, strokeCount in
-                    correctScore(
-                        playerID: playerID,
-                        previousEventID: previousEventID,
-                        holeNumber: holeNumber,
-                        strokeCount: strokeCount
-                    )
-                }
-            )
+            VStack(spacing: SpacingTokens.sm) {
+                HoleStripView(holes: holeCells, activeHole: $currentHole)
+                    .padding(.top, SpacingTokens.sm)
+
+                ScorecardHoleCardStack(
+                    round: round,
+                    holeCount: round.holeCount,
+                    courseHoles: courseHoles,
+                    courseName: courseName,
+                    scorecardPlayers: scorecardPlayers,
+                    roundScoreEvents: roundScoreEvents,
+                    playerNamesByID: playerNamesByID,
+                    currentHole: $currentHole,
+                    onScore: { playerID, holeNumber, strokeCount in
+                        enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+                    },
+                    onCorrection: { playerID, previousEventID, holeNumber, strokeCount in
+                        correctScore(
+                            playerID: playerID,
+                            previousEventID: previousEventID,
+                            holeNumber: holeNumber,
+                            strokeCount: strokeCount
+                        )
+                    }
+                )
+            }
 
             leaderboardPillContent
+        }
+    }
+
+    /// Materialised hole cells for the strip (falls back to par 3 if a Hole record is missing).
+    private var holeCells: [HoleCell] {
+        (1...max(1, round.holeCount)).map { number in
+            HoleCell(number: number, par: par(forHole: number))
         }
     }
 
@@ -536,65 +548,6 @@ struct ScorecardContainerView: View {
     }
 }
 
-// MARK: - ScorecardHoleCardStack
-
-/// Paged `TabView` of `HoleCardView`s — one card per hole in the round.
-private struct ScorecardHoleCardStack: View {
-    let round: Round
-    let holeCount: Int
-    let courseHoles: [Hole]
-    let courseName: String
-    let scorecardPlayers: [ScorecardPlayer]
-    let roundScoreEvents: [ScoreEvent]
-    let playerNamesByID: [String: String]
-    @Binding var currentHole: Int
-    let onScore: (String, Int, Int) -> Void
-    let onCorrection: (String, UUID, Int, Int) -> Void
-
-    var body: some View {
-        TabView(selection: $currentHole) {
-            ForEach(1...max(1, holeCount), id: \.self) { holeNumber in
-                let holeParValue = courseHoles.first { $0.number == holeNumber }?.par ?? 3
-                HoleCardView(
-                    holeNumber: holeNumber,
-                    par: holeParValue,
-                    courseName: courseName,
-                    players: scorecardPlayers,
-                    scores: roundScoreEvents.filter { $0.holeNumber == holeNumber },
-                    scorerNamesByID: playerNamesByID,
-                    isRoundFinished: round.isFinished,
-                    onScore: { playerID, strokeCount in
-                        onScore(playerID, holeNumber, strokeCount)
-                    },
-                    onCorrection: { playerID, previousEventID, strokeCount in
-                        onCorrection(playerID, previousEventID, holeNumber, strokeCount)
-                    }
-                )
-                .tag(holeNumber)
-            }
-        }
-        .tabViewStyle(.page(indexDisplayMode: .automatic))
-    }
-}
-
-// MARK: - ScorecardVoiceOverlay
-
-/// Positions and animates `VoiceOverlayView` at the bottom of the scorecard.
-private struct ScorecardVoiceOverlay: View {
-    let voiceVM: VoiceOverlayViewModel
-    let par: Int
-    let reduceMotion: Bool
-
-    var body: some View {
-        let transition: AnyTransition = reduceMotion
-            ? .opacity
-            : .move(edge: .bottom).combined(with: .opacity)
-        VStack {
-            Spacer()
-            VoiceOverlayView(viewModel: voiceVM, par: par)
-                .transition(transition)
-                .padding(.bottom, SpacingTokens.lg)
-        }
-        .ignoresSafeArea(edges: .bottom)
-    }
-}
+// `ScorecardHoleCardStack` and `ScorecardVoiceOverlay` live in
+// `ScorecardHoleCardStack.swift` — extracted to keep this file under the
+// SwiftLint 600-line budget.

@@ -14,25 +14,19 @@ struct CourseListView: View {
     @State private var isShowingDeleteError = false
 
     var body: some View {
-        Group {
-            if courses.isEmpty {
-                emptyState
-            } else {
-                courseList
-            }
-        }
-        .navigationTitle("Courses")
-        .background(Color.backgroundPrimary)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    isShowingEditor = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundStyle(Color.accentPrimary)
+        VStack(spacing: 0) {
+            header
+            Group {
+                if courses.isEmpty {
+                    emptyState
+                } else {
+                    courseList
                 }
             }
         }
+        .background(Color.backgroundPrimary)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $isShowingEditor) {
             CourseEditorView()
         }
@@ -55,6 +49,28 @@ struct CourseListView: View {
     }
 
     // MARK: - Private
+
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("Courses")
+                .font(TypographyTokens.pageTitle)
+                .foregroundStyle(Color.textPrimary)
+            Spacer()
+            Button {
+                isShowingEditor = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .foregroundStyle(Color.accentPrimary)
+                    .frame(width: SpacingTokens.minimumTouchTarget,
+                           height: SpacingTokens.minimumTouchTarget)
+            }
+            .accessibilityLabel("Add course")
+        }
+        .padding(.horizontal, SpacingTokens.md)
+        .padding(.top, SpacingTokens.sm)
+        .padding(.bottom, SpacingTokens.sm)
+    }
 
     private var courseList: some View {
         List(courses) { course in

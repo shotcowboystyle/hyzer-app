@@ -45,38 +45,7 @@ struct ScoreInputView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: SpacingTokens.xs) {
                     ForEach(scores, id: \.self) { value in
-                        Button {
-                            // Same-value correction: collapse without creating a new event
-                            if value == preSelectedScore {
-                                onCancel()
-                                return
-                            }
-                            haptic.impactOccurred()
-                            onSelect(value)
-                        } label: {
-                            Text("\(value)")
-                                .font(TypographyTokens.score)
-                                .foregroundStyle(value == par ? Color.backgroundPrimary : Color.textPrimary)
-                                .frame(
-                                    minWidth: SpacingTokens.scoringTouchTarget,
-                                    minHeight: SpacingTokens.scoringTouchTarget
-                                )
-                                .background(
-                                    value == par
-                                        ? Color.accentPrimary
-                                        : Color.backgroundPrimary.opacity(0.6)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline))
-                                .overlay(
-                                    // Ring indicator for the current correction value
-                                    value == preSelectedScore
-                                        ? RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline)
-                                            .stroke(Color.textSecondary, lineWidth: 2)
-                                        : nil
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(accessibilityLabel(for: value))
+                        scoreButton(for: value)
                     }
                 }
                 .scrollTargetLayout()
@@ -91,6 +60,58 @@ struct ScoreInputView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Select score for \(playerName)")
         .onAppear { haptic.prepare() }
+    }
+
+    // MARK: - Score button (tinted by delta-to-par)
+
+    @ViewBuilder
+    private func scoreButton(for value: Int) -> some View {
+        let isPar     = value == par
+        let isCurrent = value == preSelectedScore
+        Button {
+            if value == preSelectedScore {
+                onCancel()
+                return
+            }
+            haptic.impactOccurred()
+            onSelect(value)
+        } label: {
+            Text("\(value)")
+                .font(TypographyTokens.score)
+                .foregroundStyle(isPar ? Color.accentInk : Color.textPrimary)
+                .frame(
+                    minWidth: SpacingTokens.scoringTouchTarget,
+                    minHeight: SpacingTokens.scoringTouchTarget
+                )
+                .background(background(for: value))
+                .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline))
+                .shadow(
+                    color: isPar ? Color.accentPrimary.opacity(0.55) : .clear,
+                    radius: 14, x: 0, y: 4
+                )
+                .overlay(
+                    isCurrent
+                        ? RoundedRectangle(cornerRadius: SpacingTokens.cornerRadiusInline)
+                            .stroke(Color.textSecondary, lineWidth: 2)
+                        : nil
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel(for: value))
+    }
+
+    @ViewBuilder
+    private func background(for value: Int) -> some View {
+        if value == par {
+            LinearGradient.hyzerPrimary
+        } else {
+            // Delta-to-par tint: same 4-tier logic as `ColorTokens.scoreColor`,
+            // applied as a low-opacity fill over the base card colour.
+            ZStack {
+                Color.backgroundPrimary.opacity(0.6)
+                Color.scoreColor(strokes: value, par: par).opacity(0.18)
+            }
+        }
     }
 
     /// Scroll anchor: pre-selected value for corrections, par for initial scoring.

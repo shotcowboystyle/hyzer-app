@@ -15,31 +15,42 @@ struct RoundSummaryView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: SpacingTokens.xl) {
-                    headerSection
-                    Divider()
-                        .overlay(Color.backgroundElevated)
-                    standingsSection
-                    Divider()
-                        .overlay(Color.backgroundElevated)
-                    RoundSignature(input: viewModel.signatureInput)
-                        .equatable()
-                    Divider()
-                        .overlay(Color.backgroundElevated)
-                    metadataSection
-                }
-                .padding(.horizontal, SpacingTokens.lg)
-                .padding(.vertical, SpacingTokens.xl)
-            }
-            .background(Color.backgroundPrimary)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        onDismiss()
+            ZStack {
+                HyzerBackground()
+
+                ScrollView {
+                    VStack(spacing: SpacingTokens.xl) {
+                        headerSection
+                        Divider()
+                            .overlay(Color.backgroundElevated)
+                        standingsSection
+                        Divider()
+                            .overlay(Color.backgroundElevated)
+                        RoundSignature(input: viewModel.signatureInput)
+                            .equatable()
+                        Divider()
+                            .overlay(Color.backgroundElevated)
+                        metadataSection
                     }
-                    .font(TypographyTokens.body)
-                    .foregroundStyle(Color.accentPrimary)
+                    .padding(.horizontal, SpacingTokens.lg)
+                    .padding(.vertical, SpacingTokens.xl)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: onDismiss) {
+                        Image(systemName: "chevron.left")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.accentPrimary)
+                            .frame(width: SpacingTokens.minimumTouchTarget,
+                                   height: SpacingTokens.minimumTouchTarget)
+                    }
+                    .accessibilityLabel("Close round summary")
+                }
+                ToolbarItem(placement: .principal) {
+                    Text("Round Summary")
+                        .font(TypographyTokens.h3)
+                        .foregroundStyle(Color.textPrimary)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -60,9 +71,11 @@ struct RoundSummaryView: View {
     private var headerSection: some View {
         VStack(spacing: SpacingTokens.xs) {
             Text(viewModel.courseName)
-                .font(TypographyTokens.h1)
+                .font(.system(size: TypographyTokens.pageTitleHeroBaseSize, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
 
             Text(viewModel.formattedDate)
                 .font(TypographyTokens.caption)
@@ -102,23 +115,15 @@ struct RoundSummaryView: View {
     }
 
     private var shareButton: some View {
-        Button {
+        GradientPrimaryButton("Share Results") {
             shareImage = viewModel.shareSnapshot(displayScale: displayScale)
             if shareImage != nil {
                 isShareSheetPresented = true
             }
-        } label: {
-            Text("Share Results")
-                .font(TypographyTokens.body)
-                .foregroundStyle(Color.backgroundPrimary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, SpacingTokens.md)
-                .background(Color.accentPrimary)
-                .clipShape(RoundedRectangle(cornerRadius: SpacingTokens.sm))
         }
         .padding(.horizontal, SpacingTokens.lg)
         .padding(.bottom, SpacingTokens.lg)
-        .background(Color.backgroundPrimary)
+        .background(LinearGradient.hyzerFooterScrim)
     }
 
     // MARK: - Accessibility
@@ -142,17 +147,13 @@ struct RoundSummaryView: View {
 private struct PlayerSummaryRow: View {
     let row: SummaryPlayerRow
 
-    private let goldOpacity: Double = 1.0
-    private let silverOpacity: Double = 0.85
-    private let bronzeOpacity: Double = 0.80
-
     var body: some View {
         HStack(spacing: SpacingTokens.md) {
             positionLabel
                 .frame(width: SpacingTokens.xl, alignment: .center)
 
             Text(row.playerName)
-                .font(TypographyTokens.h2)
+                .font(TypographyTokens.h2Bold)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -161,7 +162,7 @@ private struct PlayerSummaryRow: View {
 
             VStack(alignment: .trailing, spacing: SpacingTokens.xs) {
                 Text(row.formattedScore)
-                    .font(TypographyTokens.score)
+                    .font(TypographyTokens.scoreMedium)
                     .foregroundStyle(row.scoreColor)
 
                 Text("\(row.totalStrokes) strokes")
@@ -173,24 +174,24 @@ private struct PlayerSummaryRow: View {
 
     private var positionLabel: some View {
         Group {
-            if row.hasMedal {
-                Text(row.positionLabelText)
-                    .font(TypographyTokens.h1)
-                    .foregroundStyle(medalColor(for: row.position))
+            if let medal = medalEmoji(for: row.position) {
+                Text(medal)
+                    .font(.title)
             } else {
-                Text(row.positionLabelText)
+                Text("\(row.position).")
                     .font(TypographyTokens.h2)
                     .foregroundStyle(Color.textSecondary)
+                    .monospacedDigit()
             }
         }
     }
 
-    private func medalColor(for position: Int) -> Color {
+    private func medalEmoji(for position: Int) -> String? {
         switch position {
-        case 1: return Color.textPrimary.opacity(goldOpacity)
-        case 2: return Color.textPrimary.opacity(silverOpacity)
-        case 3: return Color.textPrimary.opacity(bronzeOpacity)
-        default: return Color.textPrimary
+        case 1: return "🥇"
+        case 2: return "🥈"
+        case 3: return "🥉"
+        default: return nil
         }
     }
 }

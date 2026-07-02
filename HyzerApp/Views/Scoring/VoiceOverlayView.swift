@@ -141,17 +141,19 @@ private struct VoiceConfirmingView: View {
     }
 
     private func playerScoreRow(candidate: ScoreCandidate, index: Int) -> some View {
+        let scoreColor = Color.scoreColor(strokes: candidate.strokeCount, par: par)
         let rowContent = HStack(alignment: .center, spacing: SpacingTokens.xs) {
             Text(candidate.displayName)
                 .font(TypographyTokens.h2)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
-            DottedLeader()
+            GradientLeader(tint: scoreColor)
                 .accessibilityHidden(true)
             Text("\(candidate.strokeCount)")
                 .font(TypographyTokens.scoreLarge)
-                .foregroundStyle(Color.scoreColor(strokes: candidate.strokeCount, par: par))
+                .foregroundStyle(scoreColor)
                 .monospacedDigit()
+                .shadow(color: scoreColor.opacity(0.5), radius: 8)
         }
         .frame(minHeight: 56)
         .padding(.horizontal, SpacingTokens.md)
@@ -170,7 +172,7 @@ private struct VoiceConfirmingView: View {
                     .fill(Color.backgroundTertiary)
                     .frame(height: Layout.progressBarHeight)
                 Capsule()
-                    .fill(Color.accentPrimary)
+                    .fill(LinearGradient.hyzerPrimary)
                     .frame(width: geo.size.width * progress, height: Layout.progressBarHeight)
                     .animation(progressAnimation, value: progress)
             }
@@ -285,17 +287,19 @@ private struct VoicePartialView: View {
     }
 
     private func staticPlayerScoreRow(candidate: ScoreCandidate) -> some View {
-        HStack(alignment: .center, spacing: SpacingTokens.xs) {
+        let scoreColor = Color.scoreColor(strokes: candidate.strokeCount, par: par)
+        return HStack(alignment: .center, spacing: SpacingTokens.xs) {
             Text(candidate.displayName)
                 .font(TypographyTokens.h2)
                 .foregroundStyle(Color.textPrimary)
                 .lineLimit(1)
-            DottedLeader()
+            GradientLeader(tint: scoreColor)
                 .accessibilityHidden(true)
             Text("\(candidate.strokeCount)")
                 .font(TypographyTokens.scoreLarge)
-                .foregroundStyle(Color.scoreColor(strokes: candidate.strokeCount, par: par))
+                .foregroundStyle(scoreColor)
                 .monospacedDigit()
+                .shadow(color: scoreColor.opacity(0.5), radius: 8)
         }
         .frame(minHeight: 56)
         .padding(.horizontal, SpacingTokens.md)
@@ -310,7 +314,7 @@ private struct VoicePartialView: View {
                     .font(TypographyTokens.h2)
                     .foregroundStyle(Color.textSecondary)
                     .lineLimit(1)
-                DottedLeader()
+                GradientLeader(tint: Color.scoreOverPar)
                     .accessibilityHidden(true)
                 Text("?")
                     .font(TypographyTokens.scoreLarge)
@@ -433,22 +437,23 @@ private struct PlayerPickerSheet: View {
     }
 }
 
-// MARK: - DottedLeader
+// MARK: - GradientLeader
 
-/// A horizontal dotted line used as a leader between player name and score.
-private struct DottedLeader: View {
+/// Horizontal leader line that fades from a neutral hairline into the row's
+/// score-state color on the right — visually links the player name to the score.
+private struct GradientLeader: View {
+    let tint: Color
+
     var body: some View {
-        GeometryReader { geo in
-            Path { path in
-                let y = geo.size.height / 2
-                path.move(to: CGPoint(x: 0, y: y))
-                path.addLine(to: CGPoint(x: geo.size.width, y: y))
-            }
-            .stroke(
-                Color.textSecondary.opacity(0.5),
-                style: StrokeStyle(lineWidth: 1, dash: [3, 4])
-            )
-        }
+        LinearGradient(
+            colors: [
+                Color.hairline,
+                Color.hairline,
+                tint.opacity(0.55)
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
         .frame(height: 1)
     }
 }

@@ -1,8 +1,8 @@
 import SwiftUI
 
-// MARK: - Hex initializer (internal to HyzerKit)
+// MARK: - Hex initializer
 
-extension Color {
+public extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
@@ -68,4 +68,52 @@ public extension Color {
         if delta == 1 { return .scoreOverPar }
         return .scoreWayOver
     }
+}
+
+// MARK: - Gradient tokens
+//
+// Two brand gradients introduced in the design pass. Returned as `LinearGradient` values
+// (not `Color`) because every consumer applies them as fills/backgrounds.
+
+public extension LinearGradient {
+    /// "Tropic Tide" — primary CTA gradient (135°, teal → mint → lime).
+    static let hyzerPrimary = LinearGradient(
+        stops: [
+            .init(color: Color(hex: "#30D5C8"), location: 0.00),
+            .init(color: Color(hex: "#2BE8B5"), location: 0.50),
+            .init(color: Color(hex: "#6CF079"), location: 1.00)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    /// "Halo Cyan" — alternate CTA gradient (135°, cyan → blue).
+    static let hyzerHalo = LinearGradient(
+        stops: [
+            .init(color: Color(hex: "#2DE3E1"), location: 0.00),
+            .init(color: Color(hex: "#2C9BFF"), location: 1.00)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    /// Sheet background ramp — near-black at the top lifting to the canvas at the bottom.
+    /// Gives sheets a slight depth against the phone canvas without introducing color noise.
+    static let hyzerSheet = LinearGradient(
+        stops: [
+            .init(color: Color(hex: "#1C1C20"), location: 0.00),
+            .init(color: Color(hex: "#121215"), location: 0.30),
+            .init(color: Color.backgroundPrimary, location: 0.80)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+
+    /// Footer scrim — transparent-to-canvas fade behind CTA buttons pinned to `safeAreaInset(.bottom)`.
+    /// Ensures the button is legible when list content scrolls under it.
+    static let hyzerFooterScrim = LinearGradient(
+        colors: [Color.clear, Color.backgroundPrimary.opacity(0.85)],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }
