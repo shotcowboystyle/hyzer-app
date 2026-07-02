@@ -21,7 +21,7 @@ env:
 jobs:
   swiftlint:
     name: SwiftLint
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 5
     steps:
       - name: Checkout code
@@ -35,7 +35,7 @@ jobs:
 
   hyzerkit-tests:
     name: HyzerKit Tests (swift test)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 15
     steps:
       - name: Checkout code
@@ -72,7 +72,7 @@ jobs:
 
   app-tests:
     name: HyzerApp ViewModel Tests (xcodebuild)
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 30
     needs: hyzerkit-tests
     steps:
