@@ -38,7 +38,7 @@ struct LeaderboardExpandedView: View {
             .navigationTitle("Leaderboard")
             .navigationBarTitleDisplayMode(.inline)
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.fraction(0.68), .large])
         .presentationDragIndicator(.visible)
     }
 

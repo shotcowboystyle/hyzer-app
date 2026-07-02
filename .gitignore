@@ -38,3 +38,4 @@ _bmad-output/implementation-artifacts/*-evidence/
 # on every `xcodegen generate` run. Tracking it would produce perpetual dirty
 # diffs against the merged content.)
 HyzerApp/App/Info.plist
+design_handoff_hyzer_ui

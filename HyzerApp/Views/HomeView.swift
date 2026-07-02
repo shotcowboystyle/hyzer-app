@@ -376,17 +376,18 @@ private struct ScoringTabView: View {
     }
 
     private var noRoundView: some View {
-        VStack(spacing: SpacingTokens.lg) {
-            Text("No round in progress.")
-                .font(TypographyTokens.body)
-                .foregroundStyle(Color.textSecondary)
-            Button("Start Round") {
+        VStack(spacing: 28) {
+            Spacer()
+            CyberOrb()
+            GradientPrimaryButton("Start Round") {
                 requestNotificationPermissionIfNeeded()
                 isShowingRoundSetup = true
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Color.accentPrimary)
+            .padding(.horizontal, SpacingTokens.lg)
+            .accessibilityLabel("Start a new round")
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// Requests notification authorization on first "New Round" tap (AC #3).

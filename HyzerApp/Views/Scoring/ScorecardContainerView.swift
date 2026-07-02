@@ -160,29 +160,41 @@ struct ScorecardContainerView: View {
     @ViewBuilder
     private var scoringContent: some View {
         ZStack(alignment: .top) {
-            ScorecardHoleCardStack(
-                round: round,
-                holeCount: round.holeCount,
-                courseHoles: courseHoles,
-                courseName: courseName,
-                scorecardPlayers: scorecardPlayers,
-                roundScoreEvents: roundScoreEvents,
-                playerNamesByID: playerNamesByID,
-                currentHole: $currentHole,
-                onScore: { playerID, holeNumber, strokeCount in
-                    enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
-                },
-                onCorrection: { playerID, previousEventID, holeNumber, strokeCount in
-                    correctScore(
-                        playerID: playerID,
-                        previousEventID: previousEventID,
-                        holeNumber: holeNumber,
-                        strokeCount: strokeCount
-                    )
-                }
-            )
+            VStack(spacing: SpacingTokens.sm) {
+                HoleStripView(holes: holeCells, activeHole: $currentHole)
+                    .padding(.top, SpacingTokens.sm)
+
+                ScorecardHoleCardStack(
+                    round: round,
+                    holeCount: round.holeCount,
+                    courseHoles: courseHoles,
+                    courseName: courseName,
+                    scorecardPlayers: scorecardPlayers,
+                    roundScoreEvents: roundScoreEvents,
+                    playerNamesByID: playerNamesByID,
+                    currentHole: $currentHole,
+                    onScore: { playerID, holeNumber, strokeCount in
+                        enterScore(playerID: playerID, holeNumber: holeNumber, strokeCount: strokeCount)
+                    },
+                    onCorrection: { playerID, previousEventID, holeNumber, strokeCount in
+                        correctScore(
+                            playerID: playerID,
+                            previousEventID: previousEventID,
+                            holeNumber: holeNumber,
+                            strokeCount: strokeCount
+                        )
+                    }
+                )
+            }
 
             leaderboardPillContent
+        }
+    }
+
+    /// Materialised hole cells for the strip (falls back to par 3 if a Hole record is missing).
+    private var holeCells: [HoleCell] {
+        (1...max(1, round.holeCount)).map { number in
+            HoleCell(number: number, par: par(forHole: number))
         }
     }
 
@@ -573,7 +585,7 @@ private struct ScorecardHoleCardStack: View {
                 .tag(holeNumber)
             }
         }
-        .tabViewStyle(.page(indexDisplayMode: .automatic))
+        .tabViewStyle(.page(indexDisplayMode: .never))
     }
 }
 
